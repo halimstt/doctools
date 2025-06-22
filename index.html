@@ -4,21 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Statements Converter</title>
+    <!-- Tailwind CSS CDN for utility classes -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Navigation script (remains separate as it's common) -->
     <script src="navigation.js"></script>
+    <!-- PDF.js library for PDF parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script>
+      // Configure PDF.js worker source globally
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
     </script>
+    <!-- Google Fonts - Inter for a modern look -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
+      /* Base font and theme transition */
       body {
         font-family: "Inter", sans-serif;
         transition: background-color 0.3s ease, color 0.3s ease;
       }
+      /* Specific styles for navigation placeholder, handled by navigation.js */
       #nav-placeholder {
         height: 64px;
         background-color: #ffffff;
@@ -32,6 +39,7 @@
       .dark #nav-placeholder {
         background-color: #1f2937;
       }
+      /* Spinner animation styles */
       .loader {
         border: 4px solid #f3f3f3;
         border-top: 4px solid #2563eb;
@@ -56,6 +64,7 @@
         animation: spin 1s linear infinite;
         border-top-color: white;
       }
+      /* File input custom styling to hide native input */
       .file-input-wrapper {
         position: relative;
         overflow: hidden;
@@ -75,19 +84,21 @@
         align-items: center;
         justify-content: center;
       }
+      /* Modal overlay styles */
       .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1000; /* Sit on top */
         left: 0;
         top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.4);
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
         justify-content: center;
         align-items: center;
       }
+      /* Modal content box styles */
       .modal-content {
         background-color: #fefefe;
         margin: auto;
@@ -108,6 +119,7 @@
   <body
     class="bg-light-bg-primary text-light-text-primary dark:bg-dark-bg-primary dark:text-dark-text-primary"
   >
+    <!-- Placeholder for navigation bar, populated by navigation.js -->
     <div id="nav-placeholder"></div>
     <div class="container max-w-5xl mx-auto p-4 sm:p-8">
       <header class="text-center mb-8">
@@ -121,6 +133,7 @@
         </p>
       </header>
 
+      <!-- Statement type selection dropdown -->
       <div class="mb-6 flex justify-center">
         <label for="parser-select" class="sr-only">Choose Statement Type</label>
         <select
@@ -133,6 +146,7 @@
         </select>
       </div>
 
+      <!-- Message container for alerts (error/success) -->
       <div
         id="message-container"
         class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 dark:bg-red-900 dark:border-red-700 dark:text-red-300"
@@ -157,6 +171,7 @@
       </div>
 
       <main>
+        <!-- File upload area (drag & drop or click) -->
         <div
           id="upload-area"
           class="border-2 border-dashed border-light-border dark:border-dark-border rounded-xl p-8 text-center bg-light-bg-secondary dark:bg-dark-bg-secondary transition-colors duration-300 ease-in-out"
@@ -198,6 +213,7 @@
               </p>
             </div>
           </label>
+          <!-- Display for selected files -->
           <div id="file-info" class="hidden text-left mt-4">
             <p
               class="font-semibold text-light-text-primary dark:text-dark-text-primary"
@@ -217,6 +233,7 @@
           </div>
         </div>
 
+        <!-- Action buttons -->
         <div class="flex justify-center space-x-2 my-6">
           <button
             id="process-btn"
@@ -238,6 +255,7 @@
           </button>
         </div>
 
+        <!-- Processing status display -->
         <div id="status-container" class="mt-6 text-center text-sm">
           <p
             id="status-text"
@@ -245,6 +263,7 @@
           ></p>
         </div>
 
+        <!-- Results table -->
         <div id="results-container" class="mt-12">
           <h2
             class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4"
@@ -256,7 +275,7 @@
           >
             <table class="w-full text-sm text-gray-500 dark:text-gray-400">
               <thead
-                class="text-xs text-light-text-secondary dark:text-dark-text-secondary uppercase bg-light-bg-primary dark:bg-dark-bg-primary bg-gray-200 dark:bg-gray-600"
+                class="text-xs text-light-text-secondary dark:text-text-secondary uppercase bg-light-bg-primary dark:bg-dark-bg-primary bg-gray-200 dark:bg-gray-600"
               >
                 <tr>
                   <th class="px-6 py-3">Date</th>
@@ -280,6 +299,7 @@
       </main>
     </div>
 
+    <!-- Modal for Gemini API key input -->
     <div id="api-key-modal" class="modal">
       <div
         class="modal-content bg-light-bg-secondary dark:bg-dark-bg-secondary p-6 rounded-lg shadow-lg"
@@ -293,7 +313,7 @@
           To use the Gemini AI-powered parser, please enter your Gemini API key.
           You can get one from
           <a
-            href="https://ai.google.dev/"
+            href="https://aistudio.google.com/apikey"
             target="_blank"
             rel="noopener noreferrer"
             class="text-accent-blue-light dark:text-accent-blue-dark hover:underline"
@@ -323,908 +343,7 @@
       </div>
     </div>
 
-    <script>
-      function applyTheme(isDarkMode) {
-        if (isDarkMode) {
-          document.documentElement.classList.add("dark");
-        } else {
-          document.documentElement.classList.remove("dark");
-        }
-      }
-
-      const prefersDarkMode = window.matchMedia("(prefers-color-scheme: dark)");
-      applyTheme(prefersDarkMode.matches);
-
-      prefersDarkMode.addEventListener("change", (e) => {
-        applyTheme(e.matches);
-      });
-
-      const messageContainer = document.getElementById("message-container");
-      const messagePrefix = document.getElementById("message-prefix");
-      const messageText = document.getElementById("message-text");
-
-      function showMessage(type, message) {
-        messageContainer.classList.remove("hidden");
-        messageContainer.classList.remove(
-          "bg-red-100",
-          "border-red-400",
-          "text-red-700",
-          "bg-green-100",
-          "border-green-400",
-          "text-green-700",
-          "dark:bg-red-900",
-          "dark:border-red-700",
-          "dark:text-red-300",
-          "dark:bg-green-900",
-          "dark:border-green-700",
-          "dark:text-green-300"
-        );
-        if (type === "error") {
-          messageContainer.classList.add(
-            "bg-red-100",
-            "border-red-400",
-            "text-red-700",
-            "dark:bg-red-900",
-            "dark:border-red-700",
-            "dark:text-red-300"
-          );
-          messagePrefix.textContent = "Error!";
-        } else if (type === "success") {
-          messageContainer.classList.add(
-            "bg-green-100",
-            "border-green-400",
-            "text-green-700",
-            "dark:bg-green-900",
-            "dark:border-green-700",
-            "dark:text-green-300"
-          );
-          messagePrefix.textContent = "Success!";
-        }
-        messageText.textContent = message;
-      }
-
-      function hideMessage() {
-        messageContainer.classList.add("hidden");
-        messagePrefix.textContent = "";
-        messageText.textContent = "";
-      }
-
-      let selectedFiles = [];
-      let allTransactions = [];
-      let geminiApiKey = localStorage.getItem("geminiApiKey") || "";
-
-      const parserSelect = document.getElementById("parser-select");
-      const uploadArea = document.getElementById("upload-area");
-      const fileInput = document.getElementById("file-input");
-      const uploadLabel = document.getElementById("upload-label");
-      const fileInfo = document.getElementById("file-info");
-      const filePillsContainer = document.getElementById(
-        "file-pills-container"
-      );
-      const removeAllFilesBtn = document.getElementById("remove-all-files-btn");
-      const processBtn = document.getElementById("process-btn");
-      const downloadBtn = document.getElementById("download-btn");
-      const statusText = document.getElementById("status-text");
-      const processBtnText = document.getElementById("process-btn-text");
-      const spinner = document.getElementById("spinner");
-      const resultsContainer = document.getElementById("results-container");
-      const tableBody = document.getElementById("results-table-body");
-
-      const apiKeyModal = document.getElementById("api-key-modal");
-      const geminiApiKeyInput = document.getElementById("gemini-api-key-input");
-      const apiKeySaveBtn = document.getElementById("api-key-save-btn");
-      const apiKeyCancelBtn = document.getElementById("api-key-cancel-btn");
-
-      let resolveApiKeyPromise;
-
-      function showApiKeyModal() {
-        return new Promise((resolve) => {
-          resolveApiKeyPromise = resolve;
-
-          geminiApiKeyInput.value = geminiApiKey;
-          apiKeyModal.style.display = "flex";
-
-          apiKeySaveBtn.onclick = () => {
-            const key = geminiApiKeyInput.value.trim();
-            if (key) {
-              localStorage.setItem("geminiApiKey", key);
-              geminiApiKey = key;
-              apiKeyModal.style.display = "none";
-              resolve(key);
-            } else {
-              showMessage("error", "Please enter a valid Gemini API key.");
-            }
-          };
-
-          apiKeyCancelBtn.onclick = () => {
-            apiKeyModal.style.display = "none";
-            resolve(null);
-          };
-        });
-      }
-
-      parserSelect.addEventListener("change", resetUI);
-      fileInput.addEventListener("change", (event) => {
-        handleFiles(event.target.files);
-      });
-      removeAllFilesBtn.addEventListener("click", resetUI);
-
-      uploadArea.addEventListener("dragover", (event) => {
-        event.preventDefault();
-        uploadArea.classList.add(
-          "border-accent-blue-light",
-          "bg-blue-50",
-          "dark:border-accent-blue-dark",
-          "dark:bg-gray-700"
-        );
-      });
-      uploadArea.addEventListener("dragleave", () => {
-        uploadArea.classList.remove(
-          "border-accent-blue-light",
-          "bg-blue-50",
-          "dark:border-accent-blue-dark",
-          "dark:bg-gray-700"
-        );
-      });
-      uploadArea.addEventListener("drop", (event) => {
-        event.preventDefault();
-        uploadArea.classList.remove(
-          "border-accent-blue-light",
-          "bg-blue-50",
-          "dark:border-accent-blue-dark",
-          "dark:bg-gray-700"
-        );
-        handleFiles(event.dataTransfer.files);
-      });
-
-      processBtn.addEventListener("click", processStatements);
-      downloadBtn.addEventListener("click", () => {
-        downloadCSV(allTransactions);
-      });
-
-      function resetUI() {
-        selectedFiles = [];
-        allTransactions = [];
-        fileInput.value = "";
-        fileInfo.classList.add("hidden");
-        uploadLabel.classList.remove("hidden");
-        processBtn.disabled = true;
-        statusText.textContent = "";
-        statusText.textContent = "Processing your statements...";
-        hideMessage();
-        updateFileDisplay();
-        processBtnText.textContent = "Process";
-        spinner.classList.add("hidden");
-      }
-
-      function handleFiles(files) {
-        const currentParser = parserSelect.value;
-        const pdfFiles = Array.from(files).filter(
-          (file) => file.type === "application/pdf"
-        );
-
-        if (pdfFiles.length === 0) {
-          showMessage("error", "Please select valid PDF file(s).");
-          if (selectedFiles.length === 0) {
-            processBtn.disabled = true;
-          }
-          return;
-        }
-
-        if (currentParser === "maybank-pdf") {
-          if (pdfFiles.length > 1) {
-            showMessage(
-              "error",
-              "Maybank PDF Statement parser supports only one PDF file at a time. Only the first file will be used."
-            );
-          }
-          selectedFiles = [pdfFiles[0]];
-        } else {
-          pdfFiles.forEach((newFile) => {
-            if (
-              !selectedFiles.some(
-                (existingFile) =>
-                  existingFile.name === newFile.name &&
-                  existingFile.size === newFile.size
-              )
-            ) {
-              selectedFiles.push(newFile);
-            }
-          });
-        }
-
-        updateFileDisplay();
-        processBtn.disabled = selectedFiles.length === 0;
-        hideMessage();
-      }
-
-      function updateFileDisplay() {
-        filePillsContainer.innerHTML = "";
-        if (selectedFiles.length === 0) {
-          fileInfo.classList.add("hidden");
-          uploadLabel.classList.remove("hidden");
-        } else {
-          selectedFiles.forEach((file, index) => {
-            const pill = document.createElement("span");
-            pill.className =
-              "inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100 text-xs font-medium mr-2 mb-2";
-            pill.innerHTML = `
-              ${file.name}
-              <button type="button" class="ml-2 -mr-0.5 h-4 w-4 inline-flex items-center justify-center rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 dark:text-blue-300 dark:hover:bg-blue-600 dark:hover:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500" data-index="${index}">
-                <span class="sr-only">Remove file</span>
-                <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7" />
-                </svg>
-              </button>
-            `;
-            pill.querySelector("button").addEventListener("click", (event) => {
-              const fileIndexToRemove = parseInt(
-                event.currentTarget.dataset.index
-              );
-              removeIndividualFile(fileIndexToRemove);
-            });
-            filePillsContainer.appendChild(pill);
-          });
-          fileInfo.classList.remove("hidden");
-          uploadLabel.classList.add("hidden");
-        }
-        processBtn.disabled = selectedFiles.length === 0;
-      }
-
-      function removeIndividualFile(indexToRemove) {
-        selectedFiles.splice(indexToRemove, 1);
-        updateFileDisplay();
-        if (selectedFiles.length === 0) {
-          hideMessage();
-        }
-      }
-
-      async function processStatements() {
-        if (selectedFiles.length === 0) {
-          showMessage("error", "Please select at least one PDF file first.");
-          return;
-        }
-
-        processBtn.disabled = true;
-        spinner.classList.remove("hidden");
-        processBtnText.textContent = "Processing...";
-        statusText.textContent = "";
-        hideMessage();
-
-        allTransactions = [];
-        const currentParser = parserSelect.value;
-
-        if (currentParser === "gemini-parser" && !geminiApiKey) {
-          try {
-            const key = await showApiKeyModal();
-            if (!key) {
-              showMessage(
-                "error",
-                "Gemini API key is required for this parser. Processing canceled."
-              );
-              resetUI();
-              return;
-            }
-          } catch (error) {
-            showMessage(
-              "error",
-              "Could not get Gemini API key. Processing canceled."
-            );
-            resetUI();
-            return;
-          }
-        }
-
-        try {
-          for (let i = 0; i < selectedFiles.length; i++) {
-            const file = selectedFiles[i];
-            statusText.textContent = `Processing ${file.name} (${i + 1}/${
-              selectedFiles.length
-            })...`;
-
-            const fileReader = new FileReader();
-            const fileReadPromise = new Promise((resolve, reject) => {
-              fileReader.onload = (e) => resolve(e.target.result);
-              fileReader.onerror = reject;
-              fileReader.readAsArrayBuffer(file);
-            });
-
-            const typedarray = new Uint8Array(await fileReadPromise);
-            const pdf = await pdfjsLib.getDocument(typedarray).promise;
-
-            let fileTransactions = [];
-
-            switch (currentParser) {
-              case "maybank-pdf":
-                if (selectedFiles.length > 1 && i > 0) {
-                  continue;
-                }
-                statusText.textContent = `Analyzing content in ${file.name} (Maybank PDF mode)...`;
-                const allLinesFromPdf = await extractTextLinesFromPdfMaybankPdf(
-                  pdf
-                );
-                fileTransactions = parseTransactionsMaybankPdf(allLinesFromPdf);
-                break;
-              case "maybank-web":
-                statusText.textContent = `Analyzing content in ${file.name} (Maybank Web mode)...`;
-                const highAccuracyText =
-                  await getHighAccuracyTextFromPdfMaybankWeb(pdf);
-                fileTransactions =
-                  parseTextAndGenerateCsvMaybankWeb(highAccuracyText);
-                break;
-              case "gemini-parser":
-                statusText.textContent = `Sending pages of ${file.name} to AI for processing...`;
-                fileTransactions = await processGeminiStatementWithAI(
-                  pdf,
-                  geminiApiKey
-                );
-                break;
-              default:
-                showMessage(
-                  "error",
-                  "Invalid parser selected. Please choose a valid statement type."
-                );
-                throw new Error("Invalid parser selected.");
-            }
-            allTransactions = allTransactions.concat(fileTransactions);
-          }
-
-          allTransactions.sort((a, b) => {
-            const dateA = parseDateForSorting(a["Date"]);
-            const dateB = parseDateForSorting(b["Date"]);
-            return dateB - dateA;
-          });
-
-          statusText.textContent = "";
-          displayTransactions(allTransactions);
-          updateDownloadButtonState();
-
-          if (allTransactions.length > 0) {
-            showMessage(
-              "success",
-              `${selectedFiles.length} PDF(s) processed and combined CSV ready for download!`
-            );
-          } else {
-            showMessage(
-              "error",
-              "No valid transactions were extracted from the selected PDF(s). Please check your file(s) and selected parser type."
-            );
-          }
-        } catch (error) {
-          showMessage(
-            "error",
-            `An error occurred during PDF conversion: ${error.message}. Please check the console for details and ensure your Gemini API is enabled for this project if using the AI parser.`
-          );
-        } finally {
-          processBtn.disabled = false;
-          spinner.classList.add("hidden");
-          processBtnText.textContent = "Process";
-          statusText.textContent = "Processing your statements...";
-        }
-      }
-
-      function parseDateForSorting(dateString) {
-        const [day, month, year] = dateString.split("/");
-        const fullYear = parseInt(year, 10) > 50 ? `19${year}` : `20${year}`;
-        return new Date(`${fullYear}-${month}-${day}`).getTime();
-      }
-
-      function displayTransactions(data) {
-        if (!data || data.length === 0) {
-          return;
-        }
-        try {
-          tableBody.innerHTML = "";
-          data.forEach((row) => {
-            const tr = document.createElement("tr");
-            tr.className =
-              "divide-light-border dark:divide-dark-border hover:bg-gray-50 dark:hover:bg-gray-700";
-
-            const tdDate = document.createElement("td");
-            tdDate.className = "px-6 py-4";
-            tdDate.textContent = row.Date || "";
-            tr.appendChild(tdDate);
-
-            const tdDescription = document.createElement("td");
-            tdDescription.className = "px-6 py-4";
-            tdDescription.textContent = row.Description || "";
-            tr.appendChild(tdDescription);
-
-            const tdAmount = document.createElement("td");
-            tdAmount.className = "px-6 py-4";
-            const value = row.Amount || "";
-            tdAmount.textContent = value;
-            if (typeof value === "string" && value.trim() !== "") {
-              const amount = parseFloat(value);
-              tdAmount.classList.add("text-right", "font-mono");
-              tdAmount.classList.toggle("text-green-600", amount > 0);
-              tdAmount.classList.toggle("text-red-600", amount < 0);
-              tdAmount.classList.toggle("dark:text-green-400", amount > 0);
-              tdAmount.classList.toggle("dark:text-red-400", amount < 0);
-            }
-            tr.appendChild(tdAmount);
-            tableBody.appendChild(tr);
-          });
-        } catch (e) {
-          showMessage(
-            "error",
-            "Could not display results due to an internal error. Check the console."
-          );
-        }
-      }
-
-      function updateDownloadButtonState() {
-        const downloadBtn = document.getElementById("download-btn");
-        const resultsTableBody = document.getElementById("results-table-body");
-
-        const hasResults =
-          resultsTableBody.children.length > 0 &&
-          resultsTableBody.children[0].textContent.trim() !==
-            "No documents processed yet.";
-
-        if (downloadBtn) {
-          downloadBtn.disabled = !hasResults;
-        }
-      }
-
-      function downloadCSV(data) {
-        if (!data.length) return;
-        const headers = ["Date", "Description", "Amount"];
-        const csvRows = [
-          headers.join(","),
-          ...data.map((row) =>
-            headers
-              .map((fieldName) => {
-                const value = row[fieldName];
-                const stringValue = value === null ? "" : String(value);
-                return stringValue.includes(",") ||
-                  stringValue.includes('"') ||
-                  stringValue.includes("\n")
-                  ? `"${stringValue.replace(/"/g, '""')}"`
-                  : stringValue;
-              })
-              .join(",")
-          ),
-        ];
-        const csvString = csvRows.join("\n");
-        const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", "transactions.csv");
-        link.style.visibility = "hidden";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-
-      async function extractTextLinesFromPdfMaybankPdf(pdf) {
-        const allLines = [];
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const lines = {};
-          for (const item of textContent.items) {
-            const y = Math.round(item.transform[5]);
-            if (!lines[y]) lines[y] = [];
-            lines[y].push(item);
-          }
-          const sortedY = Object.keys(lines).sort((a, b) => b - a);
-          for (const y of sortedY) {
-            lines[y].sort((a, b) => a.transform[4] - b.transform[4]);
-            allLines.push(lines[y].map((item) => item.str).join(" "));
-          }
-        }
-        return allLines;
-      }
-
-      function parseTransactionsMaybankPdf(allLinesFromPdf) {
-        const statementDateMatch = allLinesFromPdf
-          .join(" ")
-          .match(/STATEMENT DATE\s*:\s*(\d{2}\/\d{2}\/\d{2})/i);
-        const year = statementDateMatch
-          ? `20${statementDateMatch[1].slice(-2)}`
-          : new Date().getFullYear().toString();
-
-        const filteredLines = [];
-        let inTransactionBlock = false;
-        for (const line of allLinesFromPdf) {
-          if (/ACCOUNT\s*TRANSACTIONS/i.test(line)) {
-            inTransactionBlock = true;
-            continue;
-          }
-          if (/BAKI\s*LEGAR/i.test(line)) {
-            inTransactionBlock = false;
-            continue;
-          }
-          if (inTransactionBlock) {
-            if (/TARIKH\s*MASUK/i.test(line) && /TARIKH\s*NILAI/i.test(line))
-              continue;
-            if (/進支日期/i.test(line) && /仄過賬日期/.test(line)) continue;
-            if (/ENTRY\s*DATE/i.test(line) && /VALUE\s*DATE/i.test(line))
-              continue;
-            if (/BEGINNING\s*BALANCE/i.test(line)) continue;
-            if (line.trim() === "=") continue;
-            filteredLines.push(line);
-          }
-        }
-
-        const transactions = [];
-        let descriptionParts = [];
-
-        for (const line of [...filteredLines].reverse()) {
-          const isIgnoreLine =
-            /TIADA\s*URUSNIAGA/i.test(line) ||
-            /NO\s*TRANSACTION/i.test(line) ||
-            /TOTAL\s*DEBIT/i.test(line) ||
-            /ENDING\s*BALANCE/i.test(line) ||
-            /LEDGER\s*BALANCE/i.test(line);
-
-          if (isIgnoreLine) {
-            descriptionParts = [];
-            continue;
-          }
-
-          const txMatch = line.match(
-            /^\s*(\d{2}\/\d{2})\s+(.*?)\s+([\d,]*\.\d{1,2}[+-])(?:\s+[\d,]*\.\d{2})?$/
-          );
-
-          if (txMatch) {
-            let date = txMatch[1];
-            let description = txMatch[2];
-            const amountWithSign = txMatch[3];
-
-            const amountStr = amountWithSign
-              .replace(/,/g, "")
-              .replace(/[+-]$/, "");
-            const sign = amountWithSign.slice(-1);
-            let amount = parseFloat(amountStr);
-            if (sign === "-") amount = -amount;
-
-            if (!date && descriptionParts.length > 0) {
-              const dateInDescIndex = descriptionParts.findIndex((p) =>
-                /^\d{2}\/\d{2}/.test(p.trim())
-              );
-              if (dateInDescIndex > -1) {
-                const lineWithDate = descriptionParts.splice(
-                  dateInDescIndex,
-                  1
-                )[0];
-                date = lineWithDate.trim().substring(0, 5);
-                description =
-                  lineWithDate.trim().substring(5).trim() + " " + description;
-              }
-            }
-
-            if (descriptionParts.length > 0) {
-              description =
-                description.trim() + " " + descriptionParts.reverse().join(" ");
-            }
-
-            if (date) {
-              transactions.push({
-                Date: `${date}/${year.slice(-2)}`,
-                Description: description,
-                Amount: amount,
-              });
-            }
-            descriptionParts = [];
-          } else {
-            if (line.trim().length > 1) {
-              descriptionParts.push(line.trim());
-            }
-          }
-        }
-
-        const finalTransactions = transactions.reverse().map((t) => {
-          const cleanedDesc = t.Description.replace(/TRANSFER FR A\/C/gi, "")
-            .replace(/TRANSFER TO A\/C/gi, "")
-            .replace(/PAYMENT FR A\/C/gi, "")
-            .replace(/MBB CT-?/gi, "")
-            .replace(/\s+/g, " ")
-            .trim();
-
-          const finalDescription =
-            cleanedDesc.includes(",") ||
-            cleanedDesc.includes('"') ||
-            cleanedDesc.includes("\n")
-              ? `"${cleanedDesc.replace(/"/g, '""')}"`
-              : cleanedDesc;
-
-          return {
-            Date: t.Date,
-            Description: finalDescription,
-            Amount: parseFloat(t.Amount).toFixed(2),
-          };
-        });
-        return finalTransactions;
-      }
-
-      async function getHighAccuracyTextFromPdfMaybankWeb(pdf) {
-        let fullText = "";
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-
-          let lastY = -1;
-          let lineText = "";
-
-          textContent.items.sort((a, b) => {
-            if (a.transform[5] < b.transform[5]) return 1;
-            if (a.transform[5] > b.transform[5]) return -1;
-            if (a.transform[4] < b.transform[4]) return -1;
-            if (a.transform[4] > b.transform[4]) return 1;
-            return 0;
-          });
-
-          for (const item of textContent.items) {
-            if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
-              fullText += lineText.trim() + "\n";
-              lineText = "";
-            }
-            lineText += item.str + " ";
-            lastY = item.transform[5];
-          }
-          fullText += lineText.trim() + "\n";
-        }
-        return fullText;
-      }
-
-      function parseTextAndGenerateCsvMaybankWeb(text) {
-        const transactions = [];
-        const dateRegex = /^\d{1,2}\s+\w{3}\s+\d{4}/;
-        const amountRegex = /(-?)\s*RM\s*([\d,]+\.\d{2})\s*$/;
-
-        const lines = text.split("\n");
-        let currentTransaction = null;
-
-        for (const line of lines) {
-          const trimmedLine = line.trim();
-          if (
-            !trimmedLine ||
-            trimmedLine.toLowerCase().startsWith("date") ||
-            trimmedLine.toLowerCase().startsWith("description") ||
-            trimmedLine.toLowerCase().startsWith("amount")
-          )
-            continue;
-
-          const hasDate = dateRegex.test(trimmedLine);
-
-          if (hasDate) {
-            if (currentTransaction) {
-              transactions.push(currentTransaction);
-            }
-
-            let date = trimmedLine.match(dateRegex)[0];
-            let restOfLine = trimmedLine.replace(dateRegex, "").trim();
-            let amountMatch = restOfLine.match(amountRegex);
-
-            let description = restOfLine;
-            let amount = null;
-
-            if (amountMatch) {
-              amount =
-                (amountMatch[1] || "") + amountMatch[2].replace(/,/g, "");
-              description = description.replace(amountMatch[0], "").trim();
-            }
-
-            currentTransaction = { date, description, amount };
-          } else if (currentTransaction && !currentTransaction.amount) {
-            let amountMatch = trimmedLine.match(amountRegex);
-            let descriptionPart = trimmedLine;
-
-            if (amountMatch) {
-              currentTransaction.amount =
-                (amountMatch[1] || "") + amountMatch[2].replace(/,/g, "");
-              descriptionPart = descriptionPart
-                .replace(amountMatch[0], "")
-                .trim();
-            }
-            currentTransaction.description += " " + descriptionPart;
-          } else if (currentTransaction && currentTransaction.amount) {
-            const lastTx = transactions[transactions.length - 1];
-            if (lastTx) {
-              lastTx.Description += " " + trimmedLine;
-            } else {
-              if (currentTransaction) {
-                transactions.push(currentTransaction);
-                currentTransaction = null;
-              }
-            }
-          }
-        }
-
-        if (currentTransaction) {
-          transactions.push(currentTransaction);
-        }
-
-        return transactions.map((t) => {
-          const dateObj = new Date(t.date);
-          const day = String(dateObj.getDate()).padStart(2, "0");
-          const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-          const year = dateObj.getFullYear();
-          const formattedDate = `${day}/${month}/${String(year).slice(-2)}`;
-
-          const cleanedDescription = t.description.replace(/\s+/g, " ").trim();
-
-          const finalDescriptionUnescaped =
-            cleanedDescription.startsWith('"') &&
-            cleanedDescription.endsWith('"')
-              ? cleanedDescription.substring(1, cleanedDescription.length - 1)
-              : cleanedDescription;
-
-          const descForCsv =
-            finalDescriptionUnescaped.includes(",") ||
-            finalDescriptionUnescaped.includes('"') ||
-            finalDescriptionUnescaped.includes("\n")
-              ? `"${finalDescriptionUnescaped.replace(/"/g, '""')}"`
-              : finalDescriptionUnescaped;
-
-          return {
-            Date: formattedDate,
-            Description: descForCsv,
-            Amount: parseFloat(t.amount).toFixed(2),
-          };
-        });
-      }
-
-      async function processGeminiStatementWithAI(pdf, apiKey) {
-        const allExtractedTransactions = [];
-        const totalPages = pdf.numPages;
-
-        if (!apiKey) {
-          throw new Error("Gemini API key is missing. Please provide it.");
-        }
-
-        for (let i = 1; i <= totalPages; i++) {
-          statusText.textContent = `Sending page ${i}/${totalPages} to AI for processing...`;
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items.map((item) => item.str).join(" ");
-
-          let chatHistory = [];
-          const prompt = `You are an expert at extracting financial transactions from bank statements.
-            Extract all transactions from the following page text.
-            For each transaction, identify the 'Date', 'Description', and 'Amount'.
-            
-            Rules for extraction:
-            - The Date should be in DD/MM/YYYY format. If only DD/MM is present, assume the current year for a full YYYY format before outputting as DD/MM/YY.
-            - The Description should be a concise summary of the transaction.
-            - The Amount should be a numeric value, positive for credit/income and negative for debit/expense. It should not include currency symbols (like RM).
-            - Ignore any opening/closing balances, totals, page numbers, headers, footers, or non-transactional text.
-            - If multiple transactions are found, return them as an array of objects.
-            - If no transactions are found on this page, return an empty array.
-
-            Here is the bank statement page text:
-            """
-            ${pageText}
-            """
-            `;
-
-          chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-          const payload = {
-            contents: chatHistory,
-            generationConfig: {
-              responseMimeType: "application/json",
-              responseSchema: {
-                type: "ARRAY",
-                items: {
-                  type: "OBJECT",
-                  properties: {
-                    Date: {
-                      type: "STRING",
-                      description: "Transaction date in DD/MM/YYYY format.",
-                    },
-                    Description: {
-                      type: "STRING",
-                      description: "Concise description of the transaction.",
-                    },
-                    Amount: {
-                      type: "NUMBER",
-                      description:
-                        "Numeric amount, positive for credit, negative for debit.",
-                    },
-                  },
-                  required: ["Date", "Description", "Amount"],
-                },
-              },
-            },
-          };
-
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-          try {
-            const response = await fetch(apiUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) {
-              const errorBody = await response.text();
-              throw new Error(
-                `API request failed for page ${i}: ${response.status} ${response.statusText}. Details: ${errorBody}`
-              );
-            }
-
-            const result = await response.json();
-
-            if (
-              result.candidates &&
-              result.candidates.length > 0 &&
-              result.candidates[0].content &&
-              result.candidates[0].content.parts &&
-              result.candidates[0].content.parts.length > 0
-            ) {
-              const jsonString = result.candidates[0].content.parts[0].text;
-              let parsedTransactions;
-              try {
-                parsedTransactions = JSON.parse(jsonString);
-              } catch (parseError) {
-                continue;
-              }
-
-              const formattedTransactions = parsedTransactions.map((t) => {
-                let [day, month, year] = t.Date.split("/");
-                if (!year || year.length !== 4) {
-                  const currentYear = new Date().getFullYear();
-                  const currentYY = String(currentYear).slice(-2);
-                  const parsedYY = parseInt(year, 10);
-                  year =
-                    parsedYY <= parseInt(currentYY, 10)
-                      ? `20${String(parsedYY).padStart(2, "0")}`
-                      : `19${String(parsedYY).padStart(2, "0")}`;
-                }
-                const formattedYear = String(year).slice(-2);
-
-                const cleanedDescription = String(t.Description)
-                  .replace(/\s+/g, " ")
-                  .trim();
-                const descForCsv =
-                  cleanedDescription.includes(",") ||
-                  cleanedDescription.includes('"') ||
-                  cleanedDescription.includes("\n")
-                    ? `"${cleanedDescription.replace(/"/g, '""')}"`
-                    : cleanedDescription;
-
-                return {
-                  Date: `${String(day).padStart(2, "0")}/${String(
-                    month
-                  ).padStart(2, "0")}/${formattedYear}`,
-                  Description: descForCsv,
-                  Amount: parseFloat(t.Amount).toFixed(2),
-                };
-              });
-              allExtractedTransactions.push(...formattedTransactions);
-            } else {
-              let feedbackMessage = `No valid content found for page ${i} in Gemini API response.`;
-              if (result.promptFeedback && result.promptFeedback.blockReason) {
-                feedbackMessage += ` Block reason: ${result.promptFeedback.blockReason}.`;
-                if (result.promptFeedback.safetyRatings) {
-                  feedbackMessage += ` Safety ratings: ${JSON.stringify(
-                    result.promptFeedback.safetyRatings
-                  )}.`;
-                }
-              }
-              showMessage(
-                "error",
-                `AI processing warning for page ${i}: ${feedbackMessage}`
-              );
-            }
-          } catch (error) {
-            showMessage(
-              "error",
-              `AI processing failed for page ${i}: ${error.message}.`
-            );
-          }
-        }
-        return allExtractedTransactions;
-      }
-
-      document.addEventListener("DOMContentLoaded", () => {
-        resetUI();
-        updateDownloadButtonState();
-      });
-    </script>
+    <!-- Link to the external JavaScript file -->
+    <script src="index-script.js"></script>
   </body>
 </html>

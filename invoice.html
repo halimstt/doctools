@@ -4,21 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Invoices Converter</title>
+    <!-- Tailwind CSS CDN for utility classes -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Navigation script (remains separate as it's common) -->
     <script src="navigation.js"></script>
+    <!-- PDF.js library for PDF parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script>
+      // Configure PDF.js worker source globally
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
     </script>
+    <!-- Google Fonts - Inter for a modern look -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
+      /* Base font and theme transition */
       body {
         font-family: "Inter", sans-serif;
         transition: background-color 0.3s ease, color 0.3s ease;
       }
+      /* Specific styles for navigation placeholder, handled by navigation.js */
       #nav-placeholder {
         height: 64px;
         background-color: #ffffff;
@@ -32,11 +39,13 @@
       .dark #nav-placeholder {
         background-color: #1f2937;
       }
+      /* Responsive hiding for skeleton mobile button */
       @media (min-width: 768px) {
         .skeleton-mobile-button {
           display: none;
         }
       }
+      /* Spinner animation styles */
       @keyframes spin {
         0% {
           transform: rotate(0deg);
@@ -49,6 +58,7 @@
         animation: spin 1s linear infinite;
         border-top-color: white;
       }
+      /* Tab button styling */
       .tab-button {
         padding: 0.75rem 1.5rem;
         font-weight: 500;
@@ -78,7 +88,7 @@
       .dark .tab-button:not(.active):hover {
         color: #60a5fa;
       }
-
+      /* Drag and drop area styling */
       .drop-area {
         border: 2px dashed #e5e7eb;
         padding: 2rem;
@@ -103,7 +113,7 @@
         border-color: #60a5fa;
         background-color: #1f2937;
       }
-
+      /* File pill styling for uploaded files */
       .file-pill {
         display: inline-flex;
         align-items: center;
@@ -119,7 +129,6 @@
         background-color: #1e40af;
         color: #bfdbfe;
       }
-
       .file-pill .remove-button {
         margin-left: 0.5rem;
         cursor: pointer;
@@ -132,20 +141,21 @@
       .file-pill .remove-button:hover {
         color: #ef4444;
       }
-
+      /* Modal overlay styles */
       .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1000; /* Sit on top */
         left: 0;
         top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.4);
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
         justify-content: center;
         align-items: center;
       }
+      /* Modal content box styles */
       .modal-content {
         margin: auto;
         padding: 1.5rem;
@@ -156,7 +166,7 @@
           0 2px 4px -1px rgba(0, 0, 0, 0.06);
         position: relative;
       }
-
+      /* User icon container styling */
       #userIconContainer {
         width: 40px;
         height: 40px;
@@ -191,6 +201,7 @@
   <body
     class="bg-light-bg-primary text-light-text-primary dark:bg-dark-bg-primary dark:text-dark-text-primary"
   >
+    <!-- Placeholder for navigation bar, populated by navigation.js -->
     <div id="nav-placeholder"></div>
     <div class="container max-w-5xl mx-auto p-4 sm:p-8">
       <header class="text-center mb-8 relative">
@@ -199,6 +210,7 @@
         >
           Invoices Converter
         </h1>
+        <!-- User profile icon and authentication -->
         <div class="absolute top-0 right-0 flex items-center space-x-2">
           <div
             id="userIconContainer"
@@ -222,6 +234,7 @@
         </div>
       </header>
 
+      <!-- Tab navigation for Extract and Template sections -->
       <div
         class="mb-6 border-b border-light-border dark:border-dark-border flex"
       >
@@ -230,7 +243,9 @@
       </div>
 
       <main>
+        <!-- Tab content for PDF extraction -->
         <div id="tabContentProcess" class="tab-content w-full">
+          <!-- PDF upload area -->
           <div
             id="dropArea"
             class="drop-area mb-4 bg-light-bg-secondary dark:bg-dark-bg-secondary"
@@ -279,6 +294,7 @@
               </div>
             </label>
 
+            <!-- Display for uploaded files -->
             <div id="file-info-invoice" class="hidden text-left w-full">
               <p
                 class="font-semibold text-light-text-primary dark:text-dark-text-primary"
@@ -298,6 +314,7 @@
             </div>
           </div>
 
+          <!-- Action buttons for processing and downloading -->
           <div class="flex justify-center space-x-2 my-6">
             <button
               id="processPdfButton"
@@ -315,11 +332,13 @@
             </button>
           </div>
 
+          <!-- Processing status display -->
           <p
             id="processingStatus"
             class="mt-2 text-sm text-center text-light-text-secondary dark:text-dark-text-secondary"
           ></p>
 
+          <!-- Results table for extracted data -->
           <div id="results-container" class="mt-12">
             <h2
               class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4"
@@ -362,6 +381,7 @@
           </div>
         </div>
 
+        <!-- Tab content for Template Editor and Analysis -->
         <div
           id="tabContentAnalyze"
           class="tab-content w-full flex flex-col md:flex-row gap-8 hidden"
@@ -374,6 +394,7 @@
             </h2>
 
             <div class="space-y-4">
+              <!-- Template Name input -->
               <div>
                 <label
                   for="configName"
@@ -388,6 +409,7 @@
                 />
               </div>
 
+              <!-- Official Supplier Name for Export input -->
               <div>
                 <label
                   for="officialSupplierNameForExportInput"
@@ -402,6 +424,7 @@
                 />
               </div>
 
+              <!-- Load Saved Template dropdown -->
               <div>
                 <label
                   for="configSelect"
@@ -435,6 +458,7 @@
               </h3>
 
               <div class="space-y-4">
+                <!-- Supplier Name Hint input -->
                 <div>
                   <label
                     for="supplierNameHint"
@@ -448,6 +472,7 @@
                     placeholder="e.g., (.*) Sdn Bhd"
                   />
                 </div>
+                <!-- Document Date Hint input with AI suggest button -->
                 <div>
                   <label
                     for="documentDateHint"
@@ -496,6 +521,7 @@
                     </button>
                   </div>
                 </div>
+                <!-- Document Number Hint input with AI suggest button -->
                 <div>
                   <label
                     for="documentNumberHint"
@@ -544,6 +570,7 @@
                     </button>
                   </div>
                 </div>
+                <!-- Total Amount Hint input with AI suggest button -->
                 <div>
                   <label
                     for="totalAmountHint"
@@ -594,6 +621,7 @@
                 </div>
               </div>
 
+              <!-- Preview and Save Template buttons -->
               <div class="flex space-x-2 pt-4">
                 <button
                   id="previewButton"
@@ -611,6 +639,7 @@
             </div>
           </div>
 
+          <!-- Extracted Information Display and PDF Preview -->
           <div class="flex-1 md:pl-4 mt-8 md:mt-0">
             <h2
               class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4"
@@ -653,6 +682,7 @@
       </main>
     </div>
 
+    <!-- Modals (API Key, Logout, Regex Suggestion) -->
     <div id="apiKeyModal" class="modal">
       <div
         class="modal-content bg-light-bg-secondary dark:bg-dark-bg-secondary"
@@ -666,7 +696,7 @@
           To use AI-powered features, please enter your Gemini API key. You can
           get one from
           <a
-            href="https://ai.google.dev/"
+            href="https://aistudio.google.com/apikey"
             target="_blank"
             rel="noopener noreferrer"
             class="text-accent-blue-light dark:text-accent-blue-dark hover:underline"
@@ -802,1575 +832,7 @@
         </div>
       </div>
     </div>
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-      import {
-        getAuth,
-        onAuthStateChanged,
-        GoogleAuthProvider,
-        signInWithPopup,
-        signOut,
-      } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-      import {
-        getFirestore,
-        collection,
-        addDoc,
-        getDocs,
-        doc,
-        updateDoc,
-        deleteDoc,
-        query,
-        where,
-        getDoc,
-      } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-      const firebaseConfig = {
-        apiKey: "AIzaSyCMXn3b0kul6cYiqqyFejFyX_6Hp0wXqY0",
-        authDomain: "invoice-extractor-ec792.firebaseapp.com",
-        projectId: "invoice-extractor-ec792",
-        storageBucket: "invoice-extractor-ec792.firebasestorage.app",
-        messagingSenderId: "532030177380",
-        appId: "1:532030177380:web:aa69cfdbc842c196435f71",
-        measurementId: "G-1WJ1KLDQB4",
-      };
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-      let uploadedFiles = [];
-      let currentPdfTextForAnalysis = "";
-      let currentUser = null;
-      let activeConfig = null;
-      let userConfigurations = [];
-      let allExtractedData = [];
-      let currentRegexTargetField = null;
-      const GEMINI_API_ENDPOINT =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-      let GEMINI_API_KEY = localStorage.getItem("geminiApiKey");
-      const DEBUG_MODE = true;
-      function logDebug(message) {
-        if (DEBUG_MODE) {
-        }
-      }
-      function showApiKeyModal() {
-        const modal = document.getElementById("apiKeyModal");
-        if (modal) {
-          modal.style.display = "flex";
-        }
-      }
-      function hideApiKeyModal() {
-        const modal = document.getElementById("apiKeyModal");
-        if (modal) {
-          modal.style.display = "none";
-        }
-      }
-      function showLogoutModal() {
-        const modal = document.getElementById("logoutModal");
-        if (modal) {
-          modal.style.display = "flex";
-        }
-      }
-      function hideLogoutModal() {
-        const modal = document.getElementById("logoutModal");
-        if (modal) {
-          modal.style.display = "none";
-        }
-      }
-      function switchTab(tabId) {
-        const tabs = document.querySelectorAll(".tab-button");
-        const contents = document.querySelectorAll(".tab-content");
-        tabs.forEach((tab) => {
-          if (tab.id === `tabButton${tabId}`) {
-            tab.classList.add("active");
-          } else {
-            tab.classList.remove("active");
-          }
-        });
-        contents.forEach((content) => {
-          if (content.id === `tabContent${tabId}`) {
-            content.classList.remove("hidden");
-            if (tabId === "Analyze") {
-              content.classList.add("flex");
-            }
-          } else {
-            content.classList.add("hidden");
-            if (content.id === "tabContentAnalyze") {
-              content.classList.remove("flex");
-            }
-          }
-        });
-        updateAnalyzeTabButtonsState();
-        updateProcessTabButtonsState();
-      }
-      function extractDataWithRegex(pdfText, config) {
-        const extracted = {
-          supplierName: null,
-          documentDate: null,
-          documentNumber: null,
-          totalAmount: null,
-        };
-        const extractValue = (text, pattern) => {
-          if (!pattern) return null;
-          try {
-            new RegExp(pattern);
-            const regex = new RegExp(pattern, "i");
-            const match = text.match(regex);
-            if (match) {
-              return match[1] ? match[1].trim() : match[0].trim();
-            }
-            return null;
-          } catch (e) {
-            return null;
-          }
-        };
-        if (config) {
-          extracted.supplierName = extractValue(
-            pdfText,
-            config.supplierNamePattern
-          );
-          let docDate = extractValue(pdfText, config.documentDatePattern);
-          extracted.documentDate = docDate;
-          let docNumber = extractValue(pdfText, config.documentNumberPattern);
-          if (docNumber) {
-            docNumber = docNumber
-              .replace(/\s*-\s*/g, "-")
-              .replace(/\s+/g, "")
-              .trim();
-          }
-          extracted.documentNumber = docNumber;
-          const totalAmountStr = extractValue(
-            pdfText,
-            config.totalAmountPattern
-          );
-          if (totalAmountStr) {
-            const cleanedAmount = totalAmountStr.replace(/[^0-9.]/g, "");
-            const parsedAmount = parseFloat(cleanedAmount);
-            if (!isNaN(parsedAmount)) {
-              extracted.totalAmount = parsedAmount;
-            }
-          }
-        }
-        return extracted;
-      }
-      function classifyDocumentHeuristically(pdfText, userConfigurations) {
-        let scores = [];
-        const testPattern = (text, pattern) => {
-          if (!pattern) return false;
-          try {
-            new RegExp(pattern);
-            return new RegExp(pattern, "i").test(text);
-          } catch (e) {
-            return false;
-          }
-        };
-        for (const config of userConfigurations) {
-          let currentScore = 0;
-          if (testPattern(pdfText, config.supplierNamePattern)) {
-            currentScore += 4;
-          }
-          if (testPattern(pdfText, config.documentNumberPattern)) {
-            currentScore += 3;
-          }
-          if (testPattern(pdfText, config.totalAmountPattern)) {
-            currentScore += 2;
-          }
-          if (testPattern(pdfText, config.documentDatePattern)) {
-            currentScore += 1;
-          }
-          if (currentScore > 0) {
-            scores.push({ configName: config.name, score: currentScore });
-          }
-        }
-        if (scores.length === 0) {
-          return { matchedConfigName: "None" };
-        }
-        scores.sort((a, b) => b.score - a.score);
-        const bestMatch = scores[0];
-        if (bestMatch.score >= 3) {
-          return { matchedConfigName: bestMatch.configName };
-        } else {
-          return { matchedConfigName: "None" };
-        }
-      }
-      async function callGeminiApi(
-        pdfText,
-        config = null,
-        isRefine = false,
-        classifyOnly = false,
-        useLlmsForOperation = true,
-        generateRegexForField = null,
-        userContextForRegex = null
-      ) {
-        if (useLlmsForOperation && !GEMINI_API_KEY) {
-          showApiKeyModal();
-          return null;
-        }
-        const processingStatus = window.processingStatus;
-        window.processPdfButton.disabled = true;
-        window.previewButton.disabled = true;
-        window.saveConfigButton.disabled = true;
-        window.loadConfigButton.disabled = true;
-        window.deleteConfigButton.disabled = true;
-        document.querySelectorAll(".ai-suggest-button").forEach((btn) => {
-          btn.disabled = true;
-        });
-        let prompt;
-        let responseMimeType = "application/json";
-        let normalizedResult = {};
-        if (classifyOnly && userConfigurations.length > 0) {
-          processingStatus.textContent =
-            "Identifying best template heuristically...";
-          normalizedResult = classifyDocumentHeuristically(
-            pdfText,
-            userConfigurations
-          );
-          processingStatus.textContent = "Heuristic classification complete!";
-          return normalizedResult;
-        } else if (generateRegexForField) {
-          processingStatus.textContent = "Generating regex suggestions...";
-          window.regexSuggestStatus.textContent = "Generating suggestions...";
-          let regexPrompt = `From the following document text, suggest 3-5 JavaScript-compatible regular expressions (regex) to extract the "${generateRegexForField}" field. Provide only the regex patterns, in a JSON array format like {"regexSuggestions": ["regex1", "regex2", "regex3"]}. The regex should include a capturing group for the value if applicable, and be suitable for use with JavaScript's String.prototype.match() method.`;
-          if (userContextForRegex) {
-            regexPrompt += `\n\nAdditional context from user: "${userContextForRegex}"`;
-          }
-          prompt = `${regexPrompt}\nDocument Text: "${pdfText.substring(
-            0,
-            Math.min(pdfText.length, 1500)
-          )}"`;
-          responseMimeType = "application/json";
-        } else if (!useLlmsForOperation) {
-          processingStatus.textContent = isRefine
-            ? "Previewing with current hints (using regex)..."
-            : "Processing with saved template (using regex)...";
-          normalizedResult = extractDataWithRegex(pdfText, config);
-          processingStatus.textContent = isRefine
-            ? "Preview complete!"
-            : "Processing complete!";
-          return normalizedResult;
-        } else {
-          processingStatus.textContent =
-            "Sending to AI for initial analysis...";
-          prompt = `Extract the following information from the invoice/receipt text:\n`;
-          prompt += `- Supplier Name\n- Document Date\n- Document Number\n- Total Amount\n\n`;
-          prompt += `Return the results in a JSON object with keys: "supplierName", "documentDate", "documentNumber", "totalAmount".\n`;
-          prompt += `If a value is not found, return null for that key. Ensure Total Amount is a number (e.g., 123.45). Date should be in DD/MM/YYYY format.\n\n`;
-
-          if (config) {
-            prompt += `Here are some extraction guidelines. For each field, **strictly attempt to extract using the provided pattern first.** If the pattern does not yield a result, or if no pattern is provided, then use general knowledge to find the best match:\n`;
-            if (config.supplierNamePattern)
-              prompt += `- Supplier Name Hint: "${config.supplierNamePattern}"\n`;
-            if (config.documentDatePattern)
-              prompt += `- Document Date Hint: "${config.documentDatePattern}"\n`;
-            if (config.documentNumberPattern)
-              prompt += `- Document Number Hint: "${config.documentNumberPattern}"\n`;
-            if (config.totalAmountPattern)
-              prompt += `- Total Amount Hint: "${config.totalAmountPattern}"\n`;
-            prompt += "\n";
-          }
-          prompt += `Invoice/Receipt Text:\n\n${pdfText}\n\nJSON Output:`;
-        }
-
-        try {
-          const response = await fetch(
-            `${GEMINI_API_ENDPOINT}?key=${GEMINI_API_KEY}`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                  responseMimeType: responseMimeType,
-                },
-              }),
-            }
-          );
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(
-              `API call failed: ${
-                errorData.error.message || response.statusText
-              }`
-            );
-          }
-
-          const data = await response.json();
-          if (
-            !data.candidates ||
-            !data.candidates.length ||
-            !data.candidates[0].content ||
-            !data.candidates[0].content.parts ||
-            !data.candidates[0].content.parts.length ||
-            !data.candidates[0].content.parts[0].text
-          ) {
-            throw new Error("Invalid response format from Gemini API.");
-          }
-          const rawResult = JSON.parse(
-            data.candidates[0].content.parts[0].text
-          );
-
-          if (generateRegexForField) {
-            if (rawResult && Array.isArray(rawResult.regexSuggestions)) {
-              processingStatus.textContent = "Regex suggestions generated.";
-              window.regexSuggestStatus.textContent =
-                "Suggestions generated. Select one to use.";
-              return rawResult.regexSuggestions;
-            }
-            processingStatus.textContent =
-              "No regex suggestions could be generated.";
-            window.regexSuggestStatus.textContent =
-              "No regex suggestions could be generated.";
-            return [];
-          } else {
-            if (Array.isArray(rawResult) && rawResult.length > 0) {
-              normalizedResult = rawResult[0];
-            } else if (typeof rawResult === "object" && rawResult !== null) {
-              normalizedResult = rawResult;
-            }
-            processingStatus.textContent = classifyOnly
-              ? "Classification complete!"
-              : isRefine
-              ? "Preview complete!"
-              : "AI analysis complete!";
-            return normalizedResult;
-          }
-        } catch (error) {
-          processingStatus.textContent = `AI operation failed: ${error.message}`;
-          alert(
-            "Error during AI operation. See console for details: " +
-              error.message
-          );
-          window.regexSuggestStatus.textContent = `Error: ${error.message}`;
-          throw error;
-        } finally {
-          updateAnalyzeTabButtonsState();
-          updateProcessTabButtonsState();
-        }
-      }
-
-      function FileListShim(files) {
-        const dt = new DataTransfer();
-        files.forEach((file) => dt.items.add(file));
-        return dt.files;
-      }
-
-      function updateInvoiceFileDisplay() {
-        const uploadLabel = document.getElementById("upload-label-invoice");
-        const fileInfo = document.getElementById("file-info-invoice");
-        const fileList = document.getElementById("uploadedFilesList");
-
-        if (uploadedFiles.length === 0) {
-          uploadLabel.classList.remove("hidden");
-          fileInfo.classList.add("hidden");
-          fileList.innerHTML = "";
-        } else {
-          uploadLabel.classList.add("hidden");
-          fileInfo.classList.remove("hidden");
-          fileList.innerHTML = ""; // Clear before populating
-
-          uploadedFiles.forEach((file, index) => {
-            const filePill = document.createElement("div");
-            filePill.className = "file-pill";
-            filePill.innerHTML = `
-                    <span>${file.name}</span>
-                    <button data-index="${index}" class="remove-button"> &times; </button>
-                `;
-            fileList.appendChild(filePill);
-          });
-        }
-        window.processingStatus.textContent = `${uploadedFiles.length} file(s) selected. Click Process PDF(s).`;
-        updateProcessTabButtonsState();
-      }
-
-      function handlePdfUpload(event) {
-        const files = event.target.files;
-        uploadedFiles = Array.from(files);
-        updateInvoiceFileDisplay();
-      }
-
-      async function renderPdfToCanvas(file) {
-        if (!file || file.type !== "application/pdf") {
-          window.pdfCanvas
-            .getContext("2d")
-            .clearRect(0, 0, window.pdfCanvas.width, window.pdfCanvas.height);
-          window.currentAnalysisFileName.textContent = "N/A";
-          return;
-        }
-        window.currentAnalysisFileName.textContent = file.name;
-
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const pdfData = new Uint8Array(e.target.result);
-          try {
-            const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-            const page = await pdf.getPage(1);
-            const viewport = page.getViewport({ scale: 1.5 });
-            const context = window.pdfCanvas.getContext("2d");
-            window.pdfCanvas.height = viewport.height;
-            window.pdfCanvas.width = viewport.width;
-
-            const renderContext = {
-              canvasContext: context,
-              viewport: viewport,
-            };
-            await page.render(renderContext).promise;
-
-            let fullText = "";
-            for (let i = 1; i <= pdf.numPages; i++) {
-              const currentPage = await pdf.getPage(i);
-              const textContent = await currentPage.getTextContent();
-              fullText +=
-                textContent.items.map((item) => item.str).join(" ") + "\n";
-            }
-            currentPdfTextForAnalysis = fullText;
-          } catch (error) {
-            window.pdfCanvas
-              .getContext("2d")
-              .clearRect(0, 0, window.pdfCanvas.width, window.pdfCanvas.height);
-            alert("Error loading PDF preview: " + error.message);
-            currentPdfTextForAnalysis = "";
-          } finally {
-            updateAnalyzeTabButtonsState();
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      }
-
-      async function saveConfiguration() {
-        if (!currentUser) {
-          alert("Please sign in to save templates.");
-          return;
-        }
-
-        const templateName = window.configNameInput.value.trim();
-        if (!templateName) {
-          alert("Please enter a template name.");
-          return;
-        }
-
-        window.saveConfigButton.disabled = true;
-        window.loadConfigButton.disabled = true;
-        window.deleteConfigButton.disabled = true;
-        window.previewButton.disabled = true;
-
-        const userConfigsCollectionRef = collection(
-          db,
-          `artifacts/${firebaseConfig.appId}/users/${currentUser.uid}/configurations`
-        );
-
-        const newConfig = {
-          name: templateName,
-          officialSupplierNameForExport:
-            window.officialSupplierNameForExportInput.value.trim(),
-          supplierNamePattern: window.supplierNameHintInput.value,
-          documentDatePattern: window.documentDateHintInput.value,
-          documentNumberPattern: window.documentNumberHintInput.value,
-          totalAmountPattern: window.totalAmountHintInput.value,
-          createdAt: new Date(),
-        };
-
-        try {
-          const q = query(
-            userConfigsCollectionRef,
-            where("name", "==", templateName)
-          );
-          const querySnapshot = await getDocs(q);
-
-          if (!querySnapshot.empty) {
-            const configDoc = querySnapshot.docs[0];
-            await updateDoc(
-              doc(userConfigsCollectionRef, configDoc.id),
-              newConfig
-            );
-            alert("Template updated successfully!");
-          } else {
-            await addDoc(userConfigsCollectionRef, newConfig);
-            alert("Template saved successfully!");
-          }
-          await loadUserConfigurations(currentUser.uid);
-        } catch (error) {
-          alert("Failed to save template: " + error.message);
-        } finally {
-          updateAnalyzeTabButtonsState();
-          updateProcessTabButtonsState();
-        }
-      }
-
-      async function loadUserConfigurations(uid) {
-        window.configSelect.innerHTML =
-          '<option value="">-- Select a template --</option>';
-        userConfigurations = [];
-        try {
-          const userConfigsCollectionRef = collection(
-            db,
-            `artifacts/${firebaseConfig.appId}/users/${uid}/configurations`
-          );
-          const q = query(userConfigsCollectionRef);
-          const querySnapshot = await getDocs(q);
-          if (querySnapshot.empty) {
-            window.configSelect.innerHTML =
-              '<option value="">-- No templates saved --</option>';
-            return;
-          }
-          querySnapshot.forEach((doc) => {
-            const config = { id: doc.id, ...doc.data() };
-            userConfigurations.push(config);
-            const option = document.createElement("option");
-            option.value = doc.id;
-            option.textContent = config.name;
-            window.configSelect.appendChild(option);
-          });
-        } catch (error) {
-          alert("Failed to load templates: " + error.message);
-        } finally {
-          updateAnalyzeTabButtonsState();
-          updateProcessTabButtonsState();
-        }
-      }
-
-      async function loadSelectedConfiguration() {
-        const selectedConfigId = window.configSelect.value;
-        if (!selectedConfigId) {
-          alert("Please select a template to load.");
-          return;
-        }
-        if (!currentUser) {
-          alert("Please sign in to load templates.");
-          return;
-        }
-
-        window.saveConfigButton.disabled = true;
-        window.loadConfigButton.disabled = true;
-        window.deleteConfigButton.disabled = true;
-        window.previewButton.disabled = true;
-
-        try {
-          const configDocRef = doc(
-            db,
-            `artifacts/${firebaseConfig.appId}/users/${currentUser.uid}/configurations`,
-            selectedConfigId
-          );
-          const configSnap = await getDoc(configDocRef);
-
-          if (configSnap.exists()) {
-            activeConfig = { id: configSnap.id, ...configSnap.data() };
-            window.configNameInput.value = activeConfig.name;
-            window.officialSupplierNameForExportInput.value =
-              activeConfig.officialSupplierNameForExport || "";
-            window.supplierNameHintInput.value =
-              activeConfig.supplierNamePattern || "";
-            window.documentDateHintInput.value =
-              activeConfig.documentDatePattern || "";
-            window.documentNumberHintInput.value =
-              activeConfig.documentNumberPattern || "";
-            window.totalAmountHintInput.value =
-              activeConfig.totalAmountPattern || "";
-          } else {
-            alert("Selected template not found or you don't have access.");
-            activeConfig = null;
-          }
-        } catch (error) {
-          alert("Failed to load selected template: " + error.message);
-        } finally {
-          updateAnalyzeTabButtonsState();
-          updateProcessTabButtonsState();
-        }
-      }
-
-      async function deleteSelectedConfiguration() {
-        const selectedConfigId = window.configSelect.value;
-        if (!selectedConfigId) {
-          alert("Please select a template to delete.");
-          return;
-        }
-        if (!currentUser) {
-          alert("Please sign in to delete templates.");
-          return;
-        }
-
-        showLogoutModal();
-        document.getElementById("logoutModalTitle").textContent =
-          "Delete Template?";
-        document.getElementById("logoutModalText").textContent =
-          "Are you sure you want to delete this template?";
-        document.getElementById("confirmLogoutButton").textContent = "Delete";
-
-        document.getElementById("confirmLogoutButton").onclick = async () => {
-          hideLogoutModal();
-          document.getElementById("confirmLogoutButton").onclick = null;
-
-          window.saveConfigButton.disabled = true;
-          window.loadConfigButton.disabled = true;
-          window.deleteConfigButton.disabled = true;
-          window.previewButton.disabled = true;
-
-          try {
-            const configDocRef = doc(
-              db,
-              `artifacts/${firebaseConfig.appId}/users/${currentUser.uid}/configurations`,
-              selectedConfigId
-            );
-            const configSnap = await getDoc(configDocRef);
-
-            if (configSnap.exists()) {
-              await deleteDoc(configDocRef);
-              alert("Template deleted successfully!");
-              await loadUserConfigurations(currentUser.uid);
-              resetConfigInputFields();
-            } else {
-              alert(
-                "Template not found or you don't have permission to delete it."
-              );
-            }
-          } catch (error) {
-            alert("Failed to delete template: " + error.message);
-          } finally {
-            updateAnalyzeTabButtonsState();
-            updateProcessTabButtonsState();
-          }
-        };
-
-        document.getElementById("cancelLogoutButton").onclick = () => {
-          hideLogoutModal();
-          document.getElementById("cancelLogoutButton").onclick = null;
-          updateAnalyzeTabButtonsState();
-          updateProcessTabButtonsState();
-        };
-      }
-
-      function resetConfigInputFields() {
-        window.configNameInput.value = "";
-        window.officialSupplierNameForExportInput.value = "";
-        window.supplierNameHintInput.value = "";
-        window.documentDateHintInput.value = "";
-        window.documentNumberHintInput.value = "";
-        window.totalAmountHintInput.value = "";
-        activeConfig = null;
-        updateAnalyzeTabButtonsState();
-      }
-
-      function resetExtractedFieldsForAnalysisTab() {
-        window.supplierNameSpan.textContent = "N/A";
-        window.documentDateSpan.textContent = "N/A";
-        window.documentNumberSpan.textContent = "N/A";
-        window.totalAmountSpan.textContent = "N/A";
-        window.currentAnalysisFileName.textContent = "N/A";
-        currentPdfTextForAnalysis = "";
-        if (window.pdfCanvas) {
-          const context = window.pdfCanvas.getContext("2d");
-          if (context) {
-            context.clearRect(
-              0,
-              0,
-              window.pdfCanvas.width,
-              window.pdfCanvas.height
-            );
-          }
-        }
-        updateAnalyzeTabButtonsState();
-      }
-
-      function resetUI() {
-        if (window.pdfCanvas) {
-          const context = window.pdfCanvas.getContext("2d");
-          if (context) {
-            context.clearRect(
-              0,
-              0,
-              window.pdfCanvas.width,
-              window.pdfCanvas.height
-            );
-          }
-        }
-        uploadedFiles = [];
-        updateInvoiceFileDisplay();
-        currentPdfTextForAnalysis = "";
-        resetExtractedFieldsForAnalysisTab();
-        resetConfigInputFields();
-        window.processingStatus.textContent = "";
-        clearConfigSelect();
-        hideApiKeyModal();
-        hideLogoutModal();
-        clearAllResults();
-        switchTab("Process");
-        updateAnalyzeTabButtonsState();
-        updateProcessTabButtonsState();
-      }
-
-      function clearUploadForm() {
-        uploadedFiles = [];
-        window.pdfUpload.value = ""; // Resets the file input
-        updateInvoiceFileDisplay();
-      }
-
-      function clearConfigSelect() {
-        window.configSelect.innerHTML =
-          '<option value="">-- No templates saved --</option>';
-      }
-
-      function updateProcessTabButtonsState() {
-        const hasUploadedFiles = uploadedFiles.length > 0;
-        const hasExtractedData = allExtractedData.length > 0;
-
-        window.processPdfButton.disabled = !hasUploadedFiles;
-
-        window.downloadCsvButton.disabled = !hasExtractedData;
-      }
-
-      function appendExtractedResultToTable(data, index) {
-        const tableBody = window.extractedResultsTableBody;
-
-        const noDocsRow = tableBody.querySelector('tr td[colspan="7"]');
-        if (noDocsRow) {
-          noDocsRow.parentElement.remove();
-        }
-
-        const newRow = tableBody.insertRow(0);
-        newRow.setAttribute("data-index", index);
-        newRow.className = "hover:bg-gray-50 dark:hover:bg-gray-700";
-
-        newRow.innerHTML = `
-            <td class="px-6 py-4 text-sm break-words max-w-[150px] overflow-hidden">${
-              data.fileName
-            }</td>
-            <td class="px-6 py-4 text-xs">${data.configUsedName || "N/A"}</td>
-            <td class="px-6 py-4 text-sm">${
-              data.officialSupplierNameForExport ||
-              data.extractedSupplierName ||
-              "N/A"
-            }</td>
-            <td class="px-6 py-4 text-sm">${formatDateForDisplay(
-              data.documentDate
-            )}</td>
-            <td class="px-6 py-4 text-sm">${data.documentNumber || "N/A"}</td>
-            <td class="px-6 py-4 text-sm">${formatAmountForDisplay(
-              data.totalAmount
-            )}</td>
-            <td class="px-6 py-4">
-                <button data-index="${index}" class="analyze-row-button bg-blue-500 text-white p-2 rounded-md hover:bg-blue-700 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </button>
-            </td>
-        `;
-
-        newRow
-          .querySelector(".analyze-row-button")
-          .addEventListener("click", async (e) => {
-            const clickedIndex = parseInt(
-              e.target.closest("button").dataset.index
-            );
-            const dataToAnalyze = allExtractedData[clickedIndex];
-            const fileToAnalyze = allExtractedData[clickedIndex].originalFile;
-
-            switchTab("Analyze");
-
-            await renderPdfToCanvas(fileToAnalyze);
-
-            window.supplierNameSpan.textContent =
-              dataToAnalyze.extractedSupplierName || "N/A";
-            window.documentDateSpan.textContent = formatDateForDisplay(
-              dataToAnalyze.documentDate
-            );
-            window.documentNumberSpan.textContent =
-              dataToAnalyze.documentNumber || "N/A";
-            window.totalAmountSpan.textContent = formatAmountForDisplay(
-              dataToAnalyze.totalAmount
-            );
-
-            if (
-              dataToAnalyze.configUsedName &&
-              dataToAnalyze.configUsedName !== "None (Best Guess)"
-            ) {
-              const foundConfig = userConfigurations.find(
-                (cfg) => cfg.name === dataToAnalyze.configUsedName
-              );
-              if (foundConfig) {
-                window.configSelect.value = foundConfig.id;
-                await loadSelectedConfiguration();
-              } else {
-                window.configSelect.value = "";
-                activeConfig = null;
-                resetConfigInputFields();
-              }
-            } else {
-              window.configSelect.value = "";
-              activeConfig = null;
-              resetConfigInputFields();
-            }
-
-            updateAnalyzeTabButtonsState();
-          });
-      }
-
-      function formatAmountForDisplay(amount) {
-        if (
-          amount === null ||
-          isNaN(amount) ||
-          amount === "N/A" ||
-          amount === "Error"
-        ) {
-          return amount;
-        }
-        let parsedAmount = parseFloat(amount);
-        if (isNaN(parsedAmount)) {
-          return "N/A";
-        }
-        return parsedAmount.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-      }
-
-      function formatDateForDisplay(dateString) {
-        if (!dateString || dateString === "N/A" || dateString === "Error")
-          return dateString;
-        try {
-          let date;
-          if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-            const parts = dateString.split("/");
-            date = new Date(parts[2], parts[1] - 1, parts[0]);
-          } else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            date = new Date(dateString);
-          } else {
-            date = new Date(dateString);
-          }
-
-          if (isNaN(date.getTime())) {
-            return dateString;
-          }
-
-          const day = String(date.getDate()).padStart(2, "0");
-          const month = String(date.getMonth() + 1).padStart(2, "0");
-          const year = String(date.getFullYear()).slice(-2);
-          return `${day}/${month}/${year}`;
-        } catch (e) {
-          return dateString;
-        }
-      }
-
-      function downloadCSV() {
-        if (allExtractedData.length === 0) {
-          alert("No data to export to CSV.");
-          return;
-        }
-
-        const headers = [
-          "Supplier Name",
-          "Document Date",
-          "Document Number",
-          "Total Amount",
-        ];
-        const csvRows = [headers.join(",")];
-
-        for (const data of allExtractedData) {
-          const formattedDate = formatDateForDisplay(data.documentDate);
-          const formattedAmount = (
-            formatAmountForDisplay(data.totalAmount) || ""
-          ).replace(/,/g, "");
-
-          const escapeCsv = (value) => {
-            if (value === null || value === undefined) return "";
-            let stringValue = String(value);
-            if (
-              stringValue.includes(",") ||
-              stringValue.includes("\n") ||
-              stringValue.includes('"')
-            ) {
-              return `"${stringValue.replace(/"/g, '""')}"`;
-            }
-            return stringValue;
-          };
-
-          csvRows.push(
-            [
-              escapeCsv(
-                data.officialSupplierNameForExport || data.extractedSupplierName
-              ),
-              escapeCsv(formattedDate),
-              escapeCsv(data.documentNumber),
-              escapeCsv(formattedAmount),
-            ].join(",")
-          );
-        }
-
-        const csvString = csvRows.join("\n");
-        const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", "invoices.csv");
-        link.style.visibility = "hidden";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }
-
-      function clearAllResults() {
-        allExtractedData = [];
-        window.extractedResultsTableBody.innerHTML =
-          '<tr><td colspan="7" class="px-6 py-4 text-center">No documents processed yet.</td></tr>';
-        updateProcessTabButtonsState();
-      }
-
-      function showRegexSuggestModal(fieldName) {
-        currentRegexTargetField = fieldName;
-        window.regexSuggestModalTitle.textContent = `AI Regex Suggestions for ${fieldName
-          .replace(/([A-Z])/g, " $1")
-          .toLowerCase()
-          .replace("document ", "")}`;
-        window.regexUserPrompt.value = "";
-        window.regexSuggestionsContainer.innerHTML =
-          '<p id="noSuggestionsText" class="text-sm text-light-text-secondary dark:text-dark-text-secondary">Click "Generate Suggestions" to get AI help.</p>';
-        window.useSelectedRegexButton.disabled = true;
-        window.regexSuggestStatus.textContent = "";
-        window.regexTestResult.textContent =
-          "Test Result: No regex tested yet.";
-        window.regexSuggestModal.style.display = "flex";
-      }
-
-      function hideRegexSuggestModal() {
-        window.regexSuggestModal.style.display = "none";
-        currentRegexTargetField = null;
-      }
-
-      async function generateRegexSuggestions() {
-        if (!currentUser || !currentPdfTextForAnalysis) {
-          alert(
-            "A PDF must be loaded for analysis and you must be signed in to generate regex suggestions."
-          );
-          return;
-        }
-
-        if (!GEMINI_API_KEY) {
-          showApiKeyModal();
-          window.generateRegexButton.disabled = false;
-          updateAnalyzeTabButtonsState();
-          return;
-        }
-
-        const userPrompt = window.regexUserPrompt.value.trim();
-        window.regexSuggestStatus.textContent = "Generating suggestions...";
-        window.generateRegexButton.disabled = true;
-        window.useSelectedRegexButton.disabled = true;
-        window.regexSuggestionsContainer.innerHTML =
-          '<p class="text-center"><div class="spinner border-t-blue-500 border-4 border-gray-200 h-6 w-6 rounded-full inline-block"></div> Generating...</p>';
-
-        try {
-          const suggestions = await callGeminiApi(
-            currentPdfTextForAnalysis,
-            null,
-            false,
-            false,
-            true,
-            currentRegexTargetField,
-            userPrompt
-          );
-
-          window.regexSuggestionsContainer.innerHTML = "";
-          if (suggestions && suggestions.length > 0) {
-            suggestions.forEach((regex, index) => {
-              const div = document.createElement("div");
-              div.className = "flex items-center mb-2";
-              div.innerHTML = `
-                          <input type="radio" name="regexSuggestion" id="regex-${index}" value="${encodeURIComponent(
-                regex
-              )}" class="mr-2">
-                          <label for="regex-${index}" class="text-sm font-mono bg-light-bg-primary dark:bg-dark-bg-primary p-1 rounded cursor-pointer flex-1 break-all">${regex}</label>
-                      `;
-              window.regexSuggestionsContainer.appendChild(div);
-            });
-            window.useSelectedRegexButton.disabled = false;
-            window.regexSuggestStatus.textContent =
-              "Suggestions generated. Select one to use.";
-
-            window.regexSuggestionsContainer.addEventListener(
-              "change",
-              handleRegexSelectionChange
-            );
-          } else {
-            window.regexSuggestionsContainer.innerHTML =
-              '<p class="text-sm text-red-600">No regex suggestions could be generated. Try a different prompt.</p>';
-            window.regexSuggestStatus.textContent = "No suggestions.";
-          }
-        } catch (error) {
-          window.regexSuggestionsContainer.innerHTML =
-            '<p class="text-sm text-red-600">Failed to get suggestions. Check console.</p>';
-          window.regexSuggestStatus.textContent =
-            "Error generating suggestions.";
-        } finally {
-          window.generateRegexButton.disabled = false;
-        }
-      }
-
-      function handleRegexSelectionChange(event) {
-        if (event.target.name === "regexSuggestion" && event.target.checked) {
-          const selectedRegex = decodeURIComponent(event.target.value);
-          testRegexInModal(selectedRegex);
-          window.useSelectedRegexButton.disabled = false;
-        }
-      }
-
-      function testRegexInModal(regexPattern) {
-        if (!currentPdfTextForAnalysis) {
-          window.regexTestResult.textContent =
-            "Test Result: Error - No PDF text loaded.";
-          window.regexTestResult.classList.add("text-red-500");
-          return;
-        }
-        window.regexTestResult.classList.remove(
-          "text-red-500",
-          "text-green-500"
-        );
-
-        try {
-          const regex = new RegExp(regexPattern, "i");
-          const match = currentPdfTextForAnalysis.match(regex);
-
-          if (match) {
-            const result = match[1] ? match[1].trim() : match[0].trim();
-
-            let cleanedResult = result;
-            if (currentRegexTargetField === "documentNumber") {
-              cleanedResult = result
-                .replace(/\s*-\s*/g, "-")
-                .replace(/\s+/g, "")
-                .trim();
-            }
-
-            window.regexTestResult.textContent = `Test Result: Match Found -> "${cleanedResult}"`;
-            window.regexTestResult.classList.add("text-green-500");
-          } else {
-            window.regexTestResult.textContent = "Test Result: No match found.";
-            window.regexTestResult.classList.add("text-red-500");
-          }
-        } catch (e) {
-          window.regexTestResult.textContent = `Test Result: Invalid regex pattern -> ${e.message}`;
-          window.regexTestResult.classList.add("text-red-500");
-        }
-      }
-
-      function useSelectedRegex() {
-        const selectedRadio = window.regexSuggestionsContainer.querySelector(
-          'input[name="regexSuggestion"]:checked'
-        );
-        if (selectedRadio) {
-          const selectedRegex = decodeURIComponent(selectedRadio.value);
-          if (currentRegexTargetField === "documentDate") {
-            window.documentDateHintInput.value = selectedRegex;
-          } else if (currentRegexTargetField === "documentNumber") {
-            window.documentNumberHintInput.value = selectedRegex;
-          } else if (currentRegexTargetField === "totalAmount") {
-            window.totalAmountHintInput.value = selectedRegex;
-          }
-          hideRegexSuggestModal();
-          window.previewButton.click();
-        } else {
-          alert("Please select a regex suggestion first.");
-        }
-      }
-
-      function applyTheme(isDarkMode) {
-        if (isDarkMode) {
-          document.documentElement.classList.add("dark");
-        } else {
-          document.documentElement.classList.remove("dark");
-        }
-      }
-
-      document.addEventListener("DOMContentLoaded", () => {
-        const prefersDarkMode = window.matchMedia(
-          "(prefers-color-scheme: dark)"
-        );
-        applyTheme(prefersDarkMode.matches);
-        prefersDarkMode.addEventListener("change", (e) =>
-          applyTheme(e.matches)
-        );
-
-        // Renamed elements and added new ones
-        window.userIconContainer = document.getElementById("userIconContainer");
-        window.userIcon = document.getElementById("userIcon");
-        window.defaultUserSvg = document.getElementById("defaultUserSvg");
-        window.logoutModal = document.getElementById("logoutModal");
-        window.confirmLogoutButton = document.getElementById(
-          "confirmLogoutButton"
-        );
-        window.cancelLogoutButton =
-          document.getElementById("cancelLogoutButton");
-
-        // Existing element references
-        window.pdfUpload = document.getElementById("pdfUpload");
-        window.pdfCanvas = document.getElementById("pdfCanvas");
-        window.processPdfButton = document.getElementById("processPdfButton");
-        window.processingStatus = document.getElementById("processingStatus");
-        window.supplierNameSpan = document.getElementById("supplierName");
-        window.documentDateSpan = document.getElementById("documentDate");
-        window.documentNumberSpan = document.getElementById("documentNumber");
-        window.totalAmountSpan = document.getElementById("totalAmount");
-        window.configNameInput = document.getElementById("configName");
-        window.officialSupplierNameForExportInput = document.getElementById(
-          "officialSupplierNameForExportInput"
-        );
-        window.supplierNameHintInput =
-          document.getElementById("supplierNameHint");
-        window.documentDateHintInput =
-          document.getElementById("documentDateHint");
-        window.documentNumberHintInput =
-          document.getElementById("documentNumberHint");
-        window.totalAmountHintInput =
-          document.getElementById("totalAmountHint");
-        window.saveConfigButton = document.getElementById("saveConfigButton");
-        window.configSelect = document.getElementById("configSelect");
-        window.loadConfigButton = document.getElementById("loadConfigButton");
-        window.deleteConfigButton =
-          document.getElementById("deleteConfigButton");
-        window.previewButton = document.getElementById("previewButton");
-        window.dropArea = document.getElementById("dropArea");
-
-        window.uploadedFilesList = document.getElementById("uploadedFilesList");
-
-        window.allExtractedResultsContainer = document.getElementById(
-          "allExtractedResultsContainer"
-        );
-        window.extractedResultsTableBody = document.getElementById(
-          "extractedResultsTableBody"
-        );
-        window.downloadCsvButton = document.getElementById("downloadCsvButton");
-        window.clearUploadFormButton = document.getElementById(
-          "clearUploadFormButton"
-        );
-        window.currentAnalysisFileName = document.getElementById(
-          "currentAnalysisFileName"
-        );
-
-        window.tabButtonProcess = document.getElementById("tabButtonProcess");
-        window.tabButtonAnalyze = document.getElementById("tabButtonAnalyze");
-        window.tabContentProcess = document.getElementById("tabContentProcess");
-        window.tabContentAnalyze = document.getElementById("tabContentAnalyze");
-
-        window.aiSuggestDateBtn = document.getElementById("aiSuggestDateBtn");
-        window.aiSuggestNumberBtn =
-          document.getElementById("aiSuggestNumberBtn");
-        window.aiSuggestAmountBtn =
-          document.getElementById("aiSuggestAmountBtn");
-
-        window.apiKeyModal = document.getElementById("apiKeyModal");
-        window.apiKeyValueInput = document.getElementById("apiKeyValueInput");
-        window.saveApiKeyButton = document.getElementById("saveApiKeyButton");
-        window.cancelApiKeyButton =
-          document.getElementById("cancelApiKeyButton");
-
-        window.regexSuggestModal = document.getElementById("regexSuggestModal");
-        window.regexSuggestModalTitle = document.getElementById(
-          "regexSuggestModalTitle"
-        );
-        window.regexUserPrompt = document.getElementById("regexUserPrompt");
-        window.generateRegexButton = document.getElementById(
-          "generateRegexButton"
-        );
-        window.regexSuggestionsContainer = document.getElementById(
-          "regexSuggestionsContainer"
-        );
-        window.noSuggestionsText = document.getElementById("noSuggestionsText");
-        window.regexSuggestStatus =
-          document.getElementById("regexSuggestStatus");
-        window.cancelRegexSuggestButton = document.getElementById(
-          "cancelRegexSuggestButton"
-        );
-        window.useSelectedRegexButton = document.getElementById(
-          "useSelectedRegexButton"
-        );
-        window.regexTestResult = document.getElementById("regexTestResult");
-
-        window.updateAnalyzeTabButtonsState = function () {
-          const isUserLoggedIn = currentUser !== null;
-          const isPdfLoadedForAnalysis = currentPdfTextForAnalysis.length > 0;
-          const hasConfigName = window.configNameInput.value.trim().length > 0;
-          const isConfigSelected = window.configSelect.value !== "";
-
-          window.previewButton.disabled = !(
-            isUserLoggedIn && isPdfLoadedForAnalysis
-          );
-
-          window.saveConfigButton.disabled = !(isUserLoggedIn && hasConfigName);
-
-          window.loadConfigButton.disabled = !(
-            isUserLoggedIn && isConfigSelected
-          );
-
-          window.deleteConfigButton.disabled = !(
-            isUserLoggedIn && isConfigSelected
-          );
-
-          document.querySelectorAll(".ai-suggest-button").forEach((btn) => {
-            btn.disabled = !(isUserLoggedIn && isPdfLoadedForAnalysis);
-          });
-        };
-
-        tabButtonProcess.addEventListener("click", () => switchTab("Process"));
-        tabButtonAnalyze.addEventListener("click", () => switchTab("Analyze"));
-
-        saveApiKeyButton.addEventListener("click", () => {
-          const enteredKey = apiKeyValueInput.value.trim();
-          if (enteredKey) {
-            localStorage.setItem("geminiApiKey", enteredKey);
-            GEMINI_API_KEY = enteredKey;
-            hideApiKeyModal();
-          } else {
-            alert("Please enter a valid Gemini API Key.");
-          }
-        });
-
-        cancelApiKeyButton.addEventListener("click", () => {
-          hideApiKeyModal();
-          updateAnalyzeTabButtonsState();
-        });
-
-        userIconContainer.addEventListener("click", async () => {
-          if (currentUser) {
-            showLogoutModal();
-            document.getElementById("logoutModalTitle").textContent =
-              "Sign Out?";
-            document.getElementById("logoutModalText").textContent =
-              "Are you sure you want to sign out?";
-            document.getElementById("confirmLogoutButton").textContent =
-              "Sign Out";
-
-            confirmLogoutButton.onclick = async () => {
-              hideLogoutModal();
-              try {
-                await signOut(auth);
-              } catch (error) {
-                alert("Error signing out: " + error.message);
-              } finally {
-                confirmLogoutButton.onclick = null;
-                cancelLogoutButton.onclick = null;
-              }
-            };
-            cancelLogoutButton.onclick = () => {
-              hideLogoutModal();
-              confirmLogoutButton.onclick = null;
-              cancelLogoutButton.onclick = null;
-            };
-          } else {
-            const provider = new GoogleAuthProvider();
-            try {
-              await signInWithPopup(auth, provider);
-            } catch (error) {
-              alert("Error signing in: " + error.message);
-            }
-          }
-        });
-
-        onAuthStateChanged(auth, (user) => {
-          currentUser = user;
-          if (user) {
-            if (user.photoURL) {
-              userIcon.src = user.photoURL;
-              userIcon.classList.remove("hidden");
-              userIconContainer.classList.remove("default-icon");
-              defaultUserSvg.classList.add("hidden");
-            } else {
-              userIcon.classList.add("hidden");
-              userIconContainer.classList.add("default-icon");
-              defaultUserSvg.classList.remove("hidden");
-            }
-            loadUserConfigurations(user.uid);
-          } else {
-            userIcon.classList.add("hidden");
-            userIconContainer.classList.add("default-icon");
-            defaultUserSvg.classList.remove("hidden");
-            resetUI();
-          }
-          updateAnalyzeTabButtonsState();
-          updateProcessTabButtonsState();
-        });
-
-        pdfUpload.addEventListener("change", handlePdfUpload);
-
-        // Listener for the new 'Remove All' button
-        clearUploadFormButton.addEventListener("click", clearUploadForm);
-
-        // Add delegated event listener for removing individual files
-        uploadedFilesList.addEventListener("click", (e) => {
-          if (e.target.matches(".remove-button")) {
-            const indexToRemove = parseInt(e.target.dataset.index, 10);
-            uploadedFiles.splice(indexToRemove, 1);
-
-            // Update the file input's internal file list for consistency
-            const dataTransfer = new DataTransfer();
-            uploadedFiles.forEach((file) => dataTransfer.items.add(file));
-            window.pdfUpload.files = dataTransfer.files;
-
-            updateInvoiceFileDisplay();
-          }
-        });
-
-        dropArea.addEventListener("dragover", (e) => {
-          e.preventDefault();
-          dropArea.classList.add("highlight");
-        });
-
-        dropArea.addEventListener("dragleave", () => {
-          dropArea.classList.remove("highlight");
-        });
-
-        dropArea.addEventListener("drop", (e) => {
-          e.preventDefault();
-          dropArea.classList.remove("highlight");
-          const files = e.dataTransfer.files;
-          const dataTransfer = new DataTransfer();
-          for (let i = 0; i < files.length; i++) {
-            dataTransfer.items.add(files[i]);
-          }
-          pdfUpload.files = dataTransfer.files;
-          pdfUpload.dispatchEvent(new Event("change", { bubbles: true }));
-        });
-
-        processPdfButton.addEventListener("click", async () => {
-          if (uploadedFiles.length === 0) {
-            alert("Please select PDF file(s) first.");
-            return;
-          }
-          if (!currentUser) {
-            alert("Please sign in to process PDFs.");
-            return;
-          }
-
-          clearAllResults();
-          window.extractedResultsTableBody.innerHTML =
-            '<tr><td colspan="7" class="px-6 py-4 text-center">Processing...</td></tr>';
-
-          window.processingStatus.textContent = `Processing 0/${uploadedFiles.length} PDFs...`;
-          updateProcessTabButtonsState();
-
-          let processedCount = 0;
-          for (let i = 0; i < uploadedFiles.length; i++) {
-            const file = uploadedFiles[i];
-            if (file.type !== "application/pdf") {
-              continue;
-            }
-
-            window.processingStatus.textContent = `Processing "${file.name}" (${
-              processedCount + 1
-            }/${uploadedFiles.length})...`;
-
-            const reader = new FileReader();
-            const fileReadPromise = new Promise((resolve, reject) => {
-              reader.onload = async (e) => {
-                const pdfData = new Uint8Array(e.target.result);
-                try {
-                  const pdf = await pdfjsLib.getDocument({ data: pdfData })
-                    .promise;
-                  let fullText = "";
-                  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    const currentPage = await pdf.getPage(pageNum);
-                    const textContent = await currentPage.getTextContent();
-                    fullText +=
-                      textContent.items.map((item) => item.str).join(" ") +
-                      "\n";
-                  }
-                  resolve(fullText);
-                } catch (error) {
-                  reject(
-                    `Error extracting text from PDF "${file.name}": ${error.message}`
-                  );
-                }
-              };
-              reader.onerror = (error) =>
-                reject(`FileReader error for "${file.name}": ${error}`);
-              reader.readAsArrayBuffer(file);
-            });
-
-            try {
-              const fileText = await fileReadPromise;
-              let extractedData;
-              let configUsedName = "None (Best Guess)";
-              let selectedConfigForExtraction = null;
-              let officialSupplierNameForExport = null;
-
-              if (userConfigurations.length > 0) {
-                window.processingStatus.textContent = `Identifying best template for "${file.name}"...`;
-                const classificationResult = classifyDocumentHeuristically(
-                  fileText,
-                  userConfigurations
-                );
-
-                if (
-                  classificationResult &&
-                  classificationResult.matchedConfigName &&
-                  classificationResult.matchedConfigName !== "None"
-                ) {
-                  const matchedName = classificationResult.matchedConfigName;
-                  const foundConfig = userConfigurations.find(
-                    (cfg) => cfg.name === matchedName
-                  );
-                  if (foundConfig) {
-                    selectedConfigForExtraction = foundConfig;
-                    configUsedName = matchedName;
-                    officialSupplierNameForExport =
-                      foundConfig.officialSupplierNameForExport || null;
-                  }
-                }
-              }
-
-              window.processingStatus.textContent = `Extracting data from "${file.name}"...`;
-              logDebug(
-                `Calling regex-based extraction for "${
-                  file.name
-                }" with template: ${
-                  selectedConfigForExtraction
-                    ? selectedConfigForExtraction.name
-                    : "None"
-                }`
-              );
-              extractedData = await callGeminiApi(
-                fileText,
-                selectedConfigForExtraction,
-                false,
-                false,
-                false
-              );
-
-              const formattedExtractedData = {
-                originalFile: file,
-                fileName: file.name,
-                configUsedName: configUsedName,
-                extractedSupplierName: extractedData.supplierName || "N/A",
-                officialSupplierNameForExport: officialSupplierNameForExport,
-                documentDate: extractedData.documentDate || "N/A",
-                documentNumber: extractedData.documentNumber || "N/A",
-                totalAmount: extractedData.totalAmount || null,
-              };
-              allExtractedData.push(formattedExtractedData);
-              appendExtractedResultToTable(
-                formattedExtractedData,
-                allExtractedData.length - 1
-              );
-            } catch (error) {
-              const errorData = {
-                originalFile: file,
-                fileName: file.name,
-                configUsedName: "Error",
-                extractedSupplierName: "Error",
-                officialSupplierNameForExport: "Error",
-                documentDate: "Error",
-                documentNumber: "Error",
-                totalAmount: null,
-                error: error.message,
-              };
-              allExtractedData.push(errorData);
-              appendExtractedResultToTable(
-                errorData,
-                allExtractedData.length - 1
-              );
-            }
-            processedCount++;
-          }
-
-          window.processingStatus.textContent = `Finished processing ${processedCount} PDF(s).`;
-          updateProcessTabButtonsState();
-        });
-
-        previewButton.addEventListener("click", async () => {
-          if (!currentUser) {
-            alert("Please sign in to preview.");
-            return;
-          }
-          if (!currentPdfTextForAnalysis) {
-            alert(
-              "No document selected for analysis. Please select a document from the 'Extract' tab first."
-            );
-            return;
-          }
-
-          try {
-            const currentHints = {
-              supplierNamePattern: supplierNameHintInput.value,
-              documentDatePattern: documentDateHintInput.value,
-              documentNumberPattern: documentNumberHintInput.value,
-              totalAmountPattern: totalAmountHintInput.value,
-            };
-
-            const refinedData = await callGeminiApi(
-              currentPdfTextForAnalysis,
-              currentHints,
-              true,
-              false,
-              false
-            );
-
-            if (refinedData) {
-              window.supplierNameSpan.textContent =
-                refinedData.supplierName || "N/A";
-              window.documentDateSpan.textContent = formatDateForDisplay(
-                refinedData.documentDate
-              );
-              window.documentNumberSpan.textContent =
-                refinedData.documentNumber || "N/A";
-              window.totalAmountSpan.textContent = formatAmountForDisplay(
-                refinedData.totalAmount
-              );
-            } else {
-              alert("No refined data extracted during preview.");
-            }
-          } catch (error) {
-            alert(
-              "Error during preview. Check console for details: " +
-                error.message
-            );
-          } finally {
-            updateAnalyzeTabButtonsState();
-            updateProcessTabButtonsState();
-          }
-        });
-
-        aiSuggestDateBtn.addEventListener("click", () => {
-          if (!GEMINI_API_KEY) {
-            showApiKeyModal();
-          } else {
-            showRegexSuggestModal("documentDate");
-          }
-        });
-        aiSuggestNumberBtn.addEventListener("click", () => {
-          if (!GEMINI_API_KEY) {
-            showApiKeyModal();
-          } else {
-            showRegexSuggestModal("documentNumber");
-          }
-        });
-        aiSuggestAmountBtn.addEventListener("click", () => {
-          if (!GEMINI_API_KEY) {
-            showApiKeyModal();
-          } else {
-            showRegexSuggestModal("totalAmount");
-          }
-        });
-
-        generateRegexButton.addEventListener("click", generateRegexSuggestions);
-        cancelRegexSuggestButton.addEventListener(
-          "click",
-          hideRegexSuggestModal
-        );
-        useSelectedRegexButton.addEventListener("click", useSelectedRegex);
-
-        saveConfigButton.addEventListener("click", saveConfiguration);
-        loadConfigButton.addEventListener("click", loadSelectedConfiguration);
-        deleteConfigButton.addEventListener(
-          "click",
-          deleteSelectedConfiguration
-        );
-
-        downloadCsvButton.addEventListener("click", downloadCSV);
-
-        configSelect.addEventListener("change", () => {
-          updateAnalyzeTabButtonsState();
-        });
-
-        switchTab("Process");
-        updateAnalyzeTabButtonsState();
-        updateProcessTabButtonsState();
-      });
-    </script>
+    <!-- Link to the external JavaScript module file -->
+    <script type="module" src="invoice-script.js"></script>
   </body>
 </html>
