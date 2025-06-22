@@ -17,34 +17,32 @@
     <style>
       body {
         font-family: "Inter", sans-serif;
-        transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition for theme change */
+        transition: background-color 0.3s ease, color 0.3s ease;
       }
-      /* Styles for the navigation placeholder */
       #nav-placeholder {
-        height: 64px; /* Matches your header's height */
-        background-color: #ffffff; /* Light mode default */
+        height: 64px;
+        background-color: #ffffff;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         display: flex;
-        justify-content: space-between; /* To space out logo and links */
+        justify-content: space-between;
         align-items: center;
-        padding: 0 1rem; /* Matches your header's padding */
-        box-sizing: border-box; /* Include padding in height */
+        padding: 0 1rem;
+        box-sizing: border-box;
       }
-      /* Dark mode styles for the placeholder */
       .dark #nav-placeholder {
-        background-color: #1f2937; /* Dark mode background */
+        background-color: #1f2937;
       }
       .loader {
         border: 4px solid #f3f3f3;
-        border-top: 4px solid #2563eb; /* Use the light mode accent blue */
+        border-top: 4px solid #2563eb;
         border-radius: 50%;
         width: 40px;
         height: 40px;
         animation: spin 1s linear infinite;
       }
       .dark .loader {
-        border-color: #374151; /* Darker border for dark mode (dark-border) */
-        border-top-color: #60a5fa; /* Dark mode accent blue */
+        border-color: #374151;
+        border-top-color: #60a5fa;
       }
       @keyframes spin {
         0% {
@@ -77,17 +75,16 @@
         align-items: center;
         justify-content: center;
       }
-      /* Removed tab-button styles as tabs are no longer used */
       .modal {
-        display: none; /* Hidden by default */
-        position: fixed; /* Stay in place */
-        z-index: 1000; /* Sit on top */
+        display: none;
+        position: fixed;
+        z-index: 1000;
         left: 0;
         top: 0;
-        width: 100%; /* Full width */
-        height: 100%; /* Full height */
-        overflow: auto; /* Enable scroll if needed */
-        background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
         justify-content: center;
         align-items: center;
       }
@@ -103,8 +100,8 @@
         position: relative;
       }
       .dark .modal-content {
-        background-color: #1f2937; /* dark-bg-secondary */
-        color: #f3f4f6; /* dark-text-primary */
+        background-color: #1f2937;
+        color: #f3f4f6;
       }
     </style>
   </head>
@@ -283,7 +280,6 @@
       </main>
     </div>
 
-    <!-- API Key Modal -->
     <div id="api-key-modal" class="modal">
       <div
         class="modal-content bg-light-bg-secondary dark:bg-dark-bg-secondary p-6 rounded-lg shadow-lg"
@@ -328,7 +324,6 @@
     </div>
 
     <script>
-      // Function to apply the current theme
       function applyTheme(isDarkMode) {
         if (isDarkMode) {
           document.documentElement.classList.add("dark");
@@ -337,11 +332,9 @@
         }
       }
 
-      // Check initial theme preference
       const prefersDarkMode = window.matchMedia("(prefers-color-scheme: dark)");
       applyTheme(prefersDarkMode.matches);
 
-      // Listen for changes in theme preference
       prefersDarkMode.addEventListener("change", (e) => {
         applyTheme(e.matches);
       });
@@ -396,10 +389,9 @@
         messageText.textContent = "";
       }
 
-      // --- Combined Logic for File Handling and Processing ---
       let selectedFiles = [];
       let allTransactions = [];
-      let geminiApiKey = localStorage.getItem("geminiApiKey") || ""; // Load API key from local storage
+      let geminiApiKey = localStorage.getItem("geminiApiKey") || "";
 
       const parserSelect = document.getElementById("parser-select");
       const uploadArea = document.getElementById("upload-area");
@@ -412,34 +404,25 @@
       const removeAllFilesBtn = document.getElementById("remove-all-files-btn");
       const processBtn = document.getElementById("process-btn");
       const downloadBtn = document.getElementById("download-btn");
-      // const loaderContainer = document.getElementById("loader-container"); // Removed
-      const progressText = document.getElementById("progress-text"); // This will now update statusText
       const statusText = document.getElementById("status-text");
       const processBtnText = document.getElementById("process-btn-text");
       const spinner = document.getElementById("spinner");
       const resultsContainer = document.getElementById("results-container");
-      const tableHeadRow = document.getElementById("results-table-head");
       const tableBody = document.getElementById("results-table-body");
 
-      // API Key Modal Elements
       const apiKeyModal = document.getElementById("api-key-modal");
       const geminiApiKeyInput = document.getElementById("gemini-api-key-input");
       const apiKeySaveBtn = document.getElementById("api-key-save-btn");
       const apiKeyCancelBtn = document.getElementById("api-key-cancel-btn");
 
-      // Promise resolver for the API Key modal
       let resolveApiKeyPromise;
 
-      /**
-       * Shows the API key input modal and returns a Promise that resolves when the key is saved or canceled.
-       * @returns {Promise<string|null>} Resolves with the API key or null if canceled.
-       */
       function showApiKeyModal() {
         return new Promise((resolve) => {
-          resolveApiKeyPromise = resolve; // Store the resolve function
+          resolveApiKeyPromise = resolve;
 
-          geminiApiKeyInput.value = geminiApiKey; // Pre-fill if exists
-          apiKeyModal.style.display = "flex"; // Show the modal
+          geminiApiKeyInput.value = geminiApiKey;
+          apiKeyModal.style.display = "flex";
 
           apiKeySaveBtn.onclick = () => {
             const key = geminiApiKeyInput.value.trim();
@@ -447,7 +430,7 @@
               localStorage.setItem("geminiApiKey", key);
               geminiApiKey = key;
               apiKeyModal.style.display = "none";
-              resolve(key); // Resolve the promise with the key
+              resolve(key);
             } else {
               showMessage("error", "Please enter a valid Gemini API key.");
             }
@@ -455,12 +438,11 @@
 
           apiKeyCancelBtn.onclick = () => {
             apiKeyModal.style.display = "none";
-            resolve(null); // Resolve with null if canceled
+            resolve(null);
           };
         });
       }
 
-      // Event Listeners
       parserSelect.addEventListener("change", resetUI);
       fileInput.addEventListener("change", (event) => {
         handleFiles(event.target.files);
@@ -507,10 +489,8 @@
         fileInfo.classList.add("hidden");
         uploadLabel.classList.remove("hidden");
         processBtn.disabled = true;
-        //resultsContainer.classList.add("hidden");
-        //downloadBtn.classList.add("hidden");
         statusText.textContent = "";
-        statusText.textContent = "Processing your statements..."; // This text will now be used for statusText directly
+        statusText.textContent = "Processing your statements...";
         hideMessage();
         updateFileDisplay();
         processBtnText.textContent = "Process";
@@ -526,23 +506,20 @@
         if (pdfFiles.length === 0) {
           showMessage("error", "Please select valid PDF file(s).");
           if (selectedFiles.length === 0) {
-            // Only disable if no files were previously selected either
             processBtn.disabled = true;
           }
           return;
         }
 
         if (currentParser === "maybank-pdf") {
-          // For Maybank PDF, only accept one file, replace if new one is dropped/selected
           if (pdfFiles.length > 1) {
             showMessage(
               "error",
               "Maybank PDF Statement parser supports only one PDF file at a time. Only the first file will be used."
             );
           }
-          selectedFiles = [pdfFiles[0]]; // Take only the first file
+          selectedFiles = [pdfFiles[0]];
         } else {
-          // For Maybank Web and Gemini, allow multiple and append unique ones
           pdfFiles.forEach((newFile) => {
             if (
               !selectedFiles.some(
@@ -558,8 +535,6 @@
 
         updateFileDisplay();
         processBtn.disabled = selectedFiles.length === 0;
-        //resultsContainer.classList.add("hidden");
-        //downloadBtn.classList.add("hidden");
         hideMessage();
       }
 
@@ -600,8 +575,6 @@
         selectedFiles.splice(indexToRemove, 1);
         updateFileDisplay();
         if (selectedFiles.length === 0) {
-          //resultsContainer.classList.add("hidden");
-          //downloadBtn.classList.add("hidden");
           hideMessage();
         }
       }
@@ -612,19 +585,15 @@
           return;
         }
 
-        //resultsContainer.classList.add("hidden");
         processBtn.disabled = true;
         spinner.classList.remove("hidden");
         processBtnText.textContent = "Processing...";
-        //downloadBtn.classList.add("hidden");
         statusText.textContent = "";
-        // loaderContainer.classList.remove("hidden"); // Removed
         hideMessage();
 
         allTransactions = [];
         const currentParser = parserSelect.value;
 
-        // If Gemini parser is selected, ensure API key is available
         if (currentParser === "gemini-parser" && !geminiApiKey) {
           try {
             const key = await showApiKeyModal();
@@ -633,11 +602,10 @@
                 "error",
                 "Gemini API key is required for this parser. Processing canceled."
               );
-              resetUI(); // Reset UI if user cancels
+              resetUI();
               return;
             }
           } catch (error) {
-            console.error("Error showing API key modal:", error);
             showMessage(
               "error",
               "Could not get Gemini API key. Processing canceled."
@@ -652,7 +620,7 @@
             const file = selectedFiles[i];
             statusText.textContent = `Processing ${file.name} (${i + 1}/${
               selectedFiles.length
-            })...`; // progressText removed, using statusText
+            })...`;
 
             const fileReader = new FileReader();
             const fileReadPromise = new Promise((resolve, reject) => {
@@ -669,7 +637,6 @@
             switch (currentParser) {
               case "maybank-pdf":
                 if (selectedFiles.length > 1 && i > 0) {
-                  // Only process the first file for maybank-pdf if multiple are selected
                   continue;
                 }
                 statusText.textContent = `Analyzing content in ${file.name} (Maybank PDF mode)...`;
@@ -687,7 +654,6 @@
                 break;
               case "gemini-parser":
                 statusText.textContent = `Sending pages of ${file.name} to AI for processing...`;
-                // Call the Gemini parser with the PDF object to enable page-by-page processing
                 fileTransactions = await processGeminiStatementWithAI(
                   pdf,
                   geminiApiKey
@@ -703,11 +669,10 @@
             allTransactions = allTransactions.concat(fileTransactions);
           }
 
-          // Sort all accumulated transactions after processing all files/pages
           allTransactions.sort((a, b) => {
             const dateA = parseDateForSorting(a["Date"]);
             const dateB = parseDateForSorting(b["Date"]);
-            return dateB - dateA; // Sort descending (most recent first)
+            return dateB - dateA;
           });
 
           statusText.textContent = "";
@@ -715,7 +680,6 @@
           updateDownloadButtonState();
 
           if (allTransactions.length > 0) {
-            //downloadBtn.classList.remove("hidden");
             showMessage(
               "success",
               `${selectedFiles.length} PDF(s) processed and combined CSV ready for download!`
@@ -731,22 +695,18 @@
             "error",
             `An error occurred during PDF conversion: ${error.message}. Please check the console for details and ensure your Gemini API is enabled for this project if using the AI parser.`
           );
-          console.error("Processing error:", error);
         } finally {
           processBtn.disabled = false;
           spinner.classList.add("hidden");
           processBtnText.textContent = "Process";
-          // loaderContainer.classList.add("hidden"); // Removed
-          statusText.textContent = "Processing your statements..."; // Reset progress text for next use
+          statusText.textContent = "Processing your statements...";
         }
       }
 
       function parseDateForSorting(dateString) {
-        // Expects DD/MM/YY and converts to YYYY-MM-DD for consistent Date object creation
         const [day, month, year] = dateString.split("/");
-        // Assuming 'YY' refers to 20YY for years 00-99. Adjust century if needed for older dates.
         const fullYear = parseInt(year, 10) > 50 ? `19${year}` : `20${year}`;
-        return new Date(`${fullYear}-${month}-${day}`).getTime(); // Use getTime() for sortable number
+        return new Date(`${fullYear}-${month}-${day}`).getTime();
       }
 
       function displayTransactions(data) {
@@ -760,37 +720,27 @@
             tr.className =
               "divide-light-border dark:divide-dark-border hover:bg-gray-50 dark:hover:bg-gray-700";
 
-            // Date column
             const tdDate = document.createElement("td");
             tdDate.className = "px-6 py-4";
-            tdDate.textContent = row.Date || ""; // Access property directly
+            tdDate.textContent = row.Date || "";
             tr.appendChild(tdDate);
 
-            // Description column
             const tdDescription = document.createElement("td");
             tdDescription.className = "px-6 py-4";
-            tdDescription.textContent = row.Description || ""; // Access property directly
+            tdDescription.textContent = row.Description || "";
             tr.appendChild(tdDescription);
 
-            // Amount column
             const tdAmount = document.createElement("td");
             tdAmount.className = "px-6 py-4";
-            const value = row.Amount || ""; // Access property directly
+            const value = row.Amount || "";
             tdAmount.textContent = value;
             if (typeof value === "string" && value.trim() !== "") {
-              // Ensure it's a valid number string before parsing
               const amount = parseFloat(value);
               tdAmount.classList.add("text-right", "font-mono");
               tdAmount.classList.toggle("text-green-600", amount > 0);
               tdAmount.classList.toggle("text-red-600", amount < 0);
-              tdAmount.classList.toggle(
-                "dark:text-green-400",
-                amount > 0
-              ); /* Dark mode green */
-              tdAmount.classList.toggle(
-                "dark:text-red-400",
-                amount < 0
-              ); /* Dark mode red */
+              tdAmount.classList.toggle("dark:text-green-400", amount > 0);
+              tdAmount.classList.toggle("dark:text-red-400", amount < 0);
             }
             tr.appendChild(tdAmount);
             tableBody.appendChild(tr);
@@ -800,16 +750,13 @@
             "error",
             "Could not display results due to an internal error. Check the console."
           );
-          console.error("Display error:", e);
         }
       }
 
-      // Function to update the state of the download button
       function updateDownloadButtonState() {
         const downloadBtn = document.getElementById("download-btn");
         const resultsTableBody = document.getElementById("results-table-body");
 
-        // Check if the table body contains any actual results (not just the initial placeholder)
         const hasResults =
           resultsTableBody.children.length > 0 &&
           resultsTableBody.children[0].textContent.trim() !==
@@ -830,7 +777,6 @@
               .map((fieldName) => {
                 const value = row[fieldName];
                 const stringValue = value === null ? "" : String(value);
-                // Escape double quotes and enclose in quotes if value contains comma, double quote or newline
                 return stringValue.includes(",") ||
                   stringValue.includes('"') ||
                   stringValue.includes("\n")
@@ -852,21 +798,20 @@
         document.body.removeChild(link);
       }
 
-      // --- Maybank PDF Specific Parsing Logic (kept as is) ---
       async function extractTextLinesFromPdfMaybankPdf(pdf) {
         const allLines = [];
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
           const lines = {};
-          for (const item /*: TextItem*/ of textContent.items) {
+          for (const item of textContent.items) {
             const y = Math.round(item.transform[5]);
             if (!lines[y]) lines[y] = [];
             lines[y].push(item);
           }
-          const sortedY = Object.keys(lines).sort((a, b) => b - a); // Sort by Y-coordinate descending
+          const sortedY = Object.keys(lines).sort((a, b) => b - a);
           for (const y of sortedY) {
-            lines[y].sort((a, b) => a.transform[4] - b.transform[4]); // Sort by X-coordinate ascending within a line
+            lines[y].sort((a, b) => a.transform[4] - b.transform[4]);
             allLines.push(lines[y].map((item) => item.str).join(" "));
           }
         }
@@ -878,8 +823,8 @@
           .join(" ")
           .match(/STATEMENT DATE\s*:\s*(\d{2}\/\d{2}\/\d{2})/i);
         const year = statementDateMatch
-          ? `20${statementDateMatch[1].slice(-2)}` // Assuming XX/XX/YY format, prepend 20
-          : new Date().getFullYear().toString(); // Fallback to current year if not found
+          ? `20${statementDateMatch[1].slice(-2)}`
+          : new Date().getFullYear().toString();
 
         const filteredLines = [];
         let inTransactionBlock = false;
@@ -907,7 +852,6 @@
         const transactions = [];
         let descriptionParts = [];
 
-        // Process lines in reverse to handle multi-line descriptions that might follow an amount
         for (const line of [...filteredLines].reverse()) {
           const isIgnoreLine =
             /TIADA\s*URUSNIAGA/i.test(line) ||
@@ -917,11 +861,10 @@
             /LEDGER\s*BALANCE/i.test(line);
 
           if (isIgnoreLine) {
-            descriptionParts = []; // Clear description parts if an ignore line is encountered
+            descriptionParts = [];
             continue;
           }
 
-          // Regex to capture date (DD/MM), description, and amount with sign
           const txMatch = line.match(
             /^\s*(\d{2}\/\d{2})\s+(.*?)\s+([\d,]*\.\d{1,2}[+-])(?:\s+[\d,]*\.\d{2})?$/
           );
@@ -938,8 +881,6 @@
             let amount = parseFloat(amountStr);
             if (sign === "-") amount = -amount;
 
-            // If a date was not found in the current line but exists in accumulated description parts
-            // This handles cases where the date might be on a preceding line for a transaction
             if (!date && descriptionParts.length > 0) {
               const dateInDescIndex = descriptionParts.findIndex((p) =>
                 /^\d{2}\/\d{2}/.test(p.trim())
@@ -948,47 +889,41 @@
                 const lineWithDate = descriptionParts.splice(
                   dateInDescIndex,
                   1
-                )[0]; // Extract and remove that line
+                )[0];
                 date = lineWithDate.trim().substring(0, 5);
                 description =
                   lineWithDate.trim().substring(5).trim() + " " + description;
               }
             }
 
-            // Prepend accumulated description parts (if any)
             if (descriptionParts.length > 0) {
               description =
                 description.trim() + " " + descriptionParts.reverse().join(" ");
             }
 
             if (date) {
-              // Only add if a date was found or constructed
               transactions.push({
-                Date: `${date}/${year.slice(-2)}`, // Output as DD/MM/YY
+                Date: `${date}/${year.slice(-2)}`,
                 Description: description,
                 Amount: amount,
               });
             }
-            descriptionParts = []; // Reset for the next transaction
+            descriptionParts = [];
           } else {
-            // If it's not a transaction line, accumulate it as part of a multi-line description
             if (line.trim().length > 1) {
-              // Avoid adding empty or single-character lines
               descriptionParts.push(line.trim());
             }
           }
         }
 
-        // Final processing: reverse back to chronological order, clean descriptions, format amount
         const finalTransactions = transactions.reverse().map((t) => {
           const cleanedDesc = t.Description.replace(/TRANSFER FR A\/C/gi, "")
             .replace(/TRANSFER TO A\/C/gi, "")
             .replace(/PAYMENT FR A\/C/gi, "")
             .replace(/MBB CT-?/gi, "")
-            .replace(/\s+/g, " ") // Replace multiple spaces with a single space
+            .replace(/\s+/g, " ")
             .trim();
 
-          // Handle CSV escaping for description
           const finalDescription =
             cleanedDesc.includes(",") ||
             cleanedDesc.includes('"') ||
@@ -1005,7 +940,6 @@
         return finalTransactions;
       }
 
-      // --- Maybank Web Specific Parsing Logic (kept as is) ---
       async function getHighAccuracyTextFromPdfMaybankWeb(pdf) {
         let fullText = "";
         for (let i = 1; i <= pdf.numPages; i++) {
@@ -1015,41 +949,37 @@
           let lastY = -1;
           let lineText = "";
 
-          // Sort items for better line reconstruction: Y-descending, then X-ascending
           textContent.items.sort((a, b) => {
-            if (a.transform[5] < b.transform[5]) return 1; // Higher Y (lower on page) comes first
+            if (a.transform[5] < b.transform[5]) return 1;
             if (a.transform[5] > b.transform[5]) return -1;
-            if (a.transform[4] < b.transform[4]) return -1; // Smaller X (left-most) comes first
+            if (a.transform[4] < b.transform[4]) return -1;
             if (a.transform[4] > b.transform[4]) return 1;
             return 0;
           });
 
-          for (const item /*: TextItem*/ of textContent.items) {
-            // If the current item is on a significantly different Y-coordinate, it's a new line
-            // The magic number 5 is a common heuristic for line separation threshold
+          for (const item of textContent.items) {
             if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
-              fullText += lineText.trim() + "\n"; // Add trimmed line and a newline
-              lineText = ""; // Reset for the new line
+              fullText += lineText.trim() + "\n";
+              lineText = "";
             }
-            lineText += item.str + " "; // Add item string and a space
-            lastY = item.transform[5]; // Update last Y-coordinate
+            lineText += item.str + " ";
+            lastY = item.transform[5];
           }
-          fullText += lineText.trim() + "\n"; // Add the last line on the page
+          fullText += lineText.trim() + "\n";
         }
         return fullText;
       }
 
       function parseTextAndGenerateCsvMaybankWeb(text) {
         const transactions = [];
-        const dateRegex = /^\d{1,2}\s+\w{3}\s+\d{4}/; // e.g., "1 Jan 2023"
-        const amountRegex = /(-?)\s*RM\s*([\d,]+\.\d{2})\s*$/; // e.g., "RM 123.45" or "- RM 12.34"
+        const dateRegex = /^\d{1,2}\s+\w{3}\s+\d{4}/;
+        const amountRegex = /(-?)\s*RM\s*([\d,]+\.\d{2})\s*$/;
 
         const lines = text.split("\n");
         let currentTransaction = null;
 
         for (const line of lines) {
           const trimmedLine = line.trim();
-          // Skip empty lines or header lines
           if (
             !trimmedLine ||
             trimmedLine.toLowerCase().startsWith("date") ||
@@ -1061,7 +991,6 @@
           const hasDate = dateRegex.test(trimmedLine);
 
           if (hasDate) {
-            // If we found a new transaction, push the previous one if it exists
             if (currentTransaction) {
               transactions.push(currentTransaction);
             }
@@ -1074,15 +1003,13 @@
             let amount = null;
 
             if (amountMatch) {
-              // Capture the sign (if any) and the numeric part, remove commas
               amount =
                 (amountMatch[1] || "") + amountMatch[2].replace(/,/g, "");
-              description = description.replace(amountMatch[0], "").trim(); // Remove amount from description
+              description = description.replace(amountMatch[0], "").trim();
             }
 
             currentTransaction = { date, description, amount };
           } else if (currentTransaction && !currentTransaction.amount) {
-            // If no date, but we're in a transaction and haven't found an amount yet, try to find it
             let amountMatch = trimmedLine.match(amountRegex);
             let descriptionPart = trimmedLine;
 
@@ -1093,28 +1020,20 @@
                 .replace(amountMatch[0], "")
                 .trim();
             }
-            // Append line to description (could be part of multi-line description or the amount line)
             currentTransaction.description += " " + descriptionPart;
           } else if (currentTransaction && currentTransaction.amount) {
-            // If a transaction is complete (has date and amount), subsequent lines
-            // are likely continuations of the description of the *previous* transaction
-            // in web statements.
             const lastTx = transactions[transactions.length - 1];
             if (lastTx) {
               lastTx.Description += " " + trimmedLine;
             } else {
-              // This case should ideally not be hit if parsing is correct,
-              // but as a fallback, if currentTransaction is set and has amount,
-              // and no lastTx, push current one and reset.
               if (currentTransaction) {
                 transactions.push(currentTransaction);
-                currentTransaction = null; // Reset to avoid appending to it mistakenly
+                currentTransaction = null;
               }
             }
           }
         }
 
-        // Push the last transaction if it exists
         if (currentTransaction) {
           transactions.push(currentTransaction);
         }
@@ -1122,21 +1041,18 @@
         return transactions.map((t) => {
           const dateObj = new Date(t.date);
           const day = String(dateObj.getDate()).padStart(2, "0");
-          const month = String(dateObj.getMonth() + 1).padStart(2, "0"); // Month is 0-indexed
+          const month = String(dateObj.getMonth() + 1).padStart(2, "0");
           const year = dateObj.getFullYear();
-          const formattedDate = `${day}/${month}/${String(year).slice(-2)}`; // Output as DD/MM/YY
+          const formattedDate = `${day}/${month}/${String(year).slice(-2)}`;
 
-          // Clean up description: replace multiple spaces, trim
           const cleanedDescription = t.description.replace(/\s+/g, " ").trim();
 
-          // Remove quotes if they enclose the whole string (common for web data extraction)
           const finalDescriptionUnescaped =
             cleanedDescription.startsWith('"') &&
             cleanedDescription.endsWith('"')
               ? cleanedDescription.substring(1, cleanedDescription.length - 1)
               : cleanedDescription;
 
-          // Escape double quotes and enclose in quotes if value contains comma, double quote or newline for CSV
           const descForCsv =
             finalDescriptionUnescaped.includes(",") ||
             finalDescriptionUnescaped.includes('"') ||
@@ -1152,7 +1068,6 @@
         });
       }
 
-      // --- New Gemini Parser Logic ---
       async function processGeminiStatementWithAI(pdf, apiKey) {
         const allExtractedTransactions = [];
         const totalPages = pdf.numPages;
@@ -1233,7 +1148,6 @@
             }
 
             const result = await response.json();
-            console.log(`Gemini API raw result for page ${i}:`, result); // Log the raw result for debugging
 
             if (
               result.candidates &&
@@ -1247,30 +1161,21 @@
               try {
                 parsedTransactions = JSON.parse(jsonString);
               } catch (parseError) {
-                console.error(
-                  `Failed to parse JSON from Gemini response for page ${i}: ${parseError.message}. Response:`,
-                  jsonString
-                );
-                // Continue to next page rather than failing all, but log the error
                 continue;
               }
 
-              // Re-format date to DD/MM/YY and clean description
               const formattedTransactions = parsedTransactions.map((t) => {
                 let [day, month, year] = t.Date.split("/");
-                // Handle cases where year might be missing or short, and try to infer
                 if (!year || year.length !== 4) {
                   const currentYear = new Date().getFullYear();
                   const currentYY = String(currentYear).slice(-2);
                   const parsedYY = parseInt(year, 10);
-                  // Simple heuristic: if parsedYY is within a reasonable range (e.g., up to current YY), assume 20xx
-                  // Otherwise, assume 19xx for older dates if it makes sense.
                   year =
                     parsedYY <= parseInt(currentYY, 10)
                       ? `20${String(parsedYY).padStart(2, "0")}`
                       : `19${String(parsedYY).padStart(2, "0")}`;
                 }
-                const formattedYear = String(year).slice(-2); // Get last two digits of the year
+                const formattedYear = String(year).slice(-2);
 
                 const cleanedDescription = String(t.Description)
                   .replace(/\s+/g, " ")
@@ -1292,10 +1197,6 @@
               });
               allExtractedTransactions.push(...formattedTransactions);
             } else {
-              console.warn(
-                `Gemini API response for page ${i} did not contain expected content:`,
-                result
-              );
               let feedbackMessage = `No valid content found for page ${i} in Gemini API response.`;
               if (result.promptFeedback && result.promptFeedback.blockReason) {
                 feedbackMessage += ` Block reason: ${result.promptFeedback.blockReason}.`;
@@ -1311,8 +1212,6 @@
               );
             }
           } catch (error) {
-            console.error(`Error calling Gemini API for page ${i}:`, error);
-            // Display error for this specific page but continue to next page if possible
             showMessage(
               "error",
               `AI processing failed for page ${i}: ${error.message}.`
@@ -1322,10 +1221,9 @@
         return allExtractedTransactions;
       }
 
-      // Initialize UI on page load
       document.addEventListener("DOMContentLoaded", () => {
         resetUI();
-        updateDownloadButtonState(); // Set initial state of download button
+        updateDownloadButtonState();
       });
     </script>
   </body>

@@ -19,25 +19,22 @@
         font-family: "Inter", sans-serif;
         transition: background-color 0.3s ease, color 0.3s ease;
       }
-      /* Styles for the navigation placeholder */
       #nav-placeholder {
-        height: 64px; /* Matches your header's height */
-        background-color: #ffffff; /* Light mode default */
+        height: 64px;
+        background-color: #ffffff;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         display: flex;
-        justify-content: space-between; /* To space out logo and links */
+        justify-content: space-between;
         align-items: center;
-        padding: 0 1rem; /* Matches your header's padding */
-        box-sizing: border-box; /* Include padding in height */
+        padding: 0 1rem;
+        box-sizing: border-box;
       }
-      /* Dark mode styles for the placeholder */
       .dark #nav-placeholder {
-        background-color: #1f2937; /* Dark mode background */
+        background-color: #1f2937;
       }
       @media (min-width: 768px) {
-        /* Tailwind's md breakpoint */
         .skeleton-mobile-button {
-          display: none; /* Hide on desktop */
+          display: none;
         }
       }
       @keyframes spin {
@@ -62,65 +59,65 @@
         border-bottom: 2px solid transparent;
       }
       .tab-button.active {
-        color: #2563eb; /* accent-blue-light */
-        border-color: #2563eb; /* accent-blue-light */
+        color: #2563eb;
+        border-color: #2563eb;
       }
       .dark .tab-button.active {
-        color: #60a5fa; /* accent-blue-dark */
-        border-color: #60a5fa; /* accent-blue-dark */
+        color: #60a5fa;
+        border-color: #60a5fa;
       }
       .tab-button:not(.active) {
-        color: #4b5563; /* light-text-secondary */
+        color: #4b5563;
       }
       .dark .tab-button:not(.active) {
-        color: #9ca3af; /* dark-text-secondary */
+        color: #9ca3af;
       }
       .tab-button:not(.active):hover {
-        color: #2563eb; /* accent-blue-light */
+        color: #2563eb;
       }
       .dark .tab-button:not(.active):hover {
-        color: #60a5fa; /* accent-blue-dark */
+        color: #60a5fa;
       }
 
       .drop-area {
-        border: 2px dashed #e5e7eb; /* light-border */
+        border: 2px dashed #e5e7eb;
         padding: 2rem;
         text-align: center;
-        border-radius: 0.75rem; /* rounded-xl */
+        border-radius: 0.75rem;
         cursor: pointer;
         transition: background-color 0.2s, border-color 0.2s;
-        min-height: 220px; /* Give it a minimum height */
+        min-height: 220px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
       }
       .dark .drop-area {
-        border-color: #374151; /* dark-border */
+        border-color: #374151;
       }
       .drop-area.highlight {
-        border-color: #2563eb; /* accent-blue-light */
+        border-color: #2563eb;
         background-color: #eff6ff;
       }
       .dark .drop-area.highlight {
-        border-color: #60a5fa; /* accent-blue-dark */
-        background-color: #1f2937; /* dark-bg-secondary */
+        border-color: #60a5fa;
+        background-color: #1f2937;
       }
 
       .file-pill {
         display: inline-flex;
         align-items: center;
-        background-color: #dbeafe; /* blue-200 */
-        color: #1d4ed8; /* blue-800 */
-        padding: 0.25rem 0.75rem; /* py-1 px-3 */
-        border-radius: 9999px; /* rounded-full */
-        font-size: 0.75rem; /* text-xs */
-        font-weight: 500; /* font-medium */
+        background-color: #dbeafe;
+        color: #1d4ed8;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
         margin: 0.25rem;
       }
       .dark .file-pill {
-        background-color: #1e40af; /* blue-800 */
-        color: #bfdbfe; /* blue-300 */
+        background-color: #1e40af;
+        color: #bfdbfe;
       }
 
       .file-pill .remove-button {
@@ -151,8 +148,8 @@
       }
       .modal-content {
         margin: auto;
-        padding: 1.5rem; /* p-6 */
-        border-radius: 0.5rem; /* rounded-lg */
+        padding: 1.5rem;
+        border-radius: 0.5rem;
         width: 90%;
         max-width: 500px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -160,7 +157,6 @@
         position: relative;
       }
 
-      /* User Icon Styling */
       #userIconContainer {
         width: 40px;
         height: 40px;
@@ -174,10 +170,10 @@
         transition: all 0.2s ease-in-out;
       }
       #userIconContainer:hover {
-        border-color: #2563eb; /* accent-blue-light */
+        border-color: #2563eb;
       }
       .dark #userIconContainer:hover {
-        border-color: #60a5fa; /* accent-blue-dark */
+        border-color: #60a5fa;
       }
       #userIcon {
         width: 100%;
@@ -186,7 +182,7 @@
         border-radius: 50%;
       }
       #userIconContainer.default-icon svg {
-        fill: #9ca3af; /* dark-text-secondary */
+        fill: #9ca3af;
         width: 60%;
         height: 60%;
       }
@@ -204,7 +200,6 @@
           Invoices Converter
         </h1>
         <div class="absolute top-0 right-0 flex items-center space-x-2">
-          <!-- User Profile Icon -->
           <div
             id="userIconContainer"
             class="default-icon bg-light-border dark:bg-dark-border"
@@ -236,7 +231,6 @@
 
       <main>
         <div id="tabContentProcess" class="tab-content w-full">
-          <!-- The main upload box, styled like index.html -->
           <div
             id="dropArea"
             class="drop-area mb-4 bg-light-bg-secondary dark:bg-dark-bg-secondary"
@@ -249,7 +243,6 @@
               class="hidden"
             />
 
-            <!-- The initial upload prompt -->
             <label
               for="pdfUpload"
               id="upload-label-invoice"
@@ -286,16 +279,16 @@
               </div>
             </label>
 
-            <!-- This container will be shown when files are selected -->
             <div id="file-info-invoice" class="hidden text-left w-full">
               <p
                 class="font-semibold text-light-text-primary dark:text-dark-text-primary"
               >
                 Selected Files:
               </p>
-              <div id="uploadedFilesList" class="flex flex-wrap gap-2 mt-2">
-                <!-- File pills will be injected here by JS -->
-              </div>
+              <div
+                id="uploadedFilesList"
+                class="flex flex-wrap gap-2 mt-2"
+              ></div>
               <button
                 id="clearUploadFormButton"
                 class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-semibold text-sm mt-2"
@@ -660,7 +653,6 @@
       </main>
     </div>
 
-    <!-- API Key Modal -->
     <div id="apiKeyModal" class="modal">
       <div
         class="modal-content bg-light-bg-secondary dark:bg-dark-bg-secondary"
@@ -704,7 +696,6 @@
       </div>
     </div>
 
-    <!-- Logout Confirmation Modal -->
     <div id="logoutModal" class="modal">
       <div
         class="modal-content bg-light-bg-secondary dark:bg-dark-bg-secondary"
@@ -738,7 +729,6 @@
       </div>
     </div>
 
-    <!-- Regex Suggestion Modal -->
     <div id="regexSuggestModal" class="modal">
       <div
         class="modal-content bg-light-bg-secondary dark:bg-dark-bg-secondary w-full max-w-lg"
@@ -795,7 +785,6 @@
           id="regexSuggestStatus"
           class="text-sm text-light-text-secondary dark:text-dark-text-secondary my-4"
         ></p>
-
         <div class="flex justify-end space-x-2">
           <button
             id="cancelRegexSuggestButton"
@@ -813,10 +802,7 @@
         </div>
       </div>
     </div>
-
     <script type="module">
-      // NOTE: All JS functions have been preserved.
-      // Firebase and other functionality remains unchanged.
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
       import {
         getAuth,
@@ -837,7 +823,6 @@
         where,
         getDoc,
       } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-
       const firebaseConfig = {
         apiKey: "AIzaSyCMXn3b0kul6cYiqqyFejFyX_6Hp0wXqY0",
         authDomain: "invoice-extractor-ec792.firebaseapp.com",
@@ -847,64 +832,51 @@
         appId: "1:532030177380:web:aa69cfdbc842c196435f71",
         measurementId: "G-1WJ1KLDQB4",
       };
-
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
-
       let uploadedFiles = [];
       let currentPdfTextForAnalysis = "";
       let currentUser = null;
       let activeConfig = null;
       let userConfigurations = [];
       let allExtractedData = [];
-
       let currentRegexTargetField = null;
-
       const GEMINI_API_ENDPOINT =
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
       let GEMINI_API_KEY = localStorage.getItem("geminiApiKey");
-
       const DEBUG_MODE = true;
-
       function logDebug(message) {
         if (DEBUG_MODE) {
-          console.log(`[DEBUG]: ${message}`);
         }
       }
-
       function showApiKeyModal() {
         const modal = document.getElementById("apiKeyModal");
         if (modal) {
           modal.style.display = "flex";
         }
       }
-
       function hideApiKeyModal() {
         const modal = document.getElementById("apiKeyModal");
         if (modal) {
           modal.style.display = "none";
         }
       }
-
       function showLogoutModal() {
         const modal = document.getElementById("logoutModal");
         if (modal) {
           modal.style.display = "flex";
         }
       }
-
       function hideLogoutModal() {
         const modal = document.getElementById("logoutModal");
         if (modal) {
           modal.style.display = "none";
         }
       }
-
       function switchTab(tabId) {
         const tabs = document.querySelectorAll(".tab-button");
         const contents = document.querySelectorAll(".tab-content");
-
         tabs.forEach((tab) => {
           if (tab.id === `tabButton${tabId}`) {
             tab.classList.add("active");
@@ -912,7 +884,6 @@
             tab.classList.remove("active");
           }
         });
-
         contents.forEach((content) => {
           if (content.id === `tabContent${tabId}`) {
             content.classList.remove("hidden");
@@ -929,7 +900,6 @@
         updateAnalyzeTabButtonsState();
         updateProcessTabButtonsState();
       }
-
       function extractDataWithRegex(pdfText, config) {
         const extracted = {
           supplierName: null,
@@ -937,7 +907,6 @@
           documentNumber: null,
           totalAmount: null,
         };
-
         const extractValue = (text, pattern) => {
           if (!pattern) return null;
           try {
@@ -949,20 +918,16 @@
             }
             return null;
           } catch (e) {
-            // Invalid regex pattern, return null
             return null;
           }
         };
-
         if (config) {
           extracted.supplierName = extractValue(
             pdfText,
             config.supplierNamePattern
           );
-
           let docDate = extractValue(pdfText, config.documentDatePattern);
           extracted.documentDate = docDate;
-
           let docNumber = extractValue(pdfText, config.documentNumberPattern);
           if (docNumber) {
             docNumber = docNumber
@@ -971,7 +936,6 @@
               .trim();
           }
           extracted.documentNumber = docNumber;
-
           const totalAmountStr = extractValue(
             pdfText,
             config.totalAmountPattern
@@ -984,29 +948,21 @@
             }
           }
         }
-
         return extracted;
       }
-
       function classifyDocumentHeuristically(pdfText, userConfigurations) {
         let scores = [];
-
         const testPattern = (text, pattern) => {
           if (!pattern) return false;
           try {
-            // Check if the pattern is a valid regex before using it
             new RegExp(pattern);
             return new RegExp(pattern, "i").test(text);
           } catch (e) {
-            // Invalid regex in a template should not break the whole process
             return false;
           }
         };
-
         for (const config of userConfigurations) {
           let currentScore = 0;
-
-          // Assign weights to each pattern match
           if (testPattern(pdfText, config.supplierNamePattern)) {
             currentScore += 4;
           }
@@ -1019,35 +975,21 @@
           if (testPattern(pdfText, config.documentDatePattern)) {
             currentScore += 1;
           }
-
           if (currentScore > 0) {
-            scores.push({
-              configName: config.name,
-              score: currentScore,
-            });
+            scores.push({ configName: config.name, score: currentScore });
           }
         }
-
         if (scores.length === 0) {
           return { matchedConfigName: "None" };
         }
-
-        // Sort by score in descending order
         scores.sort((a, b) => b.score - a.score);
-
         const bestMatch = scores[0];
-
-        // Set a threshold. A score of >= 3 means we are reasonably confident.
         if (bestMatch.score >= 3) {
-          logDebug(
-            `Heuristic classification: Best match is "${bestMatch.configName}" with score ${bestMatch.score}.`
-          );
           return { matchedConfigName: bestMatch.configName };
         } else {
           return { matchedConfigName: "None" };
         }
       }
-
       async function callGeminiApi(
         pdfText,
         config = null,
@@ -1061,9 +1003,7 @@
           showApiKeyModal();
           return null;
         }
-
         const processingStatus = window.processingStatus;
-
         window.processPdfButton.disabled = true;
         window.previewButton.disabled = true;
         window.saveConfigButton.disabled = true;
@@ -1072,11 +1012,9 @@
         document.querySelectorAll(".ai-suggest-button").forEach((btn) => {
           btn.disabled = true;
         });
-
         let prompt;
         let responseMimeType = "application/json";
         let normalizedResult = {};
-
         if (classifyOnly && userConfigurations.length > 0) {
           processingStatus.textContent =
             "Identifying best template heuristically...";
@@ -1089,7 +1027,6 @@
         } else if (generateRegexForField) {
           processingStatus.textContent = "Generating regex suggestions...";
           window.regexSuggestStatus.textContent = "Generating suggestions...";
-
           let regexPrompt = `From the following document text, suggest 3-5 JavaScript-compatible regular expressions (regex) to extract the "${generateRegexForField}" field. Provide only the regex patterns, in a JSON array format like {"regexSuggestions": ["regex1", "regex2", "regex3"]}. The regex should include a capturing group for the value if applicable, and be suitable for use with JavaScript's String.prototype.match() method.`;
           if (userContextForRegex) {
             regexPrompt += `\n\nAdditional context from user: "${userContextForRegex}"`;
@@ -1103,18 +1040,14 @@
           processingStatus.textContent = isRefine
             ? "Previewing with current hints (using regex)..."
             : "Processing with saved template (using regex)...";
-
           normalizedResult = extractDataWithRegex(pdfText, config);
-
           processingStatus.textContent = isRefine
             ? "Preview complete!"
             : "Processing complete!";
-
           return normalizedResult;
         } else {
           processingStatus.textContent =
             "Sending to AI for initial analysis...";
-
           prompt = `Extract the following information from the invoice/receipt text:\n`;
           prompt += `- Supplier Name\n- Document Date\n- Document Number\n- Total Amount\n\n`;
           prompt += `Return the results in a JSON object with keys: "supplierName", "documentDate", "documentNumber", "totalAmount".\n`;

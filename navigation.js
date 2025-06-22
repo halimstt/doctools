@@ -1,28 +1,21 @@
-// navigation.js
-
-// --- Early System Theme Detection Logic (STAYS AT THE TOP) ---
-// This ensures the <html> element gets the 'dark' class immediately
-// preventing a full page theme flash.
-
 (() => {
   tailwind.config = {
-    darkMode: "class", // Enable dark mode based on the 'dark' class
+    darkMode: "class",
     theme: {
       extend: {
         colors: {
-          // Custom colors based on the Tailwind UI theme examples
-          "light-bg-primary": "#F9FAFB", // Light mode body background (gray-50/100)
-          "light-bg-secondary": "#FFFFFF", // Light mode card/container background
-          "light-text-primary": "#1F2937", // Light mode dark text (gray-900)
-          "light-text-secondary": "#4B5563", // Light mode medium text (gray-700)
-          "light-border": "#E5E7EB", // Light mode light borders (gray-200)
-          "dark-bg-primary": "#111827", // Dark mode body background (gray-900)
-          "dark-bg-secondary": "#1F2937", // Dark mode card/container background (gray-800)
-          "dark-text-primary": "#F3F4F6", // Dark mode light text (gray-100)
-          "dark-text-secondary": "#9CA3AF", // Dark mode medium text (gray-400)
-          "dark-border": "#374151", // Dark mode dark borders (gray-700)
-          "accent-blue-light": "#2563EB", // Blue for light mode accent (blue-600)
-          "accent-blue-dark": "#60A5FA", // Blue for dark mode accent (blue-400)
+          "light-bg-primary": "#F9FAFB",
+          "light-bg-secondary": "#FFFFFF",
+          "light-text-primary": "#1F2937",
+          "light-text-secondary": "#4B5563",
+          "light-border": "#E5E7EB",
+          "dark-bg-primary": "#111827",
+          "dark-bg-secondary": "#1F2937",
+          "dark-text-primary": "#F3F4F6",
+          "dark-text-secondary": "#9CA3AF",
+          "dark-border": "#374151",
+          "accent-blue-light": "#2563EB",
+          "accent-blue-dark": "#60A5FA",
         },
       },
     },
@@ -59,7 +52,6 @@
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
-  // The HTML string for your navigation
   const navHtml = `
     <header class="bg-white shadow-sm dark:bg-gray-800">
       <div class="container mx-auto px-4 py-4 flex justify-between items-center relative">
@@ -92,14 +84,11 @@ document.addEventListener("DOMContentLoaded", () => {
     </header>
   `;
 
-  // Find the placeholder and replace its outerHTML with the actual navigation
   const navPlaceholder = document.getElementById("nav-placeholder");
   if (navPlaceholder) {
     navPlaceholder.outerHTML = navHtml;
   }
 
-  // --- Mobile Menu Toggle Logic (STAYS AS IS) ---
-  // These elements now exist within the dynamically replaced navHtml
   const mobileMenuButton = document.getElementById("mobile-menu-button");
   const mobileMenu = document.getElementById("mobile-menu");
 
