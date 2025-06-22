@@ -217,7 +217,7 @@
         class="mb-6 border-b border-light-border dark:border-dark-border flex"
       >
         <button id="tabButtonProcess" class="tab-button active">Extract</button>
-        <button id="tabButtonAnalyze" class="tab-button">Template</button>
+        <button id="tabButtonTemplate" class="tab-button">Template</button>
       </div>
 
       <main>
@@ -361,7 +361,7 @@
 
         <!-- Tab content for Template Editor and Analysis -->
         <div
-          id="tabContentAnalyze"
+          id="tabContentTemplate"
           class="tab-content w-full flex flex-col md:flex-row gap-8 hidden"
         >
           <div class="flex-1 md:pr-4">
@@ -603,7 +603,7 @@
             </div>
           </div>
 
-          <!-- Extracted Information Display and PDF Preview -->
+          <!-- Extracted Information Display and PDF Raw Text Preview -->
           <div class="flex-1 md:pl-4 mt-8 md:mt-0">
             <h2
               class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4"
@@ -615,31 +615,33 @@
             >
               <p>
                 <strong>Supplier Name:</strong>
-                <span id="supplierName">N/A</span>
+                <span id="supplierName">-</span>
               </p>
               <p>
                 <strong>Document Date:</strong>
-                <span id="documentDate">N/A</span>
+                <span id="documentDate">-</span>
               </p>
               <p>
                 <strong>Document Number:</strong>
-                <span id="documentNumber">N/A</span>
+                <span id="documentNumber">-</span>
               </p>
               <p>
-                <strong>Total Amount:</strong> <span id="totalAmount">N/A</span>
+                <strong>Total Amount:</strong> <span id="totalAmount">-</span>
               </p>
             </div>
 
             <h2
               class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mt-8 mb-4"
             >
-              Document Preview (<span id="currentAnalysisFileName">N/A</span>)
+              Raw Text Preview (<span id="currentAnalysisFileName">-</span>)
             </h2>
             <div class="mb-4">
-              <canvas
-                id="pdfCanvas"
-                class="w-full border border-light-border dark:border-dark-border rounded-lg"
-              ></canvas>
+              <textarea
+                id="pdfRawTextPreview"
+                class="w-full h-96 p-4 border border-light-border dark:border-dark-border rounded-lg bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary font-mono text-xs overflow-auto"
+                readonly
+                placeholder="Upload a PDF and switch to the Template tab to see its raw text content here."
+              ></textarea>
             </div>
           </div>
         </div>

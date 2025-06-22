@@ -7,7 +7,7 @@
 
 // Main application state
 let uploadedFiles = [];
-let currentPdfTextForAnalysis = ""; // Stores text of the PDF currently displayed in Analyze tab
+let currentPdfTextForAnalysis = ""; // Stores text of the PDF currently displayed in Template tab
 let activeConfig = null; // The currently loaded template configuration
 let serverConfigurations = []; // Array of configurations loaded from template.json
 let allExtractedData = []; // All extracted invoice data from processed PDFs
@@ -26,7 +26,7 @@ const userIconContainer = document.getElementById("userIconContainer");
 const userIcon = document.getElementById("userIcon");
 const defaultUserSvg = document.getElementById("defaultUserSvg");
 const pdfUpload = document.getElementById("pdfUpload");
-const pdfCanvas = document.getElementById("pdfCanvas");
+const pdfRawTextPreview = document.getElementById("pdfRawTextPreview");
 const processPdfButton = document.getElementById("processPdfButton");
 const processingStatus = document.getElementById("processingStatus");
 const supplierNameSpan = document.getElementById("supplierName");
@@ -59,9 +59,9 @@ const currentAnalysisFileName = document.getElementById(
   "currentAnalysisFileName"
 );
 const tabButtonProcess = document.getElementById("tabButtonProcess");
-const tabButtonAnalyze = document.getElementById("tabButtonAnalyze");
+const tabButtonTemplate = document.getElementById("tabButtonTemplate");
 const tabContentProcess = document.getElementById("tabContentProcess");
-const tabContentAnalyze = document.getElementById("tabContentAnalyze");
+const tabContentTemplate = document.getElementById("tabContentTemplate");
 const aiSuggestDateBtn = document.getElementById("aiSuggestDateBtn");
 const aiSuggestNumberBtn = document.getElementById("aiSuggestNumberBtn");
 const aiSuggestAmountBtn = document.getElementById("aiSuggestAmountBtn");
@@ -127,7 +127,7 @@ function hideApiKeyModal() {
 }
 
 /**
- * Shows a generic confirmation modal (replaces the old logout modal for general confirmations).
+ * Shows a generic confirmation modal.
  * @param {string} title - The title of the modal.
  * @param {string} message - The message to display.
  * @param {string} confirmText - Text for the confirm button.
@@ -169,8 +169,8 @@ function hideConfirmationModal() {
 }
 
 /**
- * Switches between the "Process" and "Analyze" tabs.
- * @param {string} tabId - The ID of the tab to switch to ("Process" or "Analyze").
+ * Switches between the "Process" and "Template" tabs.
+ * @param {string} tabId - The ID of the tab to switch to ("Process" or "Template").
  */
 function switchTab(tabId) {
   const tabs = document.querySelectorAll(".tab-button");
@@ -187,18 +187,18 @@ function switchTab(tabId) {
   contents.forEach((content) => {
     if (content.id === `tabContent${tabId}`) {
       content.classList.remove("hidden");
-      if (tabId === "Analyze") {
-        content.classList.add("flex"); // Ensure flex display for Analyze tab layout
+      if (tabId === "Template") {
+        content.classList.add("flex"); // Ensure flex display for Template tab layout
       }
     } else {
       content.classList.add("hidden");
-      if (content.id === "tabContentAnalyze") {
+      if (content.id === "tabContentTemplate") {
         content.classList.remove("flex");
       }
     }
   });
 
-  updateAnalyzeTabButtonsState();
+  updateTemplateTabButtonsState();
   updateProcessTabButtonsState();
 }
 
@@ -594,7 +594,7 @@ async function callGeminiApi(
     throw error; // Re-throw to propagate error
   } finally {
     // Ensure buttons are re-enabled after API call
-    updateAnalyzeTabButtonsState();
+    updateTemplateTabButtonsState();
     updateProcessTabButtonsState();
   }
 }
@@ -742,7 +742,7 @@ async function generateRegexSuggestions() {
   if (!GEMINI_API_KEY) {
     showApiKeyModal(); // Prompt for API key if missing
     generateRegexButton.disabled = false; // Re-enable button if modal shown
-    updateAnalyzeTabButtonsState();
+    updateTemplateTabButtonsState();
     return;
   }
 
@@ -815,17 +815,13 @@ function handlePdfUpload(event) {
 }
 
 /**
- * Renders the first page of a PDF file onto the canvas for preview.
- * Also extracts all text from the PDF for analysis.
- * @param {File} file - The PDF File object to render.
+ * Extracts and displays the raw text content of a PDF file in the text area.
+ * @param {File} file - The PDF File object to process.
  */
-async function renderPdfToCanvas(file) {
-  // Clear canvas and reset display if no valid file
+async function displayPdfTextForAnalysis(file) {
+  // Clear text area and reset display if no valid file
   if (!file || file.type !== "application/pdf") {
-    const context = pdfCanvas.getContext("2d");
-    if (context) {
-      context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
-    }
+    pdfRawTextPreview.value = "";
     currentAnalysisFileName.textContent = "-";
     currentPdfTextForAnalysis = "";
     return;
@@ -837,46 +833,27 @@ async function renderPdfToCanvas(file) {
     const pdfData = new Uint8Array(e.target.result);
     try {
       const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-      const page = await pdf.getPage(1); // Get the first page
-      const viewport = page.getViewport({ scale: 1.5 }); // Set a scale for rendering
-      const context = pdfCanvas.getContext("2d");
-
-      // Set canvas dimensions to match viewport
-      pdfCanvas.height = viewport.height;
-      pdfCanvas.width = viewport.width;
-
-      const renderContext = {
-        canvasContext: context,
-        viewport: viewport,
-      };
-      await page.render(renderContext).promise; // Render page to canvas
-
-      // Extract all text from the PDF
       let fullText = "";
       for (let i = 1; i <= pdf.numPages; i++) {
         const currentPage = await pdf.getPage(i);
         const textContent = await currentPage.getTextContent();
         fullText += textContent.items.map((item) => item.str).join(" ") + "\n";
       }
-      currentPdfTextForAnalysis = fullText; // Store extracted text
+      currentPdfTextForAnalysis = fullText; // Store extracted text for analysis
+      pdfRawTextPreview.value = fullText; // Display text in the textarea
     } catch (error) {
-      // Clear canvas on error
-      const context = pdfCanvas.getContext("2d");
-      if (context) {
-        context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
-      }
-      // Use a custom modal for alerts instead of browser alert()
+      pdfRawTextPreview.value = ""; // Clear text area on error
       showConfirmationModal(
-        "PDF Preview Error",
-        "Error loading PDF preview: " + error.message,
+        "PDF Text Extraction Error",
+        "Error extracting text from PDF: " + error.message,
         "OK",
         () => {},
         () => {}
       );
-      console.error("PDF Preview Error:", error);
+      console.error("PDF Text Extraction Error:", error);
       currentPdfTextForAnalysis = ""; // Clear text on error
     } finally {
-      updateAnalyzeTabButtonsState(); // Re-enable buttons
+      updateTemplateTabButtonsState(); // Re-enable buttons
     }
   };
   reader.readAsArrayBuffer(file); // Start reading the file
@@ -967,7 +944,7 @@ async function loadServerConfigurations() {
     );
     console.error("Load server config error:", error);
   } finally {
-    updateAnalyzeTabButtonsState(); // Update button states
+    updateTemplateTabButtonsState(); // Update button states
     updateProcessTabButtonsState();
   }
 }
@@ -1007,7 +984,7 @@ function autoLoadSelectedConfiguration() {
     );
     activeConfig = null; // Clear active config
   }
-  updateAnalyzeTabButtonsState(); // Re-enable buttons
+  updateTemplateTabButtonsState(); // Re-enable buttons
   updateProcessTabButtonsState();
 }
 
@@ -1096,35 +1073,36 @@ function appendExtractedResultToTable(data, index) {
       </td>
   `;
 
-  // Add event listener to "Analyze" button in the row
+  // Add event listener to "Template" button in the row
   newRow
     .querySelector(".analyze-row-button")
     .addEventListener("click", async (e) => {
       const clickedIndex = parseInt(e.target.closest("button").dataset.index);
-      const dataToAnalyze = allExtractedData[clickedIndex];
-      const fileToAnalyze = allExtractedData[clickedIndex].originalFile;
+      const dataToTemplate = allExtractedData[clickedIndex];
+      const fileToTemplate = allExtractedData[clickedIndex].originalFile;
 
-      switchTab("Analyze"); // Switch to Analyze tab
+      switchTab("Template"); // Switch to Template tab
 
-      await renderPdfToCanvas(fileToAnalyze); // Render PDF for analysis
+      await displayPdfTextForAnalysis(fileToTemplate); // Display raw text for analysis
 
       // Populate extracted information display
-      supplierNameSpan.textContent = dataToAnalyze.extractedSupplierName || "-";
+      supplierNameSpan.textContent =
+        dataToTemplate.extractedSupplierName || "-";
       documentDateSpan.textContent = formatDateForDisplay(
-        dataToAnalyze.documentDate
+        dataToTemplate.documentDate
       );
-      documentNumberSpan.textContent = dataToAnalyze.documentNumber || "-";
+      documentNumberSpan.textContent = dataToTemplate.documentNumber || "-";
       totalAmountSpan.textContent = formatAmountForDisplay(
-        dataToAnalyze.totalAmount
+        dataToTemplate.totalAmount
       );
 
       // If a configuration was used, try to load it into the template editor
       if (
-        dataToAnalyze.configUsedName &&
-        dataToAnalyze.configUsedName !== "None"
+        dataToTemplate.configUsedName &&
+        dataToTemplate.configUsedName !== "-"
       ) {
         const foundConfigIndex = serverConfigurations.findIndex(
-          (cfg) => cfg.name === dataToAnalyze.configUsedName
+          (cfg) => cfg.name === dataToTemplate.configUsedName
         );
         if (foundConfigIndex !== -1) {
           configSelect.value = foundConfigIndex; // Select in dropdown
@@ -1140,7 +1118,7 @@ function appendExtractedResultToTable(data, index) {
         resetConfigInputFields();
       }
 
-      updateAnalyzeTabButtonsState();
+      updateTemplateTabButtonsState();
     });
 }
 
@@ -1227,11 +1205,11 @@ function resetConfigInputFields() {
   documentNumberHintInput.value = "";
   totalAmountHintInput.value = "";
   activeConfig = null; // Clear active config
-  updateAnalyzeTabButtonsState();
+  updateTemplateTabButtonsState();
 }
 
 /**
- * Resets the displayed extracted fields and PDF preview in the "Analyze" tab.
+ * Resets the displayed extracted fields and PDF raw text preview in the "Template" tab.
  */
 function resetExtractedFieldsForAnalysisTab() {
   supplierNameSpan.textContent = "-";
@@ -1240,24 +1218,14 @@ function resetExtractedFieldsForAnalysisTab() {
   totalAmountSpan.textContent = "-";
   currentAnalysisFileName.textContent = "-";
   currentPdfTextForAnalysis = ""; // Clear PDF text for analysis
-
-  // Clear PDF canvas
-  const context = pdfCanvas.getContext("2d");
-  if (context) {
-    context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
-  }
-  updateAnalyzeTabButtonsState();
+  pdfRawTextPreview.value = ""; // Clear the text area
+  updateTemplateTabButtonsState();
 }
 
 /**
  * Resets the entire UI of the Invoice Converter application.
  */
 function resetUI() {
-  // Clear PDF canvas
-  const context = pdfCanvas.getContext("2d");
-  if (context) {
-    context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
-  }
   uploadedFiles = [];
   updateInvoiceFileDisplay(); // Clear uploaded files display
   currentPdfTextForAnalysis = "";
@@ -1269,7 +1237,7 @@ function resetUI() {
   hideConfirmationModal(); // Hide the confirmation modal
   clearAllResults(); // Clear extracted results table
   switchTab("Process"); // Go back to Process tab
-  updateAnalyzeTabButtonsState();
+  updateTemplateTabButtonsState();
   updateProcessTabButtonsState();
 }
 
@@ -1302,9 +1270,9 @@ function updateProcessTabButtonsState() {
 }
 
 /**
- * Updates the disabled state of buttons in the "Analyze" tab based on PDF loaded.
+ * Updates the disabled state of buttons in the "Template" tab based on PDF loaded.
  */
-function updateAnalyzeTabButtonsState() {
+function updateTemplateTabButtonsState() {
   const isPdfLoadedForAnalysis = currentPdfTextForAnalysis.length > 0;
   const hasConfigName = configNameInput.value.trim().length > 0;
   // const isConfigSelected = configSelect.value !== ""; // Removed this check as config loads automatically
@@ -1334,14 +1302,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Initial UI setup
   switchTab("Process"); // Start on the Process tab
-  updateAnalyzeTabButtonsState(); // Set initial button states
+  updateTemplateTabButtonsState(); // Set initial button states
   updateProcessTabButtonsState();
 
   // --- Event Listeners for UI Interactions ---
 
   // Tab switching
   tabButtonProcess.addEventListener("click", () => switchTab("Process"));
-  tabButtonAnalyze.addEventListener("click", () => switchTab("Analyze"));
+  tabButtonTemplate.addEventListener("click", () => switchTab("Template"));
 
   // API Key modal buttons
   saveApiKeyButton.addEventListener("click", () => {
@@ -1363,7 +1331,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   cancelApiKeyButton.addEventListener("click", () => {
     hideApiKeyModal();
-    updateAnalyzeTabButtonsState(); // Re-enable buttons if API key was mandatory
+    updateTemplateTabButtonsState(); // Re-enable buttons if API key was mandatory
   });
 
   // User icon (no longer for login, just a visual placeholder)
@@ -1555,7 +1523,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateProcessTabButtonsState(); // Update button states after all files processed
   });
 
-  // Preview button click handler in "Analyze" tab
+  // Preview button click handler in "Template" tab
   previewButton.addEventListener("click", async () => {
     if (!currentPdfTextForAnalysis) {
       // Use a custom modal for alerts instead of browser alert()
@@ -1618,7 +1586,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
       console.error("Preview error:", error);
     } finally {
-      updateAnalyzeTabButtonsState();
+      updateTemplateTabButtonsState();
       updateProcessTabButtonsState();
     }
   });
@@ -1663,6 +1631,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Update analyze tab buttons state when config selection changes
   configSelect.addEventListener("change", () => {
-    updateAnalyzeTabButtonsState();
+    updateTemplateTabButtonsState();
   });
 });
