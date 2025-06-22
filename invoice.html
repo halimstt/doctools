@@ -166,7 +166,7 @@
           0 2px 4px -1px rgba(0, 0, 0, 0.06);
         position: relative;
       }
-      /* User icon container styling */
+      /* User icon container styling (kept for visual consistency, though no login) */
       #userIconContainer {
         width: 40px;
         height: 40px;
@@ -174,16 +174,16 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
+        cursor: default; /* Changed to default as no click action */
         overflow: hidden;
         border: 2px solid transparent;
         transition: all 0.2s ease-in-out;
       }
       #userIconContainer:hover {
-        border-color: #2563eb;
+        border-color: transparent; /* No hover effect without login */
       }
       .dark #userIconContainer:hover {
-        border-color: #60a5fa;
+        border-color: transparent;
       }
       #userIcon {
         width: 100%;
@@ -210,28 +210,6 @@
         >
           Invoices Converter
         </h1>
-        <!-- User profile icon and authentication -->
-        <div class="absolute top-0 right-0 flex items-center space-x-2">
-          <div
-            id="userIconContainer"
-            class="default-icon bg-light-border dark:bg-dark-border"
-          >
-            <img id="userIcon" src="" alt="User Profile" class="hidden" />
-            <svg
-              id="defaultUserSvg"
-              class="w-6 h-6 text-light-text-secondary dark:text-dark-text-secondary"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </div>
-        </div>
       </header>
 
       <!-- Tab navigation for Extract and Template sections -->
@@ -429,28 +407,14 @@
                 <label
                   for="configSelect"
                   class="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1"
-                  >Load Saved Template</label
+                  >Select Template</label
                 >
                 <select
                   id="configSelect"
                   class="block w-full py-2 px-3 border border-light-border dark:border-dark-border bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-md shadow-sm focus:outline-none focus:ring-accent-blue-light focus:border-accent-blue-light dark:focus:ring-accent-blue-dark dark:focus:border-accent-blue-dark sm:text-sm"
                 ></select>
               </div>
-              <div class="flex space-x-2">
-                <button
-                  id="loadConfigButton"
-                  class="flex-1 bg-gray-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-                >
-                  Load Selected
-                </button>
-                <button
-                  id="deleteConfigButton"
-                  class="flex-1 bg-red-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-                >
-                  Delete Selected
-                </button>
-              </div>
-
+              <!-- Removed Load Selected and Delete Selected buttons -->
               <h3
                 class="text-xl font-bold text-light-text-primary dark:text-dark-text-primary pt-4"
               >
@@ -621,7 +585,7 @@
                 </div>
               </div>
 
-              <!-- Preview and Save Template buttons -->
+              <!-- Preview and Download Config buttons -->
               <div class="flex space-x-2 pt-4">
                 <button
                   id="previewButton"
@@ -630,10 +594,10 @@
                   Preview
                 </button>
                 <button
-                  id="saveConfigButton"
+                  id="downloadConfigButton"
                   class="flex-1 bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
                 >
-                  Save Template
+                  Download Config
                 </button>
               </div>
             </div>
@@ -682,7 +646,7 @@
       </main>
     </div>
 
-    <!-- Modals (API Key, Logout, Regex Suggestion) -->
+    <!-- Modals (API Key, Regex Suggestion, and a generic Confirmation Modal) -->
     <div id="apiKeyModal" class="modal">
       <div
         class="modal-content bg-light-bg-secondary dark:bg-dark-bg-secondary"
@@ -726,34 +690,35 @@
       </div>
     </div>
 
-    <div id="logoutModal" class="modal">
+    <!-- Generic Confirmation Modal - Replaces old logoutModal -->
+    <div id="confirmationModal" class="modal">
       <div
         class="modal-content bg-light-bg-secondary dark:bg-dark-bg-secondary"
       >
         <h2
-          id="logoutModalTitle"
+          id="confirmationModalTitle"
           class="text-xl font-bold mb-4 text-light-text-primary dark:text-dark-text-primary"
         >
-          Sign Out?
+          Confirmation
         </h2>
         <p
-          id="logoutModalText"
+          id="confirmationModalText"
           class="text-sm text-light-text-secondary dark:text-dark-text-secondary mb-4"
         >
-          Are you sure you want to sign out?
+          Are you sure?
         </p>
         <div class="flex justify-end space-x-2">
           <button
-            id="cancelLogoutButton"
+            id="cancelConfirmationButton"
             class="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
             Cancel
           </button>
           <button
-            id="confirmLogoutButton"
-            class="bg-red-600 text-white font-bold py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+            id="confirmActionButton"
+            class="bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
           >
-            Sign Out
+            Confirm
           </button>
         </div>
       </div>

@@ -1,57 +1,15 @@
 // invoice-script.js
 
-// --- 1. Firebase Imports and Initialization ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut,
-  signInAnonymously,
-} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  getDoc,
-} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
-
-// --- IMPORTANT: REPLACE THIS WITH YOUR ACTUAL FIREBASE CONFIG ---
-// Go to your Firebase project settings -> "Your apps" -> select your web app to find this.
-const firebaseConfig = {
-  apiKey: "AIzaSyCMXn3b0kul6cYiqqyFejFyX_6Hp0wXqY0",
-  authDomain: "invoice-extractor-ec792.firebaseapp.com",
-  projectId: "invoice-extractor-ec792",
-  storageBucket: "invoice-extractor-ec792.firebasestorage.app",
-  messagingSenderId: "532030177380",
-  appId: "1:532030177380:web:aa69cfdbc842c196435f71",
-  measurementId: "G-1WJ1KLDQB4",
-};
-
-// Use a static app ID for self-hosting, or generate one if truly dynamic
-// For a simple client-side app, you might just use a constant string.
-const appId = firebaseConfig.appId || "your-default-app-id"; // Use Firebase config's appId or a fallback
-
-// Initialize Firebase App
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// --- 1. Firebase Imports and Initialization (REMOVED) ---
+// Firebase is no longer used for authentication or configuration storage.
 
 // --- 2. Global Variables and DOM Element References ---
 
 // Main application state
 let uploadedFiles = [];
 let currentPdfTextForAnalysis = ""; // Stores text of the PDF currently displayed in Analyze tab
-let currentUser = null; // Firebase user object
 let activeConfig = null; // The currently loaded template configuration
-let userConfigurations = []; // Array of saved user templates
+let serverConfigurations = []; // Array of configurations loaded from template.json
 let allExtractedData = []; // All extracted invoice data from processed PDFs
 let currentRegexTargetField = null; // Field for which AI regex suggestions are being generated (e.g., 'documentDate')
 
@@ -83,10 +41,9 @@ const supplierNameHintInput = document.getElementById("supplierNameHint");
 const documentDateHintInput = document.getElementById("documentDateHint");
 const documentNumberHintInput = document.getElementById("documentNumberHint");
 const totalAmountHintInput = document.getElementById("totalAmountHint");
-const saveConfigButton = document.getElementById("saveConfigButton");
+const downloadConfigButton = document.getElementById("downloadConfigButton"); // Renamed
 const configSelect = document.getElementById("configSelect");
-const loadConfigButton = document.getElementById("loadConfigButton");
-const deleteConfigButton = document.getElementById("deleteConfigButton");
+// Removed loadConfigButton and deleteConfigButton
 const previewButton = document.getElementById("previewButton");
 const dropArea = document.getElementById("dropArea");
 const uploadedFilesList = document.getElementById("uploadedFilesList");
@@ -112,11 +69,18 @@ const apiKeyModal = document.getElementById("apiKeyModal");
 const apiKeyValueInput = document.getElementById("apiKeyValueInput");
 const saveApiKeyButton = document.getElementById("saveApiKeyButton");
 const cancelApiKeyButton = document.getElementById("cancelApiKeyButton");
-const logoutModal = document.getElementById("logoutModal");
-const confirmLogoutButton = document.getElementById("confirmLogoutButton");
-const cancelLogoutButton = document.getElementById("cancelLogoutButton");
-const logoutModalTitle = document.getElementById("logoutModalTitle");
-const logoutModalText = document.getElementById("logoutModalText");
+
+// New confirmation modal elements
+const confirmationModal = document.getElementById("confirmationModal");
+const confirmationModalTitle = document.getElementById(
+  "confirmationModalTitle"
+);
+const confirmationModalText = document.getElementById("confirmationModalText");
+const confirmActionButton = document.getElementById("confirmActionButton");
+const cancelConfirmationButton = document.getElementById(
+  "cancelConfirmationButton"
+);
+
 const regexSuggestModal = document.getElementById("regexSuggestModal");
 const regexSuggestModalTitle = document.getElementById(
   "regexSuggestModalTitle"
@@ -163,17 +127,45 @@ function hideApiKeyModal() {
 }
 
 /**
- * Shows the logout confirmation modal.
+ * Shows a generic confirmation modal (replaces the old logout modal for general confirmations).
+ * @param {string} title - The title of the modal.
+ * @param {string} message - The message to display.
+ * @param {string} confirmText - Text for the confirm button.
+ * @param {Function} onConfirm - Callback function when confirm is clicked.
+ * @param {Function} onCancel - Callback function when cancel is clicked.
  */
-function showLogoutModal() {
-  logoutModal.style.display = "flex";
+function showConfirmationModal(
+  title,
+  message,
+  confirmText,
+  onConfirm,
+  onCancel
+) {
+  confirmationModalTitle.textContent = title;
+  confirmationModalText.textContent = message;
+  confirmActionButton.textContent = confirmText;
+
+  // Clear previous listeners to prevent multiple calls
+  confirmActionButton.onclick = null;
+  cancelConfirmationButton.onclick = null;
+
+  confirmActionButton.onclick = () => {
+    hideConfirmationModal();
+    onConfirm();
+  };
+  cancelConfirmationButton.onclick = () => {
+    hideConfirmationModal();
+    onCancel();
+  };
+
+  confirmationModal.style.display = "flex";
 }
 
 /**
- * Hides the logout confirmation modal.
+ * Hides the generic confirmation modal.
  */
-function hideLogoutModal() {
-  logoutModal.style.display = "none";
+function hideConfirmationModal() {
+  confirmationModal.style.display = "none";
 }
 
 /**
@@ -214,13 +206,13 @@ function switchTab(tabId) {
  * Formats an amount for display, ensuring 2 decimal places and locale-specific formatting.
  * Handles null, NaN, and error strings gracefully.
  * @param {number|string|null} amount - The amount to format.
- * @returns {string} The formatted amount string or "N/A" / "Error".
+ * @returns {string} The formatted amount string or "-" / "Error".
  */
 function formatAmountForDisplay(amount) {
   if (
     amount === null ||
     isNaN(amount) ||
-    amount === "N/A" ||
+    amount === "-" ||
     amount === "Error" ||
     amount === undefined
   ) {
@@ -228,7 +220,7 @@ function formatAmountForDisplay(amount) {
   }
   let parsedAmount = parseFloat(amount);
   if (isNaN(parsedAmount)) {
-    return "N/A";
+    return "-";
   }
   // Format with thousands separators and two decimal places
   return parsedAmount.toLocaleString("en-US", {
@@ -239,12 +231,12 @@ function formatAmountForDisplay(amount) {
 
 /**
  * Formats a date string for display in DD/MM/YY format.
- * Handles various date formats (DD/MM/YYYY, YYYY-MM-DD, or general date strings).
+ * Handles various date formats (DD/MM/YYYY, ISO-MM-DD, or general date strings).
  * @param {string} dateString - The date string to format.
  * @returns {string} The formatted date string or the original string if invalid.
  */
 function formatDateForDisplay(dateString) {
-  if (!dateString || dateString === "N/A" || dateString === "Error")
+  if (!dateString || dateString === "-" || dateString === "Error")
     return dateString;
   try {
     let date;
@@ -253,7 +245,7 @@ function formatDateForDisplay(dateString) {
       const parts = dateString.split("/");
       date = new Date(parts[2], parts[1] - 1, parts[0]);
     }
-    // Attempt to parse YYYY-MM-DD
+    // Attempt to parse ISO-MM-DD
     else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
       date = new Date(dateString);
     }
@@ -386,7 +378,14 @@ function useSelectedRegex() {
     hideRegexSuggestModal(); // Close modal
     previewButton.click(); // Trigger a preview to see the effect of the new regex
   } else {
-    alert("Please select a regex suggestion first.");
+    // Use a custom modal for alerts instead of browser alert()
+    showConfirmationModal(
+      "Selection Required",
+      "Please select a regex suggestion first.",
+      "OK",
+      () => {}, // No action on OK
+      () => {} // No action on Cancel
+    );
   }
 }
 
@@ -447,9 +446,7 @@ async function callGeminiApi(
   // Disable buttons during API call
   processPdfButton.disabled = true;
   previewButton.disabled = true;
-  saveConfigButton.disabled = true;
-  loadConfigButton.disabled = true;
-  deleteConfigButton.disabled = true;
+  downloadConfigButton.disabled = true; // Renamed
   document.querySelectorAll(".ai-suggest-button").forEach((btn) => {
     btn.disabled = true;
   });
@@ -459,11 +456,11 @@ async function callGeminiApi(
   let normalizedResult = {}; // To store the parsed result
 
   // Logic for document classification (heuristic)
-  if (classifyOnly && userConfigurations.length > 0) {
+  if (classifyOnly && serverConfigurations.length > 0) {
     processingStatus.textContent = "Identifying best template heuristically...";
     normalizedResult = classifyDocumentHeuristically(
       pdfText,
-      userConfigurations
+      serverConfigurations
     );
     processingStatus.textContent = "Heuristic classification complete!";
     return normalizedResult;
@@ -487,7 +484,7 @@ async function callGeminiApi(
   else if (!useLlmsForOperation) {
     processingStatus.textContent = isRefine
       ? "Previewing with current hints (using regex)..."
-      : "Processing with saved template (using regex)...";
+      : "Processing with selected template (using regex)...";
     normalizedResult = extractDataWithRegex(pdfText, config);
     processingStatus.textContent = isRefine
       ? "Preview complete!"
@@ -586,8 +583,12 @@ async function callGeminiApi(
   } catch (error) {
     processingStatus.textContent = `AI operation failed: ${error.message}`;
     // Use custom modal for alerts instead of browser alert()
-    alert(
-      "Error during AI operation. See console for details: " + error.message
+    showConfirmationModal(
+      "AI Operation Error",
+      "Error during AI operation. See console for details: " + error.message,
+      "OK",
+      () => {},
+      () => {}
     );
     regexSuggestStatus.textContent = `Error: ${error.message}`; // Update status in regex modal
     throw error; // Re-throw to propagate error
@@ -665,10 +666,10 @@ function extractDataWithRegex(pdfText, config) {
 /**
  * Classifies a document to a known template heuristically based on regex pattern matches.
  * @param {string} pdfText - The text content of the PDF.
- * @param {Array<Object>} userConfigurations - Array of user-defined template configurations.
+ * @param {Array<Object>} configurations - Array of template configurations.
  * @returns {Object} An object indicating the matched configuration name and score.
  */
-function classifyDocumentHeuristically(pdfText, userConfigurations) {
+function classifyDocumentHeuristically(pdfText, configurations) {
   let scores = [];
 
   /**
@@ -686,7 +687,7 @@ function classifyDocumentHeuristically(pdfText, userConfigurations) {
     }
   };
 
-  for (const config of userConfigurations) {
+  for (const config of configurations) {
     let currentScore = 0;
     // Assign higher scores for more unique identifiers
     if (testPattern(pdfText, config.supplierNamePattern)) {
@@ -726,9 +727,14 @@ function classifyDocumentHeuristically(pdfText, userConfigurations) {
  * Generates regex suggestions for a specific field using the Gemini API.
  */
 async function generateRegexSuggestions() {
-  if (!currentUser || !currentPdfTextForAnalysis) {
-    alert(
-      "A PDF must be loaded for analysis and you must be signed in to generate regex suggestions."
+  if (!currentPdfTextForAnalysis) {
+    // Use a custom modal for alerts instead of browser alert()
+    showConfirmationModal(
+      "Missing PDF",
+      "A PDF must be loaded for analysis to generate regex suggestions.",
+      "OK",
+      () => {},
+      () => {}
     );
     return;
   }
@@ -820,7 +826,7 @@ async function renderPdfToCanvas(file) {
     if (context) {
       context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
     }
-    currentAnalysisFileName.textContent = "N/A";
+    currentAnalysisFileName.textContent = "-";
     currentPdfTextForAnalysis = "";
     return;
   }
@@ -859,7 +865,14 @@ async function renderPdfToCanvas(file) {
       if (context) {
         context.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
       }
-      alert("Error loading PDF preview: " + error.message);
+      // Use a custom modal for alerts instead of browser alert()
+      showConfirmationModal(
+        "PDF Preview Error",
+        "Error loading PDF preview: " + error.message,
+        "OK",
+        () => {},
+        () => {}
+      );
       console.error("PDF Preview Error:", error);
       currentPdfTextForAnalysis = ""; // Clear text on error
     } finally {
@@ -870,32 +883,23 @@ async function renderPdfToCanvas(file) {
 }
 
 /**
- * Saves the current template configuration to Firestore.
+ * Downloads the current template configuration as a JSON file.
  */
-async function saveConfiguration() {
-  if (!currentUser) {
-    alert("Please sign in to save templates.");
-    return;
-  }
-
+function downloadConfig() {
   const templateName = configNameInput.value.trim();
   if (!templateName) {
-    alert("Please enter a template name.");
+    // Use a custom modal for alerts instead of browser alert()
+    showConfirmationModal(
+      "Missing Template Name",
+      "Please enter a template name to download the configuration.",
+      "OK",
+      () => {},
+      () => {}
+    );
     return;
   }
 
-  // Disable buttons during save operation
-  saveConfigButton.disabled = true;
-  loadConfigButton.disabled = true;
-  deleteConfigButton.disabled = true;
-  previewButton.disabled = true;
-
-  const userConfigsCollectionRef = collection(
-    db,
-    `artifacts/${appId}/users/${currentUser.uid}/configurations`
-  );
-
-  const newConfig = {
+  const currentConfig = {
     name: templateName,
     officialSupplierNameForExport:
       officialSupplierNameForExportInput.value.trim(),
@@ -903,192 +907,108 @@ async function saveConfiguration() {
     documentDatePattern: documentDateHintInput.value,
     documentNumberPattern: documentNumberHintInput.value,
     totalAmountPattern: totalAmountHintInput.value,
-    createdAt: new Date(),
   };
 
-  try {
-    // Check if a template with the same name already exists for the user
-    const q = query(
-      userConfigsCollectionRef,
-      where("name", "==", templateName)
-    );
-    const querySnapshot = await getDocs(q);
-
-    if (!querySnapshot.empty) {
-      // If exists, update it
-      const configDoc = querySnapshot.docs[0];
-      await updateDoc(doc(userConfigsCollectionRef, configDoc.id), newConfig);
-      alert("Template updated successfully!");
-    } else {
-      // Otherwise, add a new document
-      await addDoc(userConfigsCollectionRef, newConfig);
-      alert("Template saved successfully!");
-    }
-    await loadUserConfigurations(currentUser.uid); // Reload configurations after saving
-  } catch (error) {
-    alert("Failed to save template: " + error.message);
-    console.error("Save config error:", error);
-  } finally {
-    updateAnalyzeTabButtonsState(); // Re-enable buttons
-    updateProcessTabButtonsState();
-  }
+  const configJson = JSON.stringify(currentConfig, null, 2); // Pretty print JSON
+  const blob = new Blob([configJson], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${templateName
+    .toLowerCase()
+    .replace(/\s/g, "-")}-template.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url); // Clean up the object URL
 }
 
 /**
- * Loads user-specific template configurations from Firestore and populates the dropdown.
- * @param {string} uid - The current user's UID.
+ * Loads template configurations from `template.json` file.
  */
-async function loadUserConfigurations(uid) {
-  // Clear existing options and set a default
-  configSelect.innerHTML = '<option value="">-- Select a template --</option>';
-  userConfigurations = []; // Clear current configurations
+async function loadServerConfigurations() {
+  configSelect.innerHTML = '<option value="">-- Select a template --</option>'; // Clear existing options
+  serverConfigurations = []; // Clear current configurations
 
   try {
-    const userConfigsCollectionRef = collection(
-      db,
-      `artifacts/${appId}/users/${uid}/configurations`
-    );
-    const q = query(userConfigsCollectionRef);
-    const querySnapshot = await getDocs(q); // Fetch documents
+    const response = await fetch("template.json"); // Fetch the static config file
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    if (!Array.isArray(data)) {
+      throw new Error("template.json must contain an array of configurations.");
+    }
+    serverConfigurations = data; // Store loaded configurations
 
-    if (querySnapshot.empty) {
+    if (serverConfigurations.length === 0) {
       configSelect.innerHTML =
-        '<option value="">-- No templates saved --</option>';
+        '<option value="">-- No templates available --</option>';
       return;
     }
 
-    // Populate userConfigurations array and the select dropdown
-    querySnapshot.forEach((doc) => {
-      const config = { id: doc.id, ...doc.data() };
-      userConfigurations.push(config);
+    // Populate the select dropdown
+    serverConfigurations.forEach((config, index) => {
       const option = document.createElement("option");
-      option.value = doc.id;
+      option.value = index; // Use index as value
       option.textContent = config.name;
       configSelect.appendChild(option);
     });
   } catch (error) {
-    alert("Failed to load templates: " + error.message);
-    console.error("Load config error:", error);
-  } finally {
-    updateAnalyzeTabButtonsState(); // Re-enable buttons
-    updateProcessTabButtonsState();
-  }
-}
-
-/**
- * Loads the currently selected configuration from the dropdown into the input fields.
- */
-async function loadSelectedConfiguration() {
-  const selectedConfigId = configSelect.value;
-  if (!selectedConfigId) {
-    alert("Please select a template to load.");
-    return;
-  }
-  if (!currentUser) {
-    alert("Please sign in to load templates.");
-    return;
-  }
-
-  // Disable buttons during load operation
-  saveConfigButton.disabled = true;
-  loadConfigButton.disabled = true;
-  deleteConfigButton.disabled = true;
-  previewButton.disabled = true;
-
-  try {
-    const configDocRef = doc(
-      db,
-      `artifacts/${appId}/users/${currentUser.uid}/configurations`,
-      selectedConfigId
+    // Use a custom modal for alerts instead of browser alert()
+    showConfirmationModal(
+      "Configuration Load Error",
+      "Failed to load templates from template.json: " +
+        error.message +
+        ". Please ensure the file exists and is correctly formatted.",
+      "OK",
+      () => {},
+      () => {}
     );
-    const configSnap = await getDoc(configDocRef); // Get document snapshot
-
-    if (configSnap.exists()) {
-      activeConfig = { id: configSnap.id, ...configSnap.data() }; // Set active config
-      // Populate input fields with loaded data
-      configNameInput.value = activeConfig.name;
-      officialSupplierNameForExportInput.value =
-        activeConfig.officialSupplierNameForExport || "";
-      supplierNameHintInput.value = activeConfig.supplierNamePattern || "";
-      documentDateHintInput.value = activeConfig.documentDatePattern || "";
-      documentNumberHintInput.value = activeConfig.documentNumberPattern || "";
-      totalAmountHintInput.value = activeConfig.totalAmountPattern || "";
-    } else {
-      alert("Selected template not found or you don't have access.");
-      activeConfig = null; // Clear active config
-    }
-  } catch (error) {
-    alert("Failed to load selected template: " + error.message);
-    console.error("Load selected config error:", error);
+    console.error("Load server config error:", error);
   } finally {
-    updateAnalyzeTabButtonsState(); // Re-enable buttons
+    updateAnalyzeTabButtonsState(); // Update button states
     updateProcessTabButtonsState();
   }
 }
 
 /**
- * Deletes the currently selected configuration from Firestore after confirmation.
+ * Loads the currently selected configuration from the dropdown into the input fields automatically.
  */
-async function deleteSelectedConfiguration() {
-  const selectedConfigId = configSelect.value;
-  if (!selectedConfigId) {
-    alert("Please select a template to delete.");
-    return;
-  }
-  if (!currentUser) {
-    alert("Please sign in to delete templates.");
+function autoLoadSelectedConfiguration() {
+  const selectedConfigIndex = configSelect.value;
+  if (selectedConfigIndex === "" || isNaN(selectedConfigIndex)) {
+    resetConfigInputFields(); // Clear fields if "Select a template" is chosen
     return;
   }
 
-  // Show a confirmation modal (reusing logout modal for generic confirmation)
-  showLogoutModal();
-  logoutModalTitle.textContent = "Delete Template?";
-  logoutModalText.textContent =
-    "Are you sure you want to delete this template?";
-  confirmLogoutButton.textContent = "Delete";
+  // Find the selected configuration by index
+  const selectedConfig = serverConfigurations[parseInt(selectedConfigIndex)];
 
-  // Set up event listeners for confirmation modal
-  confirmLogoutButton.onclick = async () => {
-    hideLogoutModal(); // Hide modal
-    confirmLogoutButton.onclick = null; // Clear handler to prevent re-triggering
-
-    // Disable buttons during delete operation
-    saveConfigButton.disabled = true;
-    loadConfigButton.disabled = true;
-    deleteConfigButton.disabled = true;
-    previewButton.disabled = true;
-
-    try {
-      const configDocRef = doc(
-        db,
-        `artifacts/${appId}/users/${currentUser.uid}/configurations`,
-        selectedConfigId
-      );
-      const configSnap = await getDoc(configDocRef);
-
-      if (configSnap.exists()) {
-        await deleteDoc(configDocRef); // Delete document
-        alert("Template deleted successfully!");
-        await loadUserConfigurations(currentUser.uid); // Reload configurations
-        resetConfigInputFields(); // Clear input fields
-      } else {
-        alert("Template not found or you don't have permission to delete it.");
-      }
-    } catch (error) {
-      alert("Failed to delete template: " + error.message);
-      console.error("Delete config error:", error);
-    } finally {
-      updateAnalyzeTabButtonsState(); // Re-enable buttons
-      updateProcessTabButtonsState();
-    }
-  };
-
-  cancelLogoutButton.onclick = () => {
-    hideLogoutModal(); // Hide modal
-    cancelLogoutButton.onclick = null; // Clear handler
-    updateAnalyzeTabButtonsState(); // Re-enable buttons
-    updateProcessTabButtonsState();
-  };
+  if (selectedConfig) {
+    activeConfig = selectedConfig; // Set active config
+    // Populate input fields with loaded data
+    configNameInput.value = activeConfig.name || "";
+    officialSupplierNameForExportInput.value =
+      activeConfig.officialSupplierNameForExport || "";
+    supplierNameHintInput.value = activeConfig.supplierNamePattern || "";
+    documentDateHintInput.value = activeConfig.documentDatePattern || "";
+    documentNumberHintInput.value = activeConfig.documentNumberPattern || "";
+    totalAmountHintInput.value = activeConfig.totalAmountPattern || "";
+  } else {
+    // This case should ideally not happen if dropdown is populated correctly
+    // Use a custom modal for alerts instead of browser alert()
+    showConfirmationModal(
+      "Template Not Found",
+      "Selected template not found.",
+      "OK",
+      () => {},
+      () => {}
+    );
+    activeConfig = null; // Clear active config
+  }
+  updateAnalyzeTabButtonsState(); // Re-enable buttons
+  updateProcessTabButtonsState();
 }
 
 /**
@@ -1158,16 +1078,14 @@ function appendExtractedResultToTable(data, index) {
       <td class="px-6 py-4 text-sm break-words max-w-[150px] overflow-hidden">${
         data.fileName
       }</td>
-      <td class="px-6 py-4 text-xs">${data.configUsedName || "N/A"}</td>
+      <td class="px-6 py-4 text-xs">${data.configUsedName || "-"}</td>
       <td class="px-6 py-4 text-sm">${
-        data.officialSupplierNameForExport ||
-        data.extractedSupplierName ||
-        "N/A"
+        data.officialSupplierNameForExport || data.extractedSupplierName || "-"
       }</td>
       <td class="px-6 py-4 text-sm">${formatDateForDisplay(
         data.documentDate
       )}</td>
-      <td class="px-6 py-4 text-sm">${data.documentNumber || "N/A"}</td>
+      <td class="px-6 py-4 text-sm">${data.documentNumber || "-"}</td>
       <td class="px-6 py-4 text-sm">${formatAmountForDisplay(
         data.totalAmount
       )}</td>
@@ -1191,12 +1109,11 @@ function appendExtractedResultToTable(data, index) {
       await renderPdfToCanvas(fileToAnalyze); // Render PDF for analysis
 
       // Populate extracted information display
-      supplierNameSpan.textContent =
-        dataToAnalyze.extractedSupplierName || "N/A";
+      supplierNameSpan.textContent = dataToAnalyze.extractedSupplierName || "-";
       documentDateSpan.textContent = formatDateForDisplay(
         dataToAnalyze.documentDate
       );
-      documentNumberSpan.textContent = dataToAnalyze.documentNumber || "N/A";
+      documentNumberSpan.textContent = dataToAnalyze.documentNumber || "-";
       totalAmountSpan.textContent = formatAmountForDisplay(
         dataToAnalyze.totalAmount
       );
@@ -1204,14 +1121,14 @@ function appendExtractedResultToTable(data, index) {
       // If a configuration was used, try to load it into the template editor
       if (
         dataToAnalyze.configUsedName &&
-        dataToAnalyze.configUsedName !== "None (Best Guess)"
+        dataToAnalyze.configUsedName !== "None"
       ) {
-        const foundConfig = userConfigurations.find(
+        const foundConfigIndex = serverConfigurations.findIndex(
           (cfg) => cfg.name === dataToAnalyze.configUsedName
         );
-        if (foundConfig) {
-          configSelect.value = foundConfig.id; // Select in dropdown
-          await loadSelectedConfiguration(); // Load details into inputs
+        if (foundConfigIndex !== -1) {
+          configSelect.value = foundConfigIndex; // Select in dropdown
+          autoLoadSelectedConfiguration(); // Load details into inputs
         } else {
           configSelect.value = "";
           activeConfig = null;
@@ -1232,7 +1149,14 @@ function appendExtractedResultToTable(data, index) {
  */
 function downloadCSV() {
   if (allExtractedData.length === 0) {
-    alert("No data to export to CSV.");
+    // Use a custom modal for alerts instead of browser alert()
+    showConfirmationModal(
+      "No Data to Export",
+      "No data to export to CSV.",
+      "OK",
+      () => {},
+      () => {}
+    );
     return;
   }
 
@@ -1310,11 +1234,11 @@ function resetConfigInputFields() {
  * Resets the displayed extracted fields and PDF preview in the "Analyze" tab.
  */
 function resetExtractedFieldsForAnalysisTab() {
-  supplierNameSpan.textContent = "N/A";
-  documentDateSpan.textContent = "N/A";
-  documentNumberSpan.textContent = "N/A";
-  totalAmountSpan.textContent = "N/A";
-  currentAnalysisFileName.textContent = "N/A";
+  supplierNameSpan.textContent = "-";
+  documentDateSpan.textContent = "-";
+  documentNumberSpan.textContent = "-";
+  totalAmountSpan.textContent = "-";
+  currentAnalysisFileName.textContent = "-";
   currentPdfTextForAnalysis = ""; // Clear PDF text for analysis
 
   // Clear PDF canvas
@@ -1342,7 +1266,7 @@ function resetUI() {
   processingStatus.textContent = ""; // Clear processing status
   clearConfigSelect(); // Clear template dropdown
   hideApiKeyModal();
-  hideLogoutModal();
+  hideConfirmationModal(); // Hide the confirmation modal
   clearAllResults(); // Clear extracted results table
   switchTab("Process"); // Go back to Process tab
   updateAnalyzeTabButtonsState();
@@ -1362,7 +1286,8 @@ function clearUploadForm() {
  * Clears all options in the configuration select dropdown.
  */
 function clearConfigSelect() {
-  configSelect.innerHTML = '<option value="">-- No templates saved --</option>';
+  configSelect.innerHTML =
+    '<option value="">-- No templates available --</option>';
 }
 
 /**
@@ -1377,29 +1302,22 @@ function updateProcessTabButtonsState() {
 }
 
 /**
- * Updates the disabled state of buttons in the "Analyze" tab based on user login and PDF loaded.
+ * Updates the disabled state of buttons in the "Analyze" tab based on PDF loaded.
  */
 function updateAnalyzeTabButtonsState() {
-  const isUserLoggedIn = currentUser !== null;
   const isPdfLoadedForAnalysis = currentPdfTextForAnalysis.length > 0;
   const hasConfigName = configNameInput.value.trim().length > 0;
-  const isConfigSelected = configSelect.value !== "";
+  // const isConfigSelected = configSelect.value !== ""; // Removed this check as config loads automatically
 
-  // Preview button enabled if user logged in and PDF loaded
-  previewButton.disabled = !(isUserLoggedIn && isPdfLoadedForAnalysis);
+  // Preview button enabled if PDF loaded
+  previewButton.disabled = !isPdfLoadedForAnalysis;
 
-  // Save config button enabled if user logged in and config name provided
-  saveConfigButton.disabled = !(isUserLoggedIn && hasConfigName);
+  // Download Config button enabled if config name provided
+  downloadConfigButton.disabled = !hasConfigName;
 
-  // Load config button enabled if user logged in and config is selected
-  loadConfigButton.disabled = !(isUserLoggedIn && isConfigSelected);
-
-  // Delete config button enabled if user logged in and config is selected
-  deleteConfigButton.disabled = !(isUserLoggedIn && isConfigSelected);
-
-  // AI suggest buttons enabled if user logged in and PDF loaded
+  // AI suggest buttons enabled if PDF loaded
   document.querySelectorAll(".ai-suggest-button").forEach((btn) => {
-    btn.disabled = !(isUserLoggedIn && isPdfLoadedForAnalysis);
+    btn.disabled = !isPdfLoadedForAnalysis;
   });
 }
 
@@ -1411,53 +1329,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   applyTheme(prefersDarkMode.matches);
   prefersDarkMode.addEventListener("change", (e) => applyTheme(e.matches));
 
-  // Firebase Authentication
-  onAuthStateChanged(auth, async (user) => {
-    currentUser = user; // Update global currentUser
-    if (user) {
-      logDebug(`User logged in: ${user.uid}`);
-      // Display user photo or default SVG
-      if (user.photoURL) {
-        userIcon.src = user.photoURL;
-        userIcon.classList.remove("hidden");
-        userIconContainer.classList.remove("default-icon");
-        defaultUserSvg.classList.add("hidden");
-      } else {
-        userIcon.classList.add("hidden");
-        userIconContainer.classList.add("default-icon");
-        defaultUserSvg.classList.remove("hidden");
-      }
-      // Only load user configurations if the user is authenticated (not anonymous)
-      if (!user.isAnonymous) {
-        await loadUserConfigurations(user.uid); // Load user's saved templates
-      } else {
-        logDebug("Anonymous user detected. Template saving/loading disabled.");
-        configSelect.innerHTML =
-          '<option value="">-- Sign in to save/load templates --</option>';
-      }
-    } else {
-      logDebug("User logged out or not authenticated.");
-      // Show default user icon
-      userIcon.classList.add("hidden");
-      userIconContainer.classList.add("default-icon");
-      defaultUserSvg.classList.remove("hidden");
-      resetUI(); // Reset UI on logout
-    }
-    updateAnalyzeTabButtonsState(); // Update button states
-    updateProcessTabButtonsState();
-  });
+  // Load server configurations from template.json on startup
+  await loadServerConfigurations();
 
-  // Initial Firebase sign-in for self-hosting: sign in anonymously
-  // This ensures a user ID is available for Firestore rules that rely on `request.auth.uid`.
-  try {
-    await signInAnonymously(auth);
-    logDebug("Signed in anonymously for self-hosting.");
-  } catch (error) {
-    console.error("Error signing in anonymously:", error);
-    alert(
-      "Failed to initialize Firebase authentication. Features requiring sign-in will not work."
-    );
-  }
+  // Initial UI setup
+  switchTab("Process"); // Start on the Process tab
+  updateAnalyzeTabButtonsState(); // Set initial button states
+  updateProcessTabButtonsState();
 
   // --- Event Listeners for UI Interactions ---
 
@@ -1473,7 +1351,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       GEMINI_API_KEY = enteredKey;
       hideApiKeyModal();
     } else {
-      alert("Please enter a valid Gemini API Key.");
+      // Use a custom modal for alerts instead of browser alert()
+      showConfirmationModal(
+        "API Key Required",
+        "Please enter a valid Gemini API Key.",
+        "OK",
+        () => {},
+        () => {}
+      );
     }
   });
   cancelApiKeyButton.addEventListener("click", () => {
@@ -1481,48 +1366,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateAnalyzeTabButtonsState(); // Re-enable buttons if API key was mandatory
   });
 
-  // User icon / Authentication
-  userIconContainer.addEventListener("click", async () => {
-    if (currentUser && !currentUser.isAnonymous) {
-      // If a non-anonymous user is signed in
-      showLogoutModal(); // Show logout confirmation
-      // Customize modal content for logout
-      logoutModalTitle.textContent = "Sign Out?";
-      logoutModalText.textContent = "Are you sure you want to sign out?";
-      confirmLogoutButton.textContent = "Sign Out";
-
-      confirmLogoutButton.onclick = async () => {
-        hideLogoutModal();
-        try {
-          await signOut(auth); // Firebase sign out
-          logDebug("User signed out.");
-        } catch (error) {
-          alert("Error signing out: " + error.message);
-          console.error("Sign out error:", error);
-        } finally {
-          // Clean up click handlers
-          confirmLogoutButton.onclick = null;
-          cancelLogoutButton.onclick = null;
-        }
-      };
-      cancelLogoutButton.onclick = () => {
-        hideLogoutModal();
-        // Clean up click handlers
-        confirmLogoutButton.onclick = null;
-        cancelLogoutButton.onclick = null;
-      };
-    } else {
-      // If no user, or anonymous user is signed in, initiate Google Sign-In
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithPopup(auth, provider);
-        logDebug("Google Sign-In successful.");
-      } catch (error) {
-        alert("Error signing in: " + error.message);
-        console.error("Google Sign-In error:", error);
-      }
-    }
-  });
+  // User icon (no longer for login, just a visual placeholder)
+  // No event listener needed for userIconContainer for login/logout
 
   // PDF Upload and Display
   pdfUpload.addEventListener("change", handlePdfUpload);
@@ -1566,11 +1411,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Process PDF button click handler
   processPdfButton.addEventListener("click", async () => {
     if (uploadedFiles.length === 0) {
-      alert("Please select PDF file(s) first.");
-      return;
-    }
-    if (!currentUser) {
-      alert("Please sign in to process PDFs.");
+      // Use a custom modal for alerts instead of browser alert()
+      showConfirmationModal(
+        "No Files Selected",
+        "Please select PDF file(s) first.",
+        "OK",
+        () => {},
+        () => {}
+      );
       return;
     }
 
@@ -1620,25 +1468,25 @@ document.addEventListener("DOMContentLoaded", async () => {
       try {
         const fileText = await fileReadPromise;
         let extractedData;
-        let configUsedName = "None (Best Guess)";
+        let configUsedName = "-";
         let selectedConfigForExtraction = null;
         let officialSupplierNameForExport = null;
 
-        // Attempt to classify document if user has saved templates AND is not anonymous
-        if (userConfigurations.length > 0 && !currentUser.isAnonymous) {
+        // Attempt to classify document if server templates are available
+        if (serverConfigurations.length > 0) {
           processingStatus.textContent = `Identifying best template for "${file.name}"...`;
           const classificationResult = classifyDocumentHeuristically(
             fileText,
-            userConfigurations
+            serverConfigurations
           );
 
           if (
             classificationResult &&
             classificationResult.matchedConfigName &&
-            classificationResult.matchedConfigName !== "None"
+            classificationResult.matchedConfigName !== "-"
           ) {
             const matchedName = classificationResult.matchedConfigName;
-            const foundConfig = userConfigurations.find(
+            const foundConfig = serverConfigurations.find(
               (cfg) => cfg.name === matchedName
             );
             if (foundConfig) {
@@ -1658,7 +1506,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               : "None"
           }`
         );
-        // Use direct regex extraction for processing (not AI, faster and uses user templates)
+        // Use direct regex extraction for processing (no AI, faster and uses user templates)
         extractedData = await callGeminiApi(
           fileText,
           selectedConfigForExtraction,
@@ -1672,10 +1520,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           originalFile: file,
           fileName: file.name,
           configUsedName: configUsedName,
-          extractedSupplierName: extractedData.supplierName || "N/A",
+          extractedSupplierName: extractedData.supplierName || "-",
           officialSupplierNameForExport: officialSupplierNameForExport,
-          documentDate: extractedData.documentDate || "N/A",
-          documentNumber: extractedData.documentNumber || "N/A",
+          documentDate: extractedData.documentDate || "-",
+          documentNumber: extractedData.documentNumber || "-",
           totalAmount: extractedData.totalAmount || null,
         };
         allExtractedData.push(formattedExtractedData);
@@ -1709,13 +1557,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Preview button click handler in "Analyze" tab
   previewButton.addEventListener("click", async () => {
-    if (!currentUser) {
-      alert("Please sign in to preview.");
-      return;
-    }
     if (!currentPdfTextForAnalysis) {
-      alert(
-        "No document selected for analysis. Please select a document from the 'Extract' tab first."
+      // Use a custom modal for alerts instead of browser alert()
+      showConfirmationModal(
+        "No Document Selected",
+        "No document selected for analysis. Please select a document from the 'Extract' tab first.",
+        "OK",
+        () => {},
+        () => {}
       );
       return;
     }
@@ -1740,20 +1589,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (refinedData) {
         // Display extracted data
-        supplierNameSpan.textContent = refinedData.supplierName || "N/A";
+        supplierNameSpan.textContent = refinedData.supplierName || "-";
         documentDateSpan.textContent = formatDateForDisplay(
           refinedData.documentDate
         );
-        documentNumberSpan.textContent = refinedData.documentNumber || "N/A";
+        documentNumberSpan.textContent = refinedData.documentNumber || "-";
         totalAmountSpan.textContent = formatAmountForDisplay(
           refinedData.totalAmount
         );
       } else {
-        alert("No refined data extracted during preview.");
+        // Use a custom modal for alerts instead of browser alert()
+        showConfirmationModal(
+          "No Data Extracted",
+          "No refined data extracted during preview.",
+          "OK",
+          () => {},
+          () => {}
+        );
       }
     } catch (error) {
-      alert(
-        "Error during preview. Check console for details: " + error.message
+      // Use a custom modal for alerts instead of browser alert()
+      showConfirmationModal(
+        "Preview Error",
+        "Error during preview. Check console for details: " + error.message,
+        "OK",
+        () => {},
+        () => {}
       );
       console.error("Preview error:", error);
     } finally {
@@ -1791,9 +1652,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   useSelectedRegexButton.addEventListener("click", useSelectedRegex);
 
   // Configuration management buttons
-  saveConfigButton.addEventListener("click", saveConfiguration);
-  loadConfigButton.addEventListener("click", loadSelectedConfiguration);
-  deleteConfigButton.addEventListener("click", deleteSelectedConfiguration);
+  downloadConfigButton.addEventListener("click", downloadConfig); // Renamed
+  // Removed loadConfigButton and deleteConfigButton listeners
+
+  // Auto-load config when selection changes
+  configSelect.addEventListener("change", autoLoadSelectedConfiguration);
 
   // Download CSV button
   downloadCsvButton.addEventListener("click", downloadCSV);
@@ -1802,9 +1665,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   configSelect.addEventListener("change", () => {
     updateAnalyzeTabButtonsState();
   });
-
-  // Initial UI setup
-  switchTab("Process"); // Start on the Process tab
-  updateAnalyzeTabButtonsState(); // Set initial button states
-  updateProcessTabButtonsState();
 });
