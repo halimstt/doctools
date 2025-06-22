@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statements Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="navigation.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js`;
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition for theme change */
+      }
+      /* Styles for the navigation placeholder */
+      #nav-placeholder {
+        height: 64px; /* Matches your header's height */
+        background-color: #ffffff; /* Light mode default */
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-between; /* To space out logo and links */
+        align-items: center;
+        padding: 0 1rem; /* Matches your header's padding */
+        box-sizing: border-box; /* Include padding in height */
+      }
+      /* Dark mode styles for the placeholder */
+      .dark #nav-placeholder {
+        background-color: #1f2937; /* Dark mode background */
+      }
+      .loader {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #2563eb; /* Use the light mode accent blue */
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+      }
+      .dark .loader {
+        border-color: #374151; /* Darker border for dark mode (dark-border) */
+        border-top-color: #60a5fa; /* Dark mode accent blue */
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .spinner {
+        animation: spin 1s linear infinite;
+        border-top-color: white;
+      }
+      .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        cursor: pointer;
+      }
+      .file-input-wrapper input[type="file"] {
+        font-size: 100px;
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .file-input-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      /* Removed tab-button styles as tabs are no longer used */
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1000; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        position: relative;
+      }
+      .dark .modal-content {
+        background-color: #1f2937; /* dark-bg-secondary */
+        color: #f3f4f6; /* dark-text-primary */
+      }
+    </style>
+  </head>
+  <body
+    class="bg-light-bg-primary text-light-text-primary dark:bg-dark-bg-primary dark:text-dark-text-primary"
+  >
+    <div id="nav-placeholder"></div>
+    <div class="container max-w-5xl mx-auto p-4 sm:p-8">
+      <header class="text-center mb-8">
+        <h1
+          class="text-3xl sm:text-4xl font-bold text-light-text-primary dark:text-dark-text-primary"
+        >
+          Statements Converter
+        </h1>
+        <p class="mt-2 text-light-text-secondary dark:text-dark-text-secondary">
+          Select your statement type and upload your PDF files.
+        </p>
+      </header>
+
+      <div class="mb-6 flex justify-center">
+        <label for="parser-select" class="sr-only">Choose Statement Type</label>
+        <select
+          id="parser-select"
+          class="block w-full sm:w-1/2 md:w-1/3 py-2 px-3 border border-light-border dark:border-dark-border bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-md shadow-sm focus:outline-none focus:ring-accent-blue-light focus:border-accent-blue-light dark:focus:ring-accent-blue-dark dark:focus:border-accent-blue-dark sm:text-sm text-light-text-primary dark:text-dark-text-primary"
+        >
+          <option value="maybank-pdf">Maybank PDF Statement</option>
+          <option value="maybank-web">Maybank Web Download</option>
+          <option value="gemini-parser">Others (AI-Powered)</option>
+        </select>
+      </div>
+
+      <div
+        id="message-container"
+        class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 dark:bg-red-900 dark:border-red-700 dark:text-red-300"
+        role="alert"
+      >
+        <strong id="message-prefix" class="font-bold"></strong>
+        <span id="message-text" class="block sm:inline ml-2"></span>
+        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+          <svg
+            class="fill-current h-6 w-6 text-red-500 dark:text-red-400"
+            role="button"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            onclick="hideMessage()"
+          >
+            <title>Close</title>
+            <path
+              d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.029a1.2 1.2 0 1 1 1.697 1.697L11.819 10l3.029 2.651a1.2 1.2 0 0 1 0 1.698z"
+            />
+          </svg>
+        </span>
+      </div>
+
+      <main>
+        <div
+          id="upload-area"
+          class="border-2 border-dashed border-light-border dark:border-dark-border rounded-xl p-8 text-center bg-light-bg-secondary dark:bg-dark-bg-secondary transition-colors duration-300 ease-in-out"
+        >
+          <input
+            type="file"
+            id="file-input"
+            class="hidden"
+            accept=".pdf"
+            multiple
+          />
+          <label for="file-input" id="upload-label" class="cursor-pointer">
+            <div class="flex flex-col items-center">
+              <svg
+                class="w-16 h-16 text-gray-400 mb-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 16.5V9.75m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
+                />
+              </svg>
+              <p
+                class="text-lg font-semibold text-light-text-secondary dark:text-dark-text-secondary"
+              >
+                Drag & drop your statement(s) here
+              </p>
+              <p class="text-gray-500 dark:text-gray-400">
+                or
+                <span
+                  class="text-accent-blue-light dark:text-accent-blue-dark font-semibold"
+                  >click to upload</span
+                >
+              </p>
+            </div>
+          </label>
+          <div id="file-info" class="hidden text-left mt-4">
+            <p
+              class="font-semibold text-light-text-primary dark:text-dark-text-primary"
+            >
+              Selected Files:
+            </p>
+            <div
+              id="file-pills-container"
+              class="flex flex-wrap gap-2 mt-2"
+            ></div>
+            <button
+              id="remove-all-files-btn"
+              class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-semibold text-sm mt-2"
+            >
+              Remove All
+            </button>
+          </div>
+        </div>
+
+        <div class="flex justify-center space-x-2 my-6">
+          <button
+            id="process-btn"
+            class="w-full sm:w-auto bg-blue-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-300 ease-in-out flex items-center justify-center"
+            disabled
+          >
+            <span id="process-btn-text">Process</span>
+            <div
+              id="spinner"
+              class="spinner w-5 h-5 border-2 border-white border-t-transparent rounded-full ml-3 hidden"
+            ></div>
+          </button>
+          <button
+            id="download-btn"
+            class="w-full sm:w-auto bg-blue-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-300 ease-in-out flex items-center justify-center"
+            disabled
+          >
+            Download
+          </button>
+        </div>
+
+        <div id="status-container" class="mt-6 text-center text-sm">
+          <p
+            id="status-text"
+            class="text-light-text-secondary dark:text-dark-text-secondary hidden"
+          ></p>
+        </div>
+
+        <div id="results-container" class="mt-12">
+          <h2
+            class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4"
+          >
+            Processed Results
+          </h2>
+          <div
+            class="overflow-x-auto bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-lg shadow"
+          >
+            <table class="w-full text-sm text-gray-500 dark:text-gray-400">
+              <thead
+                class="text-xs text-light-text-secondary dark:text-dark-text-secondary uppercase bg-light-bg-primary dark:bg-dark-bg-primary bg-gray-200 dark:bg-gray-600"
+              >
+                <tr>
+                  <th class="px-6 py-3">Date</th>
+                  <th class="px-6 py-3">Description</th>
+                  <th class="px-6 py-3">Amount</th>
+                </tr>
+              </thead>
+              <tbody
+                id="results-table-body"
+                class="divide-y divide-light-border dark:divide-dark-border"
+              >
+                <tr>
+                  <td colspan="3" class="px-6 py-4 text-center">
+                    No documents processed yet.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- API Key Modal -->
+    <div id="api-key-modal" class="modal">
+      <div
+        class="modal-content bg-light-bg-secondary dark:bg-dark-bg-secondary p-6 rounded-lg shadow-lg"
+      >
+        <h3
+          class="text-xl font-bold mb-4 text-light-text-primary dark:text-dark-text-primary"
+        >
+          Enter Gemini API Key
+        </h3>
+        <p class="mb-4 text-light-text-secondary dark:text-dark-text-secondary">
+          To use the Gemini AI-powered parser, please enter your Gemini API key.
+          You can get one from
+          <a
+            href="https://ai.google.dev/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-accent-blue-light dark:text-accent-blue-dark hover:underline"
+            >Google AI Studio</a
+          >.
+        </p>
+        <input
+          type="text"
+          id="gemini-api-key-input"
+          class="w-full p-2 border border-light-border dark:border-dark-border rounded-md mb-4 bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-accent-blue-light focus:border-accent-blue-light dark:focus:ring-accent-blue-dark dark:focus:border-accent-blue-dark"
+          placeholder="Enter your Gemini API key here"
+        />
+        <div class="flex justify-end gap-2">
+          <button
+            id="api-key-save-btn"
+            class="bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Save Key
+          </button>
+          <button
+            id="api-key-cancel-btn"
+            class="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Function to apply the current theme
+      function applyTheme(isDarkMode) {
+        if (isDarkMode) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      }
+
+      // Check initial theme preference
+      const prefersDarkMode = window.matchMedia("(prefers-color-scheme: dark)");
+      applyTheme(prefersDarkMode.matches);
+
+      // Listen for changes in theme preference
+      prefersDarkMode.addEventListener("change", (e) => {
+        applyTheme(e.matches);
+      });
+
+      const messageContainer = document.getElementById("message-container");
+      const messagePrefix = document.getElementById("message-prefix");
+      const messageText = document.getElementById("message-text");
+
+      function showMessage(type, message) {
+        messageContainer.classList.remove("hidden");
+        messageContainer.classList.remove(
+          "bg-red-100",
+          "border-red-400",
+          "text-red-700",
+          "bg-green-100",
+          "border-green-400",
+          "text-green-700",
+          "dark:bg-red-900",
+          "dark:border-red-700",
+          "dark:text-red-300",
+          "dark:bg-green-900",
+          "dark:border-green-700",
+          "dark:text-green-300"
+        );
+        if (type === "error") {
+          messageContainer.classList.add(
+            "bg-red-100",
+            "border-red-400",
+            "text-red-700",
+            "dark:bg-red-900",
+            "dark:border-red-700",
+            "dark:text-red-300"
+          );
+          messagePrefix.textContent = "Error!";
+        } else if (type === "success") {
+          messageContainer.classList.add(
+            "bg-green-100",
+            "border-green-400",
+            "text-green-700",
+            "dark:bg-green-900",
+            "dark:border-green-700",
+            "dark:text-green-300"
+          );
+          messagePrefix.textContent = "Success!";
+        }
+        messageText.textContent = message;
+      }
+
+      function hideMessage() {
+        messageContainer.classList.add("hidden");
+        messagePrefix.textContent = "";
+        messageText.textContent = "";
+      }
+
+      // --- Combined Logic for File Handling and Processing ---
+      let selectedFiles = [];
+      let allTransactions = [];
+      let geminiApiKey = localStorage.getItem("geminiApiKey") || ""; // Load API key from local storage
+
+      const parserSelect = document.getElementById("parser-select");
+      const uploadArea = document.getElementById("upload-area");
+      const fileInput = document.getElementById("file-input");
+      const uploadLabel = document.getElementById("upload-label");
+      const fileInfo = document.getElementById("file-info");
+      const filePillsContainer = document.getElementById(
+        "file-pills-container"
+      );
+      const removeAllFilesBtn = document.getElementById("remove-all-files-btn");
+      const processBtn = document.getElementById("process-btn");
+      const downloadBtn = document.getElementById("download-btn");
+      // const loaderContainer = document.getElementById("loader-container"); // Removed
+      const progressText = document.getElementById("progress-text"); // This will now update statusText
+      const statusText = document.getElementById("status-text");
+      const processBtnText = document.getElementById("process-btn-text");
+      const spinner = document.getElementById("spinner");
+      const resultsContainer = document.getElementById("results-container");
+      const tableHeadRow = document.getElementById("results-table-head");
+      const tableBody = document.getElementById("results-table-body");
+
+      // API Key Modal Elements
+      const apiKeyModal = document.getElementById("api-key-modal");
+      const geminiApiKeyInput = document.getElementById("gemini-api-key-input");
+      const apiKeySaveBtn = document.getElementById("api-key-save-btn");
+      const apiKeyCancelBtn = document.getElementById("api-key-cancel-btn");
+
+      // Promise resolver for the API Key modal
+      let resolveApiKeyPromise;
+
+      /**
+       * Shows the API key input modal and returns a Promise that resolves when the key is saved or canceled.
+       * @returns {Promise<string|null>} Resolves with the API key or null if canceled.
+       */
+      function showApiKeyModal() {
+        return new Promise((resolve) => {
+          resolveApiKeyPromise = resolve; // Store the resolve function
+
+          geminiApiKeyInput.value = geminiApiKey; // Pre-fill if exists
+          apiKeyModal.style.display = "flex"; // Show the modal
+
+          apiKeySaveBtn.onclick = () => {
+            const key = geminiApiKeyInput.value.trim();
+            if (key) {
+              localStorage.setItem("geminiApiKey", key);
+              geminiApiKey = key;
+              apiKeyModal.style.display = "none";
+              resolve(key); // Resolve the promise with the key
+            } else {
+              showMessage("error", "Please enter a valid Gemini API key.");
+            }
+          };
+
+          apiKeyCancelBtn.onclick = () => {
+            apiKeyModal.style.display = "none";
+            resolve(null); // Resolve with null if canceled
+          };
+        });
+      }
+
+      // Event Listeners
+      parserSelect.addEventListener("change", resetUI);
+      fileInput.addEventListener("change", (event) => {
+        handleFiles(event.target.files);
+      });
+      removeAllFilesBtn.addEventListener("click", resetUI);
+
+      uploadArea.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        uploadArea.classList.add(
+          "border-accent-blue-light",
+          "bg-blue-50",
+          "dark:border-accent-blue-dark",
+          "dark:bg-gray-700"
+        );
+      });
+      uploadArea.addEventListener("dragleave", () => {
+        uploadArea.classList.remove(
+          "border-accent-blue-light",
+          "bg-blue-50",
+          "dark:border-accent-blue-dark",
+          "dark:bg-gray-700"
+        );
+      });
+      uploadArea.addEventListener("drop", (event) => {
+        event.preventDefault();
+        uploadArea.classList.remove(
+          "border-accent-blue-light",
+          "bg-blue-50",
+          "dark:border-accent-blue-dark",
+          "dark:bg-gray-700"
+        );
+        handleFiles(event.dataTransfer.files);
+      });
+
+      processBtn.addEventListener("click", processStatements);
+      downloadBtn.addEventListener("click", () => {
+        downloadCSV(allTransactions);
+      });
+
+      function resetUI() {
+        selectedFiles = [];
+        allTransactions = [];
+        fileInput.value = "";
+        fileInfo.classList.add("hidden");
+        uploadLabel.classList.remove("hidden");
+        processBtn.disabled = true;
+        //resultsContainer.classList.add("hidden");
+        //downloadBtn.classList.add("hidden");
+        statusText.textContent = "";
+        statusText.textContent = "Processing your statements..."; // This text will now be used for statusText directly
+        hideMessage();
+        updateFileDisplay();
+        processBtnText.textContent = "Process";
+        spinner.classList.add("hidden");
+      }
+
+      function handleFiles(files) {
+        const currentParser = parserSelect.value;
+        const pdfFiles = Array.from(files).filter(
+          (file) => file.type === "application/pdf"
+        );
+
+        if (pdfFiles.length === 0) {
+          showMessage("error", "Please select valid PDF file(s).");
+          if (selectedFiles.length === 0) {
+            // Only disable if no files were previously selected either
+            processBtn.disabled = true;
+          }
+          return;
+        }
+
+        if (currentParser === "maybank-pdf") {
+          // For Maybank PDF, only accept one file, replace if new one is dropped/selected
+          if (pdfFiles.length > 1) {
+            showMessage(
+              "error",
+              "Maybank PDF Statement parser supports only one PDF file at a time. Only the first file will be used."
+            );
+          }
+          selectedFiles = [pdfFiles[0]]; // Take only the first file
+        } else {
+          // For Maybank Web and Gemini, allow multiple and append unique ones
+          pdfFiles.forEach((newFile) => {
+            if (
+              !selectedFiles.some(
+                (existingFile) =>
+                  existingFile.name === newFile.name &&
+                  existingFile.size === newFile.size
+              )
+            ) {
+              selectedFiles.push(newFile);
+            }
+          });
+        }
+
+        updateFileDisplay();
+        processBtn.disabled = selectedFiles.length === 0;
+        //resultsContainer.classList.add("hidden");
+        //downloadBtn.classList.add("hidden");
+        hideMessage();
+      }
+
+      function updateFileDisplay() {
+        filePillsContainer.innerHTML = "";
+        if (selectedFiles.length === 0) {
+          fileInfo.classList.add("hidden");
+          uploadLabel.classList.remove("hidden");
+        } else {
+          selectedFiles.forEach((file, index) => {
+            const pill = document.createElement("span");
+            pill.className =
+              "inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100 text-xs font-medium mr-2 mb-2";
+            pill.innerHTML = `
+              ${file.name}
+              <button type="button" class="ml-2 -mr-0.5 h-4 w-4 inline-flex items-center justify-center rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 dark:text-blue-300 dark:hover:bg-blue-600 dark:hover:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500" data-index="${index}">
+                <span class="sr-only">Remove file</span>
+                <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7" />
+                </svg>
+              </button>
+            `;
+            pill.querySelector("button").addEventListener("click", (event) => {
+              const fileIndexToRemove = parseInt(
+                event.currentTarget.dataset.index
+              );
+              removeIndividualFile(fileIndexToRemove);
+            });
+            filePillsContainer.appendChild(pill);
+          });
+          fileInfo.classList.remove("hidden");
+          uploadLabel.classList.add("hidden");
+        }
+        processBtn.disabled = selectedFiles.length === 0;
+      }
+
+      function removeIndividualFile(indexToRemove) {
+        selectedFiles.splice(indexToRemove, 1);
+        updateFileDisplay();
+        if (selectedFiles.length === 0) {
+          //resultsContainer.classList.add("hidden");
+          //downloadBtn.classList.add("hidden");
+          hideMessage();
+        }
+      }
+
+      async function processStatements() {
+        if (selectedFiles.length === 0) {
+          showMessage("error", "Please select at least one PDF file first.");
+          return;
+        }
+
+        //resultsContainer.classList.add("hidden");
+        processBtn.disabled = true;
+        spinner.classList.remove("hidden");
+        processBtnText.textContent = "Processing...";
+        //downloadBtn.classList.add("hidden");
+        statusText.textContent = "";
+        // loaderContainer.classList.remove("hidden"); // Removed
+        hideMessage();
+
+        allTransactions = [];
+        const currentParser = parserSelect.value;
+
+        // If Gemini parser is selected, ensure API key is available
+        if (currentParser === "gemini-parser" && !geminiApiKey) {
+          try {
+            const key = await showApiKeyModal();
+            if (!key) {
+              showMessage(
+                "error",
+                "Gemini API key is required for this parser. Processing canceled."
+              );
+              resetUI(); // Reset UI if user cancels
+              return;
+            }
+          } catch (error) {
+            console.error("Error showing API key modal:", error);
+            showMessage(
+              "error",
+              "Could not get Gemini API key. Processing canceled."
+            );
+            resetUI();
+            return;
+          }
+        }
+
+        try {
+          for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
+            statusText.textContent = `Processing ${file.name} (${i + 1}/${
+              selectedFiles.length
+            })...`; // progressText removed, using statusText
+
+            const fileReader = new FileReader();
+            const fileReadPromise = new Promise((resolve, reject) => {
+              fileReader.onload = (e) => resolve(e.target.result);
+              fileReader.onerror = reject;
+              fileReader.readAsArrayBuffer(file);
+            });
+
+            const typedarray = new Uint8Array(await fileReadPromise);
+            const pdf = await pdfjsLib.getDocument(typedarray).promise;
+
+            let fileTransactions = [];
+
+            switch (currentParser) {
+              case "maybank-pdf":
+                if (selectedFiles.length > 1 && i > 0) {
+                  // Only process the first file for maybank-pdf if multiple are selected
+                  continue;
+                }
+                statusText.textContent = `Analyzing content in ${file.name} (Maybank PDF mode)...`;
+                const allLinesFromPdf = await extractTextLinesFromPdfMaybankPdf(
+                  pdf
+                );
+                fileTransactions = parseTransactionsMaybankPdf(allLinesFromPdf);
+                break;
+              case "maybank-web":
+                statusText.textContent = `Analyzing content in ${file.name} (Maybank Web mode)...`;
+                const highAccuracyText =
+                  await getHighAccuracyTextFromPdfMaybankWeb(pdf);
+                fileTransactions =
+                  parseTextAndGenerateCsvMaybankWeb(highAccuracyText);
+                break;
+              case "gemini-parser":
+                statusText.textContent = `Sending pages of ${file.name} to AI for processing...`;
+                // Call the Gemini parser with the PDF object to enable page-by-page processing
+                fileTransactions = await processGeminiStatementWithAI(
+                  pdf,
+                  geminiApiKey
+                );
+                break;
+              default:
+                showMessage(
+                  "error",
+                  "Invalid parser selected. Please choose a valid statement type."
+                );
+                throw new Error("Invalid parser selected.");
+            }
+            allTransactions = allTransactions.concat(fileTransactions);
+          }
+
+          // Sort all accumulated transactions after processing all files/pages
+          allTransactions.sort((a, b) => {
+            const dateA = parseDateForSorting(a["Date"]);
+            const dateB = parseDateForSorting(b["Date"]);
+            return dateB - dateA; // Sort descending (most recent first)
+          });
+
+          statusText.textContent = "";
+          displayTransactions(allTransactions);
+          updateDownloadButtonState();
+
+          if (allTransactions.length > 0) {
+            //downloadBtn.classList.remove("hidden");
+            showMessage(
+              "success",
+              `${selectedFiles.length} PDF(s) processed and combined CSV ready for download!`
+            );
+          } else {
+            showMessage(
+              "error",
+              "No valid transactions were extracted from the selected PDF(s). Please check your file(s) and selected parser type."
+            );
+          }
+        } catch (error) {
+          showMessage(
+            "error",
+            `An error occurred during PDF conversion: ${error.message}. Please check the console for details and ensure your Gemini API is enabled for this project if using the AI parser.`
+          );
+          console.error("Processing error:", error);
+        } finally {
+          processBtn.disabled = false;
+          spinner.classList.add("hidden");
+          processBtnText.textContent = "Process";
+          // loaderContainer.classList.add("hidden"); // Removed
+          statusText.textContent = "Processing your statements..."; // Reset progress text for next use
+        }
+      }
+
+      function parseDateForSorting(dateString) {
+        // Expects DD/MM/YY and converts to YYYY-MM-DD for consistent Date object creation
+        const [day, month, year] = dateString.split("/");
+        // Assuming 'YY' refers to 20YY for years 00-99. Adjust century if needed for older dates.
+        const fullYear = parseInt(year, 10) > 50 ? `19${year}` : `20${year}`;
+        return new Date(`${fullYear}-${month}-${day}`).getTime(); // Use getTime() for sortable number
+      }
+
+      function displayTransactions(data) {
+        if (!data || data.length === 0) {
+          return;
+        }
+        try {
+          tableBody.innerHTML = "";
+          data.forEach((row) => {
+            const tr = document.createElement("tr");
+            tr.className =
+              "divide-light-border dark:divide-dark-border hover:bg-gray-50 dark:hover:bg-gray-700";
+
+            // Date column
+            const tdDate = document.createElement("td");
+            tdDate.className = "px-6 py-4";
+            tdDate.textContent = row.Date || ""; // Access property directly
+            tr.appendChild(tdDate);
+
+            // Description column
+            const tdDescription = document.createElement("td");
+            tdDescription.className = "px-6 py-4";
+            tdDescription.textContent = row.Description || ""; // Access property directly
+            tr.appendChild(tdDescription);
+
+            // Amount column
+            const tdAmount = document.createElement("td");
+            tdAmount.className = "px-6 py-4";
+            const value = row.Amount || ""; // Access property directly
+            tdAmount.textContent = value;
+            if (typeof value === "string" && value.trim() !== "") {
+              // Ensure it's a valid number string before parsing
+              const amount = parseFloat(value);
+              tdAmount.classList.add("text-right", "font-mono");
+              tdAmount.classList.toggle("text-green-600", amount > 0);
+              tdAmount.classList.toggle("text-red-600", amount < 0);
+              tdAmount.classList.toggle(
+                "dark:text-green-400",
+                amount > 0
+              ); /* Dark mode green */
+              tdAmount.classList.toggle(
+                "dark:text-red-400",
+                amount < 0
+              ); /* Dark mode red */
+            }
+            tr.appendChild(tdAmount);
+            tableBody.appendChild(tr);
+          });
+        } catch (e) {
+          showMessage(
+            "error",
+            "Could not display results due to an internal error. Check the console."
+          );
+          console.error("Display error:", e);
+        }
+      }
+
+      // Function to update the state of the download button
+      function updateDownloadButtonState() {
+        const downloadBtn = document.getElementById("download-btn");
+        const resultsTableBody = document.getElementById("results-table-body");
+
+        // Check if the table body contains any actual results (not just the initial placeholder)
+        const hasResults =
+          resultsTableBody.children.length > 0 &&
+          resultsTableBody.children[0].textContent.trim() !==
+            "No documents processed yet.";
+
+        if (downloadBtn) {
+          downloadBtn.disabled = !hasResults;
+        }
+      }
+
+      function downloadCSV(data) {
+        if (!data.length) return;
+        const headers = ["Date", "Description", "Amount"];
+        const csvRows = [
+          headers.join(","),
+          ...data.map((row) =>
+            headers
+              .map((fieldName) => {
+                const value = row[fieldName];
+                const stringValue = value === null ? "" : String(value);
+                // Escape double quotes and enclose in quotes if value contains comma, double quote or newline
+                return stringValue.includes(",") ||
+                  stringValue.includes('"') ||
+                  stringValue.includes("\n")
+                  ? `"${stringValue.replace(/"/g, '""')}"`
+                  : stringValue;
+              })
+              .join(",")
+          ),
+        ];
+        const csvString = csvRows.join("\n");
+        const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "transactions.csv");
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      // --- Maybank PDF Specific Parsing Logic (kept as is) ---
+      async function extractTextLinesFromPdfMaybankPdf(pdf) {
+        const allLines = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const lines = {};
+          for (const item /*: TextItem*/ of textContent.items) {
+            const y = Math.round(item.transform[5]);
+            if (!lines[y]) lines[y] = [];
+            lines[y].push(item);
+          }
+          const sortedY = Object.keys(lines).sort((a, b) => b - a); // Sort by Y-coordinate descending
+          for (const y of sortedY) {
+            lines[y].sort((a, b) => a.transform[4] - b.transform[4]); // Sort by X-coordinate ascending within a line
+            allLines.push(lines[y].map((item) => item.str).join(" "));
+          }
+        }
+        return allLines;
+      }
+
+      function parseTransactionsMaybankPdf(allLinesFromPdf) {
+        const statementDateMatch = allLinesFromPdf
+          .join(" ")
+          .match(/STATEMENT DATE\s*:\s*(\d{2}\/\d{2}\/\d{2})/i);
+        const year = statementDateMatch
+          ? `20${statementDateMatch[1].slice(-2)}` // Assuming XX/XX/YY format, prepend 20
+          : new Date().getFullYear().toString(); // Fallback to current year if not found
+
+        const filteredLines = [];
+        let inTransactionBlock = false;
+        for (const line of allLinesFromPdf) {
+          if (/ACCOUNT\s*TRANSACTIONS/i.test(line)) {
+            inTransactionBlock = true;
+            continue;
+          }
+          if (/BAKI\s*LEGAR/i.test(line)) {
+            inTransactionBlock = false;
+            continue;
+          }
+          if (inTransactionBlock) {
+            if (/TARIKH\s*MASUK/i.test(line) && /TARIKH\s*NILAI/i.test(line))
+              continue;
+            if (/進支日期/i.test(line) && /仄過賬日期/.test(line)) continue;
+            if (/ENTRY\s*DATE/i.test(line) && /VALUE\s*DATE/i.test(line))
+              continue;
+            if (/BEGINNING\s*BALANCE/i.test(line)) continue;
+            if (line.trim() === "=") continue;
+            filteredLines.push(line);
+          }
+        }
+
+        const transactions = [];
+        let descriptionParts = [];
+
+        // Process lines in reverse to handle multi-line descriptions that might follow an amount
+        for (const line of [...filteredLines].reverse()) {
+          const isIgnoreLine =
+            /TIADA\s*URUSNIAGA/i.test(line) ||
+            /NO\s*TRANSACTION/i.test(line) ||
+            /TOTAL\s*DEBIT/i.test(line) ||
+            /ENDING\s*BALANCE/i.test(line) ||
+            /LEDGER\s*BALANCE/i.test(line);
+
+          if (isIgnoreLine) {
+            descriptionParts = []; // Clear description parts if an ignore line is encountered
+            continue;
+          }
+
+          // Regex to capture date (DD/MM), description, and amount with sign
+          const txMatch = line.match(
+            /^\s*(\d{2}\/\d{2})\s+(.*?)\s+([\d,]*\.\d{1,2}[+-])(?:\s+[\d,]*\.\d{2})?$/
+          );
+
+          if (txMatch) {
+            let date = txMatch[1];
+            let description = txMatch[2];
+            const amountWithSign = txMatch[3];
+
+            const amountStr = amountWithSign
+              .replace(/,/g, "")
+              .replace(/[+-]$/, "");
+            const sign = amountWithSign.slice(-1);
+            let amount = parseFloat(amountStr);
+            if (sign === "-") amount = -amount;
+
+            // If a date was not found in the current line but exists in accumulated description parts
+            // This handles cases where the date might be on a preceding line for a transaction
+            if (!date && descriptionParts.length > 0) {
+              const dateInDescIndex = descriptionParts.findIndex((p) =>
+                /^\d{2}\/\d{2}/.test(p.trim())
+              );
+              if (dateInDescIndex > -1) {
+                const lineWithDate = descriptionParts.splice(
+                  dateInDescIndex,
+                  1
+                )[0]; // Extract and remove that line
+                date = lineWithDate.trim().substring(0, 5);
+                description =
+                  lineWithDate.trim().substring(5).trim() + " " + description;
+              }
+            }
+
+            // Prepend accumulated description parts (if any)
+            if (descriptionParts.length > 0) {
+              description =
+                description.trim() + " " + descriptionParts.reverse().join(" ");
+            }
+
+            if (date) {
+              // Only add if a date was found or constructed
+              transactions.push({
+                Date: `${date}/${year.slice(-2)}`, // Output as DD/MM/YY
+                Description: description,
+                Amount: amount,
+              });
+            }
+            descriptionParts = []; // Reset for the next transaction
+          } else {
+            // If it's not a transaction line, accumulate it as part of a multi-line description
+            if (line.trim().length > 1) {
+              // Avoid adding empty or single-character lines
+              descriptionParts.push(line.trim());
+            }
+          }
+        }
+
+        // Final processing: reverse back to chronological order, clean descriptions, format amount
+        const finalTransactions = transactions.reverse().map((t) => {
+          const cleanedDesc = t.Description.replace(/TRANSFER FR A\/C/gi, "")
+            .replace(/TRANSFER TO A\/C/gi, "")
+            .replace(/PAYMENT FR A\/C/gi, "")
+            .replace(/MBB CT-?/gi, "")
+            .replace(/\s+/g, " ") // Replace multiple spaces with a single space
+            .trim();
+
+          // Handle CSV escaping for description
+          const finalDescription =
+            cleanedDesc.includes(",") ||
+            cleanedDesc.includes('"') ||
+            cleanedDesc.includes("\n")
+              ? `"${cleanedDesc.replace(/"/g, '""')}"`
+              : cleanedDesc;
+
+          return {
+            Date: t.Date,
+            Description: finalDescription,
+            Amount: parseFloat(t.Amount).toFixed(2),
+          };
+        });
+        return finalTransactions;
+      }
+
+      // --- Maybank Web Specific Parsing Logic (kept as is) ---
+      async function getHighAccuracyTextFromPdfMaybankWeb(pdf) {
+        let fullText = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+
+          let lastY = -1;
+          let lineText = "";
+
+          // Sort items for better line reconstruction: Y-descending, then X-ascending
+          textContent.items.sort((a, b) => {
+            if (a.transform[5] < b.transform[5]) return 1; // Higher Y (lower on page) comes first
+            if (a.transform[5] > b.transform[5]) return -1;
+            if (a.transform[4] < b.transform[4]) return -1; // Smaller X (left-most) comes first
+            if (a.transform[4] > b.transform[4]) return 1;
+            return 0;
+          });
+
+          for (const item /*: TextItem*/ of textContent.items) {
+            // If the current item is on a significantly different Y-coordinate, it's a new line
+            // The magic number 5 is a common heuristic for line separation threshold
+            if (lastY !== -1 && Math.abs(item.transform[5] - lastY) > 5) {
+              fullText += lineText.trim() + "\n"; // Add trimmed line and a newline
+              lineText = ""; // Reset for the new line
+            }
+            lineText += item.str + " "; // Add item string and a space
+            lastY = item.transform[5]; // Update last Y-coordinate
+          }
+          fullText += lineText.trim() + "\n"; // Add the last line on the page
+        }
+        return fullText;
+      }
+
+      function parseTextAndGenerateCsvMaybankWeb(text) {
+        const transactions = [];
+        const dateRegex = /^\d{1,2}\s+\w{3}\s+\d{4}/; // e.g., "1 Jan 2023"
+        const amountRegex = /(-?)\s*RM\s*([\d,]+\.\d{2})\s*$/; // e.g., "RM 123.45" or "- RM 12.34"
+
+        const lines = text.split("\n");
+        let currentTransaction = null;
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          // Skip empty lines or header lines
+          if (
+            !trimmedLine ||
+            trimmedLine.toLowerCase().startsWith("date") ||
+            trimmedLine.toLowerCase().startsWith("description") ||
+            trimmedLine.toLowerCase().startsWith("amount")
+          )
+            continue;
+
+          const hasDate = dateRegex.test(trimmedLine);
+
+          if (hasDate) {
+            // If we found a new transaction, push the previous one if it exists
+            if (currentTransaction) {
+              transactions.push(currentTransaction);
+            }
+
+            let date = trimmedLine.match(dateRegex)[0];
+            let restOfLine = trimmedLine.replace(dateRegex, "").trim();
+            let amountMatch = restOfLine.match(amountRegex);
+
+            let description = restOfLine;
+            let amount = null;
+
+            if (amountMatch) {
+              // Capture the sign (if any) and the numeric part, remove commas
+              amount =
+                (amountMatch[1] || "") + amountMatch[2].replace(/,/g, "");
+              description = description.replace(amountMatch[0], "").trim(); // Remove amount from description
+            }
+
+            currentTransaction = { date, description, amount };
+          } else if (currentTransaction && !currentTransaction.amount) {
+            // If no date, but we're in a transaction and haven't found an amount yet, try to find it
+            let amountMatch = trimmedLine.match(amountRegex);
+            let descriptionPart = trimmedLine;
+
+            if (amountMatch) {
+              currentTransaction.amount =
+                (amountMatch[1] || "") + amountMatch[2].replace(/,/g, "");
+              descriptionPart = descriptionPart
+                .replace(amountMatch[0], "")
+                .trim();
+            }
+            // Append line to description (could be part of multi-line description or the amount line)
+            currentTransaction.description += " " + descriptionPart;
+          } else if (currentTransaction && currentTransaction.amount) {
+            // If a transaction is complete (has date and amount), subsequent lines
+            // are likely continuations of the description of the *previous* transaction
+            // in web statements.
+            const lastTx = transactions[transactions.length - 1];
+            if (lastTx) {
+              lastTx.Description += " " + trimmedLine;
+            } else {
+              // This case should ideally not be hit if parsing is correct,
+              // but as a fallback, if currentTransaction is set and has amount,
+              // and no lastTx, push current one and reset.
+              if (currentTransaction) {
+                transactions.push(currentTransaction);
+                currentTransaction = null; // Reset to avoid appending to it mistakenly
+              }
+            }
+          }
+        }
+
+        // Push the last transaction if it exists
+        if (currentTransaction) {
+          transactions.push(currentTransaction);
+        }
+
+        return transactions.map((t) => {
+          const dateObj = new Date(t.date);
+          const day = String(dateObj.getDate()).padStart(2, "0");
+          const month = String(dateObj.getMonth() + 1).padStart(2, "0"); // Month is 0-indexed
+          const year = dateObj.getFullYear();
+          const formattedDate = `${day}/${month}/${String(year).slice(-2)}`; // Output as DD/MM/YY
+
+          // Clean up description: replace multiple spaces, trim
+          const cleanedDescription = t.description.replace(/\s+/g, " ").trim();
+
+          // Remove quotes if they enclose the whole string (common for web data extraction)
+          const finalDescriptionUnescaped =
+            cleanedDescription.startsWith('"') &&
+            cleanedDescription.endsWith('"')
+              ? cleanedDescription.substring(1, cleanedDescription.length - 1)
+              : cleanedDescription;
+
+          // Escape double quotes and enclose in quotes if value contains comma, double quote or newline for CSV
+          const descForCsv =
+            finalDescriptionUnescaped.includes(",") ||
+            finalDescriptionUnescaped.includes('"') ||
+            finalDescriptionUnescaped.includes("\n")
+              ? `"${finalDescriptionUnescaped.replace(/"/g, '""')}"`
+              : finalDescriptionUnescaped;
+
+          return {
+            Date: formattedDate,
+            Description: descForCsv,
+            Amount: parseFloat(t.amount).toFixed(2),
+          };
+        });
+      }
+
+      // --- New Gemini Parser Logic ---
+      async function processGeminiStatementWithAI(pdf, apiKey) {
+        const allExtractedTransactions = [];
+        const totalPages = pdf.numPages;
+
+        if (!apiKey) {
+          throw new Error("Gemini API key is missing. Please provide it.");
+        }
+
+        for (let i = 1; i <= totalPages; i++) {
+          statusText.textContent = `Sending page ${i}/${totalPages} to AI for processing...`;
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map((item) => item.str).join(" ");
+
+          let chatHistory = [];
+          const prompt = `You are an expert at extracting financial transactions from bank statements.
+            Extract all transactions from the following page text.
+            For each transaction, identify the 'Date', 'Description', and 'Amount'.
+            
+            Rules for extraction:
+            - The Date should be in DD/MM/YYYY format. If only DD/MM is present, assume the current year for a full YYYY format before outputting as DD/MM/YY.
+            - The Description should be a concise summary of the transaction.
+            - The Amount should be a numeric value, positive for credit/income and negative for debit/expense. It should not include currency symbols (like RM).
+            - Ignore any opening/closing balances, totals, page numbers, headers, footers, or non-transactional text.
+            - If multiple transactions are found, return them as an array of objects.
+            - If no transactions are found on this page, return an empty array.
+
+            Here is the bank statement page text:
+            """
+            ${pageText}
+            """
+            `;
+
+          chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+          const payload = {
+            contents: chatHistory,
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    Date: {
+                      type: "STRING",
+                      description: "Transaction date in DD/MM/YYYY format.",
+                    },
+                    Description: {
+                      type: "STRING",
+                      description: "Concise description of the transaction.",
+                    },
+                    Amount: {
+                      type: "NUMBER",
+                      description:
+                        "Numeric amount, positive for credit, negative for debit.",
+                    },
+                  },
+                  required: ["Date", "Description", "Amount"],
+                },
+              },
+            },
+          };
+
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+          try {
+            const response = await fetch(apiUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+              const errorBody = await response.text();
+              throw new Error(
+                `API request failed for page ${i}: ${response.status} ${response.statusText}. Details: ${errorBody}`
+              );
+            }
+
+            const result = await response.json();
+            console.log(`Gemini API raw result for page ${i}:`, result); // Log the raw result for debugging
+
+            if (
+              result.candidates &&
+              result.candidates.length > 0 &&
+              result.candidates[0].content &&
+              result.candidates[0].content.parts &&
+              result.candidates[0].content.parts.length > 0
+            ) {
+              const jsonString = result.candidates[0].content.parts[0].text;
+              let parsedTransactions;
+              try {
+                parsedTransactions = JSON.parse(jsonString);
+              } catch (parseError) {
+                console.error(
+                  `Failed to parse JSON from Gemini response for page ${i}: ${parseError.message}. Response:`,
+                  jsonString
+                );
+                // Continue to next page rather than failing all, but log the error
+                continue;
+              }
+
+              // Re-format date to DD/MM/YY and clean description
+              const formattedTransactions = parsedTransactions.map((t) => {
+                let [day, month, year] = t.Date.split("/");
+                // Handle cases where year might be missing or short, and try to infer
+                if (!year || year.length !== 4) {
+                  const currentYear = new Date().getFullYear();
+                  const currentYY = String(currentYear).slice(-2);
+                  const parsedYY = parseInt(year, 10);
+                  // Simple heuristic: if parsedYY is within a reasonable range (e.g., up to current YY), assume 20xx
+                  // Otherwise, assume 19xx for older dates if it makes sense.
+                  year =
+                    parsedYY <= parseInt(currentYY, 10)
+                      ? `20${String(parsedYY).padStart(2, "0")}`
+                      : `19${String(parsedYY).padStart(2, "0")}`;
+                }
+                const formattedYear = String(year).slice(-2); // Get last two digits of the year
+
+                const cleanedDescription = String(t.Description)
+                  .replace(/\s+/g, " ")
+                  .trim();
+                const descForCsv =
+                  cleanedDescription.includes(",") ||
+                  cleanedDescription.includes('"') ||
+                  cleanedDescription.includes("\n")
+                    ? `"${cleanedDescription.replace(/"/g, '""')}"`
+                    : cleanedDescription;
+
+                return {
+                  Date: `${String(day).padStart(2, "0")}/${String(
+                    month
+                  ).padStart(2, "0")}/${formattedYear}`,
+                  Description: descForCsv,
+                  Amount: parseFloat(t.Amount).toFixed(2),
+                };
+              });
+              allExtractedTransactions.push(...formattedTransactions);
+            } else {
+              console.warn(
+                `Gemini API response for page ${i} did not contain expected content:`,
+                result
+              );
+              let feedbackMessage = `No valid content found for page ${i} in Gemini API response.`;
+              if (result.promptFeedback && result.promptFeedback.blockReason) {
+                feedbackMessage += ` Block reason: ${result.promptFeedback.blockReason}.`;
+                if (result.promptFeedback.safetyRatings) {
+                  feedbackMessage += ` Safety ratings: ${JSON.stringify(
+                    result.promptFeedback.safetyRatings
+                  )}.`;
+                }
+              }
+              showMessage(
+                "error",
+                `AI processing warning for page ${i}: ${feedbackMessage}`
+              );
+            }
+          } catch (error) {
+            console.error(`Error calling Gemini API for page ${i}:`, error);
+            // Display error for this specific page but continue to next page if possible
+            showMessage(
+              "error",
+              `AI processing failed for page ${i}: ${error.message}.`
+            );
+          }
+        }
+        return allExtractedTransactions;
+      }
+
+      // Initialize UI on page load
+      document.addEventListener("DOMContentLoaded", () => {
+        resetUI();
+        updateDownloadButtonState(); // Set initial state of download button
+      });
+    </script>
+  </body>
+</html>
