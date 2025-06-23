@@ -29,6 +29,7 @@ const apiKeyCancelBtn = document.getElementById("api-key-cancel-btn");
 const messageContainer = document.getElementById("message-container");
 const messagePrefix = document.getElementById("message-prefix");
 const messageText = document.getElementById("message-text");
+const closeMessageBtn = document.getElementById("close-message-btn");
 
 // Application state variables
 let selectedFiles = [];
@@ -987,6 +988,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   removeAllFilesBtn.addEventListener("click", resetUI); // Clear all files
 
+  closeMessageBtn.addEventListener("click", hideMessage);
   // Drag and drop event listeners for the upload area
   uploadArea.addEventListener("dragover", (event) => {
     event.preventDefault(); // Prevent default to allow drop
