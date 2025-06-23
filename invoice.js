@@ -1,15 +1,12 @@
-// invoice-script.js
+// invoice.js
 
-// --- 1. Firebase Imports and Initialization (REMOVED) ---
-// Firebase is no longer used for authentication or configuration storage.
-
-// --- 2. Global Variables and DOM Element References ---
+// --- 1. Global Variables and DOM Element References ---
 
 // Main application state
 let uploadedFiles = [];
 let currentPdfTextForAnalysis = ""; // Stores text of the PDF currently displayed in Template tab
 let activeConfig = null; // The currently loaded template configuration
-let serverConfigurations = []; // Array of configurations loaded from template.json
+let localConfigurations = []; // Array of configurations loaded from localStorage
 let allExtractedData = []; // All extracted invoice data from processed PDFs
 let currentRegexTargetField = null; // Field for which AI regex suggestions are being generated (e.g., 'documentDate')
 
@@ -41,9 +38,7 @@ const supplierNameHintInput = document.getElementById("supplierNameHint");
 const documentDateHintInput = document.getElementById("documentDateHint");
 const documentNumberHintInput = document.getElementById("documentNumberHint");
 const totalAmountHintInput = document.getElementById("totalAmountHint");
-const downloadConfigButton = document.getElementById("downloadConfigButton"); // Renamed
 const configSelect = document.getElementById("configSelect");
-// Removed loadConfigButton and deleteConfigButton
 const previewButton = document.getElementById("previewButton");
 const dropArea = document.getElementById("dropArea");
 const uploadedFilesList = document.getElementById("uploadedFilesList");
@@ -100,7 +95,18 @@ const useSelectedRegexButton = document.getElementById(
 );
 const regexTestResult = document.getElementById("regexTestResult");
 
-// --- 3. Utility Functions ---
+// New buttons
+const saveTemplateButton = document.getElementById("saveTemplateButton");
+const deleteTemplateButton = document.getElementById("deleteTemplateButton");
+const importConfigButton = document.getElementById("importConfigButton");
+const exportAllConfigsButton = document.getElementById(
+  "exportAllConfigsButton"
+);
+const exportCurrentConfigButton = document.getElementById(
+  "exportCurrentConfigButton"
+); // Renamed from downloadConfigButton
+
+// --- 2. Utility Functions ---
 
 /**
  * Logs a message to the console if DEBUG_MODE is enabled.
@@ -413,7 +419,7 @@ function FileListShim(files) {
   return dt.files;
 }
 
-// --- 4. Data Extraction and AI Interaction Functions ---
+// --- 3. Data Extraction and AI Interaction Functions ---
 
 /**
  * Extracts data from PDF text using provided regex patterns or a heuristic approach.
@@ -446,7 +452,12 @@ async function callGeminiApi(
   // Disable buttons during API call
   processPdfButton.disabled = true;
   previewButton.disabled = true;
-  downloadConfigButton.disabled = true; // Renamed
+  exportCurrentConfigButton.disabled = true;
+  saveTemplateButton.disabled = true;
+  deleteTemplateButton.disabled = true;
+  importConfigButton.disabled = true;
+  exportAllConfigsButton.disabled = true;
+
   document.querySelectorAll(".ai-suggest-button").forEach((btn) => {
     btn.disabled = true;
   });
@@ -456,11 +467,11 @@ async function callGeminiApi(
   let normalizedResult = {}; // To store the parsed result
 
   // Logic for document classification (heuristic)
-  if (classifyOnly && serverConfigurations.length > 0) {
+  if (classifyOnly && localConfigurations.length > 0) {
     processingStatus.textContent = "Identifying best template heuristically...";
     normalizedResult = classifyDocumentHeuristically(
       pdfText,
-      serverConfigurations
+      localConfigurations
     );
     processingStatus.textContent = "Heuristic classification complete!";
     return normalizedResult;
@@ -803,6 +814,269 @@ async function generateRegexSuggestions() {
   }
 }
 
+// --- 4. Local Storage Template Management Functions ---
+
+const LOCAL_STORAGE_KEY = "invoiceTemplates";
+
+/**
+ * Loads configurations from local storage.
+ * @returns {Array<Object>} An array of template configuration objects.
+ */
+function loadLocalConfigurations() {
+  const storedConfigs = localStorage.getItem(LOCAL_STORAGE_KEY);
+  try {
+    localConfigurations = storedConfigs ? JSON.parse(storedConfigs) : [];
+  } catch (e) {
+    console.error("Error parsing local storage configurations:", e);
+    localConfigurations = [];
+  }
+  populateConfigSelect(); // Update the dropdown after loading
+  return localConfigurations;
+}
+
+/**
+ * Saves the current template configuration to local storage.
+ */
+function saveTemplateToLocalStorage() {
+  const templateName = configNameInput.value.trim();
+  if (!templateName) {
+    showConfirmationModal(
+      "Missing Template Name",
+      "Please enter a template name to save the configuration.",
+      "OK",
+      () => {},
+      () => {}
+    );
+    return;
+  }
+
+  const newConfig = {
+    name: templateName,
+    officialSupplierNameForExport:
+      officialSupplierNameForExportInput.value.trim(),
+    supplierNamePattern: supplierNameHintInput.value,
+    documentDatePattern: documentDateHintInput.value,
+    documentNumberPattern: documentNumberHintInput.value,
+    totalAmountPattern: totalAmountHintInput.value,
+  };
+
+  const existingIndex = localConfigurations.findIndex(
+    (cfg) => cfg.name === templateName
+  );
+
+  if (existingIndex !== -1) {
+    showConfirmationModal(
+      "Overwrite Template?",
+      `A template named "${templateName}" already exists. Do you want to overwrite it?`,
+      "Overwrite",
+      () => {
+        localConfigurations[existingIndex] = newConfig;
+        localStorage.setItem(
+          LOCAL_STORAGE_KEY,
+          JSON.stringify(localConfigurations)
+        );
+        populateConfigSelect();
+        showConfirmationModal(
+          "Success",
+          "Template updated successfully.",
+          "OK",
+          () => {},
+          () => {}
+        );
+      },
+      () => {}
+    );
+  } else {
+    localConfigurations.push(newConfig);
+    localStorage.setItem(
+      LOCAL_STORAGE_KEY,
+      JSON.stringify(localConfigurations)
+    );
+    populateConfigSelect();
+    showConfirmationModal(
+      "Success",
+      "Template saved successfully.",
+      "OK",
+      () => {},
+      () => {}
+    );
+  }
+  updateTemplateTabButtonsState();
+}
+
+/**
+ * Deletes the currently selected template from local storage.
+ */
+function deleteTemplateFromLocalStorage() {
+  const selectedConfigName = configSelect.value;
+  if (!selectedConfigName) {
+    showConfirmationModal(
+      "No Template Selected",
+      "Please select a template to delete.",
+      "OK",
+      () => {},
+      () => {}
+    );
+    return;
+  }
+
+  showConfirmationModal(
+    "Confirm Deletion",
+    `Are you sure you want to delete the template "${selectedConfigName}"? This action cannot be undone.`,
+    "Delete",
+    () => {
+      localConfigurations = localConfigurations.filter(
+        (cfg) => cfg.name !== selectedConfigName
+      );
+      localStorage.setItem(
+        LOCAL_STORAGE_KEY,
+        JSON.stringify(localConfigurations)
+      );
+      resetConfigInputFields(); // Clear fields
+      populateConfigSelect(); // Update dropdown
+      showConfirmationModal(
+        "Success",
+        "Template deleted successfully.",
+        "OK",
+        () => {},
+        () => {}
+      );
+    },
+    () => {}
+  );
+  updateTemplateTabButtonsState();
+}
+
+/**
+ * Populates the template selection dropdown with configurations from local storage.
+ */
+function populateConfigSelect() {
+  configSelect.innerHTML = '<option value="">-- Select a template --</option>';
+  if (localConfigurations.length === 0) {
+    configSelect.innerHTML =
+      '<option value="">-- No templates available --</option>';
+    return;
+  }
+  localConfigurations.forEach((config) => {
+    const option = document.createElement("option");
+    option.value = config.name; // Use name as value
+    option.textContent = config.name;
+    configSelect.appendChild(option);
+  });
+}
+
+/**
+ * Exports all saved configurations to a JSON file.
+ */
+function exportAllConfigsToJson() {
+  if (localConfigurations.length === 0) {
+    showConfirmationModal(
+      "No Data to Export",
+      "There are no saved templates to export.",
+      "OK",
+      () => {},
+      () => {}
+    );
+    return;
+  }
+
+  const configJson = JSON.stringify(localConfigurations, null, 2);
+  const blob = new Blob([configJson], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `invoice-templates-backup-${new Date()
+    .toISOString()
+    .slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showConfirmationModal(
+    "Export Complete",
+    "All templates exported successfully.",
+    "OK",
+    () => {},
+    () => {}
+  );
+}
+
+/**
+ * Imports configurations from a JSON file, merging with existing local storage data.
+ * Overwrites templates with matching names.
+ */
+function importConfigsFromJson() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json";
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const importedData = JSON.parse(event.target.result);
+        if (!Array.isArray(importedData)) {
+          throw new Error(
+            "Invalid JSON format. Expected an array of templates."
+          );
+        }
+
+        let importedCount = 0;
+        let overwrittenCount = 0;
+
+        importedData.forEach((importedConfig) => {
+          if (!importedConfig.name) {
+            console.warn(
+              "Skipping imported template due to missing name:",
+              importedConfig
+            );
+            return;
+          }
+          const existingIndex = localConfigurations.findIndex(
+            (cfg) => cfg.name === importedConfig.name
+          );
+
+          if (existingIndex !== -1) {
+            // Overwrite existing
+            localConfigurations[existingIndex] = importedConfig;
+            overwrittenCount++;
+          } else {
+            // Add new
+            localConfigurations.push(importedConfig);
+            importedCount++;
+          }
+        });
+
+        localStorage.setItem(
+          LOCAL_STORAGE_KEY,
+          JSON.stringify(localConfigurations)
+        );
+        populateConfigSelect();
+        showConfirmationModal(
+          "Import Complete",
+          `Successfully imported ${importedCount} new templates and updated ${overwrittenCount} existing templates.`,
+          "OK",
+          () => {},
+          () => {}
+        );
+      } catch (error) {
+        showConfirmationModal(
+          "Import Error",
+          "Failed to import configurations: " + error.message,
+          "OK",
+          () => {},
+          () => {}
+        );
+        console.error("Error importing configurations:", error);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
 // --- 5. UI Event Handlers (Specific to Invoice App) ---
 
 /**
@@ -862,13 +1136,12 @@ async function displayPdfTextForAnalysis(file) {
 /**
  * Downloads the current template configuration as a JSON file.
  */
-function downloadConfig() {
+function exportCurrentConfig() {
   const templateName = configNameInput.value.trim();
   if (!templateName) {
-    // Use a custom modal for alerts instead of browser alert()
     showConfirmationModal(
       "Missing Template Name",
-      "Please enter a template name to download the configuration.",
+      "Please enter a template name to export the configuration.",
       "OK",
       () => {},
       () => {}
@@ -898,69 +1171,29 @@ function downloadConfig() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url); // Clean up the object URL
-}
-
-/**
- * Loads template configurations from `template.json` file.
- */
-async function loadServerConfigurations() {
-  configSelect.innerHTML = '<option value="">-- Select a template --</option>'; // Clear existing options
-  serverConfigurations = []; // Clear current configurations
-
-  try {
-    const response = await fetch("template.json"); // Fetch the static config file
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    if (!Array.isArray(data)) {
-      throw new Error("template.json must contain an array of configurations.");
-    }
-    serverConfigurations = data; // Store loaded configurations
-
-    if (serverConfigurations.length === 0) {
-      configSelect.innerHTML =
-        '<option value="">-- No templates available --</option>';
-      return;
-    }
-
-    // Populate the select dropdown
-    serverConfigurations.forEach((config, index) => {
-      const option = document.createElement("option");
-      option.value = index; // Use index as value
-      option.textContent = config.name;
-      configSelect.appendChild(option);
-    });
-  } catch (error) {
-    // Use a custom modal for alerts instead of browser alert()
-    showConfirmationModal(
-      "Configuration Load Error",
-      "Failed to load templates from template.json: " +
-        error.message +
-        ". Please ensure the file exists and is correctly formatted.",
-      "OK",
-      () => {},
-      () => {}
-    );
-    console.error("Load server config error:", error);
-  } finally {
-    updateTemplateTabButtonsState(); // Update button states
-    updateProcessTabButtonsState();
-  }
+  showConfirmationModal(
+    "Export Complete",
+    "Current template exported successfully.",
+    "OK",
+    () => {},
+    () => {}
+  );
 }
 
 /**
  * Loads the currently selected configuration from the dropdown into the input fields automatically.
  */
 function autoLoadSelectedConfiguration() {
-  const selectedConfigIndex = configSelect.value;
-  if (selectedConfigIndex === "" || isNaN(selectedConfigIndex)) {
+  const selectedConfigName = configSelect.value;
+  if (selectedConfigName === "") {
     resetConfigInputFields(); // Clear fields if "Select a template" is chosen
     return;
   }
 
-  // Find the selected configuration by index
-  const selectedConfig = serverConfigurations[parseInt(selectedConfigIndex)];
+  // Find the selected configuration by name
+  const selectedConfig = localConfigurations.find(
+    (cfg) => cfg.name === selectedConfigName
+  );
 
   if (selectedConfig) {
     activeConfig = selectedConfig; // Set active config
@@ -974,10 +1207,9 @@ function autoLoadSelectedConfiguration() {
     totalAmountHintInput.value = activeConfig.totalAmountPattern || "";
   } else {
     // This case should ideally not happen if dropdown is populated correctly
-    // Use a custom modal for alerts instead of browser alert()
     showConfirmationModal(
       "Template Not Found",
-      "Selected template not found.",
+      "Selected template not found in local storage.",
       "OK",
       () => {},
       () => {}
@@ -1101,11 +1333,11 @@ function appendExtractedResultToTable(data, index) {
         dataToTemplate.configUsedName &&
         dataToTemplate.configUsedName !== "-"
       ) {
-        const foundConfigIndex = serverConfigurations.findIndex(
+        const foundConfig = localConfigurations.find(
           (cfg) => cfg.name === dataToTemplate.configUsedName
         );
-        if (foundConfigIndex !== -1) {
-          configSelect.value = foundConfigIndex; // Select in dropdown
+        if (foundConfig) {
+          configSelect.value = foundConfig.name; // Select in dropdown by name
           autoLoadSelectedConfiguration(); // Load details into inputs
         } else {
           configSelect.value = "";
@@ -1205,6 +1437,7 @@ function resetConfigInputFields() {
   documentNumberHintInput.value = "";
   totalAmountHintInput.value = "";
   activeConfig = null; // Clear active config
+  configSelect.value = ""; // Reset dropdown
   updateTemplateTabButtonsState();
 }
 
@@ -1232,7 +1465,7 @@ function resetUI() {
   resetExtractedFieldsForAnalysisTab(); // Reset analysis tab fields
   resetConfigInputFields(); // Reset template editor fields
   processingStatus.textContent = ""; // Clear processing status
-  clearConfigSelect(); // Clear template dropdown
+  populateConfigSelect(); // Reload config dropdown from local storage
   hideApiKeyModal();
   hideConfirmationModal(); // Hide the confirmation modal
   clearAllResults(); // Clear extracted results table
@@ -1248,14 +1481,6 @@ function clearUploadForm() {
   uploadedFiles = [];
   pdfUpload.value = ""; // Resets the file input itself
   updateInvoiceFileDisplay();
-}
-
-/**
- * Clears all options in the configuration select dropdown.
- */
-function clearConfigSelect() {
-  configSelect.innerHTML =
-    '<option value="">-- No templates available --</option>';
 }
 
 /**
@@ -1275,13 +1500,19 @@ function updateProcessTabButtonsState() {
 function updateTemplateTabButtonsState() {
   const isPdfLoadedForAnalysis = currentPdfTextForAnalysis.length > 0;
   const hasConfigName = configNameInput.value.trim().length > 0;
-  // const isConfigSelected = configSelect.value !== ""; // Removed this check as config loads automatically
+  const isConfigSelected = configSelect.value !== ""; // Check if a template is selected in dropdown
 
   // Preview button enabled if PDF loaded
   previewButton.disabled = !isPdfLoadedForAnalysis;
 
-  // Download Config button enabled if config name provided
-  downloadConfigButton.disabled = !hasConfigName;
+  // Export Current Config button enabled if config name provided
+  exportCurrentConfigButton.disabled = !hasConfigName;
+
+  // Save Template button enabled if config name provided
+  saveTemplateButton.disabled = !hasConfigName;
+
+  // Delete Template button enabled if a config is selected
+  deleteTemplateButton.disabled = !isConfigSelected;
 
   // AI suggest buttons enabled if PDF loaded
   document.querySelectorAll(".ai-suggest-button").forEach((btn) => {
@@ -1297,8 +1528,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   applyTheme(prefersDarkMode.matches);
   prefersDarkMode.addEventListener("change", (e) => applyTheme(e.matches));
 
-  // Load server configurations from template.json on startup
-  await loadServerConfigurations();
+  // Load configurations from local storage on startup
+  loadLocalConfigurations();
 
   // Initial UI setup
   switchTab("Process"); // Start on the Process tab
@@ -1333,9 +1564,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     hideApiKeyModal();
     updateTemplateTabButtonsState(); // Re-enable buttons if API key was mandatory
   });
-
-  // User icon (no longer for login, just a visual placeholder)
-  // No event listener needed for userIconContainer for login/logout
 
   // PDF Upload and Display
   pdfUpload.addEventListener("change", handlePdfUpload);
@@ -1440,12 +1668,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         let selectedConfigForExtraction = null;
         let officialSupplierNameForExport = null;
 
-        // Attempt to classify document if server templates are available
-        if (serverConfigurations.length > 0) {
+        // Attempt to classify document if local templates are available
+        if (localConfigurations.length > 0) {
           processingStatus.textContent = `Identifying best template for "${file.name}"...`;
           const classificationResult = classifyDocumentHeuristically(
             fileText,
-            serverConfigurations
+            localConfigurations
           );
 
           if (
@@ -1454,7 +1682,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             classificationResult.matchedConfigName !== "-"
           ) {
             const matchedName = classificationResult.matchedConfigName;
-            const foundConfig = serverConfigurations.find(
+            const foundConfig = localConfigurations.find(
               (cfg) => cfg.name === matchedName
             );
             if (foundConfig) {
@@ -1620,8 +1848,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   useSelectedRegexButton.addEventListener("click", useSelectedRegex);
 
   // Configuration management buttons
-  downloadConfigButton.addEventListener("click", downloadConfig); // Renamed
-  // Removed loadConfigButton and deleteConfigButton listeners
+  saveTemplateButton.addEventListener("click", saveTemplateToLocalStorage);
+  deleteTemplateButton.addEventListener(
+    "click",
+    deleteTemplateFromLocalStorage
+  );
+  importConfigButton.addEventListener("click", importConfigsFromJson);
+  exportAllConfigsButton.addEventListener("click", exportAllConfigsToJson);
+  exportCurrentConfigButton.addEventListener("click", exportCurrentConfig);
 
   // Auto-load config when selection changes
   configSelect.addEventListener("change", autoLoadSelectedConfiguration);
@@ -1633,4 +1867,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   configSelect.addEventListener("change", () => {
     updateTemplateTabButtonsState();
   });
+
+  // Update template tab buttons state when inputs change
+  configNameInput.addEventListener("input", updateTemplateTabButtonsState);
+  officialSupplierNameForExportInput.addEventListener(
+    "input",
+    updateTemplateTabButtonsState
+  );
+  supplierNameHintInput.addEventListener(
+    "input",
+    updateTemplateTabButtonsState
+  );
+  documentDateHintInput.addEventListener(
+    "input",
+    updateTemplateTabButtonsState
+  );
+  documentNumberHintInput.addEventListener(
+    "input",
+    updateTemplateTabButtonsState
+  );
+  totalAmountHintInput.addEventListener("input", updateTemplateTabButtonsState);
 });

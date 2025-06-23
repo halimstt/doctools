@@ -413,8 +413,21 @@
                   id="configSelect"
                   class="block w-full py-2 px-3 border border-light-border dark:border-dark-border bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-md shadow-sm focus:outline-none focus:ring-accent-blue-light focus:border-accent-blue-light dark:focus:ring-accent-blue-dark dark:focus:border-accent-blue-dark sm:text-sm"
                 ></select>
+                <div class="flex space-x-2 mt-2">
+                  <button
+                    id="saveTemplateButton"
+                    class="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Save Template
+                  </button>
+                  <button
+                    id="deleteTemplateButton"
+                    class="flex-1 bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Delete Template
+                  </button>
+                </div>
               </div>
-              <!-- Removed Load Selected and Delete Selected buttons -->
               <h3
                 class="text-xl font-bold text-light-text-primary dark:text-dark-text-primary pt-4"
               >
@@ -585,7 +598,23 @@
                 </div>
               </div>
 
-              <!-- Preview and Download Config buttons -->
+              <!-- New buttons for Import/Export All Configs -->
+              <div class="flex space-x-2 pt-4">
+                <button
+                  id="importConfigButton"
+                  class="flex-1 bg-purple-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  Import Config
+                </button>
+                <button
+                  id="exportAllConfigsButton"
+                  class="flex-1 bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Export All Configs
+                </button>
+              </div>
+
+              <!-- Preview and Export Current Config buttons -->
               <div class="flex space-x-2 pt-4">
                 <button
                   id="previewButton"
@@ -594,10 +623,10 @@
                   Preview
                 </button>
                 <button
-                  id="downloadConfigButton"
+                  id="exportCurrentConfigButton"
                   class="flex-1 bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
                 >
-                  Download Config
+                  Export Current Config
                 </button>
               </div>
             </div>
@@ -800,6 +829,6 @@
       </div>
     </div>
     <!-- Link to the external JavaScript module file -->
-    <script type="module" src="invoice-script.js"></script>
+    <script type="module" src="invoice.js"></script>
   </body>
 </html>

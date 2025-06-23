@@ -1,4 +1,4 @@
-// index-script.js
+// index.js
 
 // --- 1. Global Variables and DOM Elements ---
 // Caching DOM elements for efficient access
