@@ -416,15 +416,29 @@
                 <div class="flex space-x-2 mt-2">
                   <button
                     id="saveTemplateButton"
-                    class="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                    class="flex-1 bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
                   >
-                    Save Template
+                    Save
                   </button>
                   <button
                     id="deleteTemplateButton"
-                    class="flex-1 bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                    class="flex-1 bg-red-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
                   >
-                    Delete Template
+                    Delete
+                  </button>
+                </div>
+                <div class="flex space-x-2 pt-4">
+                  <button
+                    id="importConfigButton"
+                    class="flex-1 bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Import
+                  </button>
+                  <button
+                    id="exportAllConfigsButton"
+                    class="flex-1 bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Export All
                   </button>
                 </div>
               </div>
@@ -598,35 +612,13 @@
                 </div>
               </div>
 
-              <!-- New buttons for Import/Export All Configs -->
-              <div class="flex space-x-2 pt-4">
-                <button
-                  id="importConfigButton"
-                  class="flex-1 bg-purple-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  Import Config
-                </button>
-                <button
-                  id="exportAllConfigsButton"
-                  class="flex-1 bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-700 transition-colors"
-                >
-                  Export All Configs
-                </button>
-              </div>
-
-              <!-- Preview and Export Current Config buttons -->
+              <!-- Preview button -->
               <div class="flex space-x-2 pt-4">
                 <button
                   id="previewButton"
-                  class="flex-1 bg-gray-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                  class="w-full bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
                 >
                   Preview
-                </button>
-                <button
-                  id="exportCurrentConfigButton"
-                  class="flex-1 bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-                >
-                  Export Current Config
                 </button>
               </div>
             </div>
@@ -707,13 +699,13 @@
         <div class="flex justify-end gap-2">
           <button
             id="saveApiKeyButton"
-            class="bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+            class="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Save Key
           </button>
           <button
             id="cancelApiKeyButton"
-            class="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
+            class="bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
             Cancel
           </button>
@@ -741,13 +733,13 @@
         <div class="flex justify-end space-x-2">
           <button
             id="cancelConfirmationButton"
-            class="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
+            class="bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
             Cancel
           </button>
           <button
             id="confirmActionButton"
-            class="bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+            class="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Confirm
           </button>
@@ -814,13 +806,13 @@
         <div class="flex justify-end space-x-2">
           <button
             id="cancelRegexSuggestButton"
-            class="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
+            class="bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
             Cancel
           </button>
           <button
             id="useSelectedRegexButton"
-            class="bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            class="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             disabled
           >
             Use Selected Regex

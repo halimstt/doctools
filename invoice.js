@@ -102,9 +102,6 @@ const importConfigButton = document.getElementById("importConfigButton");
 const exportAllConfigsButton = document.getElementById(
   "exportAllConfigsButton"
 );
-const exportCurrentConfigButton = document.getElementById(
-  "exportCurrentConfigButton"
-); // Renamed from downloadConfigButton
 
 // --- 2. Utility Functions ---
 
@@ -452,7 +449,6 @@ async function callGeminiApi(
   // Disable buttons during API call
   processPdfButton.disabled = true;
   previewButton.disabled = true;
-  exportCurrentConfigButton.disabled = true;
   saveTemplateButton.disabled = true;
   deleteTemplateButton.disabled = true;
   importConfigButton.disabled = true;
@@ -1134,53 +1130,6 @@ async function displayPdfTextForAnalysis(file) {
 }
 
 /**
- * Downloads the current template configuration as a JSON file.
- */
-function exportCurrentConfig() {
-  const templateName = configNameInput.value.trim();
-  if (!templateName) {
-    showConfirmationModal(
-      "Missing Template Name",
-      "Please enter a template name to export the configuration.",
-      "OK",
-      () => {},
-      () => {}
-    );
-    return;
-  }
-
-  const currentConfig = {
-    name: templateName,
-    officialSupplierNameForExport:
-      officialSupplierNameForExportInput.value.trim(),
-    supplierNamePattern: supplierNameHintInput.value,
-    documentDatePattern: documentDateHintInput.value,
-    documentNumberPattern: documentNumberHintInput.value,
-    totalAmountPattern: totalAmountHintInput.value,
-  };
-
-  const configJson = JSON.stringify(currentConfig, null, 2); // Pretty print JSON
-  const blob = new Blob([configJson], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${templateName
-    .toLowerCase()
-    .replace(/\s/g, "-")}-template.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url); // Clean up the object URL
-  showConfirmationModal(
-    "Export Complete",
-    "Current template exported successfully.",
-    "OK",
-    () => {},
-    () => {}
-  );
-}
-
-/**
  * Loads the currently selected configuration from the dropdown into the input fields automatically.
  */
 function autoLoadSelectedConfiguration() {
@@ -1504,9 +1453,6 @@ function updateTemplateTabButtonsState() {
 
   // Preview button enabled if PDF loaded
   previewButton.disabled = !isPdfLoadedForAnalysis;
-
-  // Export Current Config button enabled if config name provided
-  exportCurrentConfigButton.disabled = !hasConfigName;
 
   // Save Template button enabled if config name provided
   saveTemplateButton.disabled = !hasConfigName;
@@ -1855,7 +1801,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   );
   importConfigButton.addEventListener("click", importConfigsFromJson);
   exportAllConfigsButton.addEventListener("click", exportAllConfigsToJson);
-  exportCurrentConfigButton.addEventListener("click", exportCurrentConfig);
 
   // Auto-load config when selection changes
   configSelect.addEventListener("change", autoLoadSelectedConfiguration);
