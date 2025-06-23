@@ -1482,6 +1482,7 @@ function updateTemplateTabButtonsState() {
 document.addEventListener("DOMContentLoaded", async () => {
   // Initial UI setup
   switchTab("Process"); // Start on the Process tab
+  updateInvoiceFileDisplay();
   updateTemplateTabButtonsState(); // Set initial button states
   updateProcessTabButtonsState();
 

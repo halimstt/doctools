@@ -64,7 +64,7 @@
 
   /* Styling for file information display area */
   .file-info-base {
-    @apply hidden text-left mt-4;
+    @apply text-left mt-4;
   }
 
   /* Styling for individual file "pills" */
