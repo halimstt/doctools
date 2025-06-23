@@ -1,8 +1,8 @@
 // index.js
 
 // --- IMPORTANT: Import your main CSS file here to be processed by Vite ---
-// This tells Vite to process 'src/style.css' with PostCSS/Tailwind and include it in the bundle.
-import "./src/style.css";
+// This tells Vite to process 'style.css' with PostCSS/Tailwind and include it in the bundle.
+import "./style.css";
 
 // --- 1. Global Variables and DOM Elements ---
 // Caching DOM elements for efficient access
@@ -77,7 +77,7 @@ function showApiKeyModal() {
     resolveApiKeyPromise = resolve; // Store resolve for external access
 
     geminiApiKeyInput.value = geminiApiKey; // Pre-fill with existing key
-    apiKeyModal.style.display = "flex"; // Show modal
+    apiKeyModal.classList.remove("hidden"); // Show modal
 
     // Event listener for saving the API key
     apiKeySaveBtn.onclick = () => {
@@ -85,7 +85,7 @@ function showApiKeyModal() {
       if (key) {
         localStorage.setItem("geminiApiKey", key); // Save to local storage
         geminiApiKey = key; // Update global variable
-        apiKeyModal.style.display = "none"; // Hide modal
+        apiKeyModal.classList.add("hidden"); // Hide modal
         resolve(key); // Resolve the promise with the key
       } else {
         showMessage("error", "Please enter a valid Gemini API key.");
@@ -94,7 +94,7 @@ function showApiKeyModal() {
 
     // Event listener for canceling API key input
     apiKeyCancelBtn.onclick = () => {
-      apiKeyModal.style.display = "none"; // Hide modal
+      apiKeyModal.classList.add("hidden"); // Hide modal
       resolve(null); // Resolve the promise with null
     };
   });

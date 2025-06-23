@@ -1,8 +1,8 @@
 // invoice.js
 
 // --- IMPORTANT: Import your main CSS file here to be processed by Vite ---
-// This tells Vite to process 'src/style.css' with PostCSS/Tailwind and include it in the bundle.
-import "./src/style.css";
+// This tells Vite to process 'style.css' with PostCSS/Tailwind and include it in the bundle.
+import "./style.css";
 
 // --- 1. Global Variables and DOM Element References ---
 
@@ -123,14 +123,14 @@ function logDebug(message) {
  * Shows the API key input modal.
  */
 function showApiKeyModal() {
-  apiKeyModal.style.display = "flex";
+  apiKeyModal.classList.remove("hidden");
 }
 
 /**
  * Hides the API key input modal.
  */
 function hideApiKeyModal() {
-  apiKeyModal.style.display = "none";
+  apiKeyModal.classList.add("hidden");
 }
 
 /**
@@ -165,14 +165,14 @@ function showConfirmationModal(
     onCancel();
   };
 
-  confirmationModal.style.display = "flex";
+  confirmationModal.classList.remove("hidden");
 }
 
 /**
  * Hides the generic confirmation modal.
  */
 function hideConfirmationModal() {
-  confirmationModal.style.display = "none";
+  confirmationModal.classList.add("hidden");
 }
 
 /**
@@ -311,14 +311,14 @@ function showRegexSuggestModal(fieldName) {
   regexSuggestStatus.textContent = "";
   regexTestResult.textContent = "Test Result: No regex tested yet.";
 
-  regexSuggestModal.style.display = "flex"; // Show modal
+  regexSuggestModal.classList.remove("hidden"); // Show modal
 }
 
 /**
  * Hides the regex suggestion modal.
  */
 function hideRegexSuggestModal() {
-  regexSuggestModal.style.display = "none";
+  regexSuggestModal.classList.add("hidden");
   currentRegexTargetField = null; // Clear target field
 }
 

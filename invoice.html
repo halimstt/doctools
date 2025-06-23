@@ -4,15 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Invoices Converter</title>
-    <!-- Removed: <link rel="stylesheet" href="./style.css" /> -->
-    <!-- Google Fonts - Inter for a modern look -->
+    <script>
+      // Prevents FOUC (Flash of Unstyled Content) by applying the theme early.
+      (() => {
+        const theme = localStorage.getItem("theme");
+        if (
+          theme === "dark" ||
+          (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      })();
+    </script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <!-- Navigation script (remains separate as it's common) -->
     <script type="module" src="./navigation.js"></script>
-    <!-- PDF.js library for PDF parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script>
       // Configure PDF.js worker source globally
@@ -20,14 +30,12 @@
     </script>
   </head>
   <body class="body-base">
-    <!-- Placeholder for navigation bar, populated by navigation.js -->
     <div id="nav-placeholder"></div>
     <div class="container-base">
       <header class="header-base relative">
         <h1 class="h1-base">Invoices Converter</h1>
       </header>
 
-      <!-- Tab navigation for Extract and Template sections -->
       <div
         class="mb-6 border-b border-light-border dark:border-dark-border flex"
       >
@@ -40,9 +48,7 @@
       </div>
 
       <main>
-        <!-- Tab content for PDF extraction -->
         <div id="tabContentProcess" class="tab-content w-full">
-          <!-- PDF upload area -->
           <div
             id="dropArea"
             class="drop-area-base mb-4 bg-light-bg-secondary dark:bg-dark-bg-secondary"
@@ -87,7 +93,6 @@
               </div>
             </label>
 
-            <!-- Display for uploaded files -->
             <div id="file-info-invoice" class="file-info-base">
               <p
                 class="font-semibold text-light-text-primary dark:text-dark-text-primary"
@@ -104,7 +109,6 @@
             </div>
           </div>
 
-          <!-- Action buttons for processing and downloading -->
           <div class="flex justify-center space-x-2 my-6">
             <button id="processPdfButton" class="btn-primary" disabled>
               Process
@@ -114,13 +118,11 @@
             </button>
           </div>
 
-          <!-- Processing status display -->
           <p
             id="processingStatus"
             class="mt-2 text-sm text-center p-secondary"
           ></p>
 
-          <!-- Results table for extracted data -->
           <div id="results-container" class="mt-12">
             <h2
               class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4"
@@ -159,10 +161,9 @@
           </div>
         </div>
 
-        <!-- Tab content for Template Editor and Analysis -->
         <div
           id="tabContentTemplate"
-          class="tab-content w-full flex flex-col md:flex-row gap-8 hidden"
+          class="tab-content w-full flex-col md:flex-row gap-8 hidden"
         >
           <div class="flex-1 md:pr-4">
             <h2
@@ -172,7 +173,6 @@
             </h2>
 
             <div class="space-y-4">
-              <!-- Template Name input -->
               <div>
                 <label
                   for="configName"
@@ -187,7 +187,6 @@
                 />
               </div>
 
-              <!-- Official Supplier Name for Export input -->
               <div>
                 <label
                   for="officialSupplierNameForExportInput"
@@ -202,7 +201,6 @@
                 />
               </div>
 
-              <!-- Load Saved Template dropdown -->
               <div>
                 <label
                   for="configSelect"
@@ -246,7 +244,6 @@
               </h3>
 
               <div class="space-y-4">
-                <!-- Supplier Name Hint input -->
                 <div>
                   <label
                     for="supplierNameHint"
@@ -260,7 +257,6 @@
                     placeholder="e.g., (.*) Sdn Bhd"
                   />
                 </div>
-                <!-- Document Date Hint input with AI suggest button -->
                 <div>
                   <label
                     for="documentDateHint"
@@ -309,7 +305,6 @@
                     </button>
                   </div>
                 </div>
-                <!-- Document Number Hint input with AI suggest button -->
                 <div>
                   <label
                     for="documentNumberHint"
@@ -358,7 +353,6 @@
                     </button>
                   </div>
                 </div>
-                <!-- Total Amount Hint input with AI suggest button -->
                 <div>
                   <label
                     for="totalAmountHint"
@@ -409,14 +403,12 @@
                 </div>
               </div>
 
-              <!-- Preview button -->
               <div class="flex space-x-2 pt-4">
                 <button id="previewButton" class="btn-primary">Preview</button>
               </div>
             </div>
           </div>
 
-          <!-- Extracted Information Display and PDF Raw Text Preview -->
           <div class="flex-1 md:pl-4 mt-8 md:mt-0">
             <h2
               class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4"
@@ -459,8 +451,7 @@
       </main>
     </div>
 
-    <!-- Modals (API Key, Regex Suggestion, and a generic Confirmation Modal) -->
-    <div id="apiKeyModal" class="modal-base">
+    <div id="apiKeyModal" class="modal-base hidden">
       <div class="modal-content-base">
         <h3
           class="text-xl font-bold mb-4 text-light-text-primary dark:text-dark-text-primary"
@@ -498,8 +489,7 @@
       </div>
     </div>
 
-    <!-- Generic Confirmation Modal - Replaces old logoutModal -->
-    <div id="confirmationModal" class="modal-base">
+    <div id="confirmationModal" class="modal-base hidden">
       <div class="modal-content-base">
         <h2
           id="confirmationModalTitle"
@@ -527,7 +517,7 @@
       </div>
     </div>
 
-    <div id="regexSuggestModal" class="modal-base">
+    <div id="regexSuggestModal" class="modal-base hidden">
       <div class="modal-content-base w-full max-w-lg">
         <h2
           id="regexSuggestModalTitle"
@@ -589,7 +579,6 @@
         </div>
       </div>
     </div>
-    <!-- Link to the external JavaScript module file -->
     <script type="module" src="./invoice.js"></script>
   </body>
 </html>

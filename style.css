@@ -1,4 +1,4 @@
-/* src/style.css */
+/* style.css */
 
 /* Import Tailwind's base styles, components, and utilities */
 @tailwind base;
@@ -109,7 +109,7 @@
 
   /* Table header styling */
   .table-header-base {
-    @apply text-xs uppercase bg-light-bg-primary dark:bg-dark-bg-secondary text-light-text-secondary dark:text-dark-text-secondary bg-gray-200 dark:bg-gray-600;
+    @apply text-xs uppercase bg-gray-200 text-light-text-secondary dark:bg-gray-600 dark:text-dark-text-secondary;
   }
 
   /* Base table row styling */
@@ -124,7 +124,7 @@
 
   /* Modal overlay base styles */
   .modal-base {
-    @apply hidden fixed z-1000 left-0 top-0 w-full h-full overflow-auto bg-black bg-opacity-40 flex justify-center items-center;
+    @apply fixed z-1000 left-0 top-0 w-full h-full overflow-auto bg-black bg-opacity-40 flex justify-center items-center;
   }
 
   /* Modal content box styles */
@@ -227,8 +227,9 @@ body {
 
 /* Tab button specific styles (overriding .tab-button-base for active/inactive states) */
 .tab-button {
-  padding: 0.75rem 1.5rem; /* Specific padding not in tab-button-base */
-  font-weight: 500; /* Already in tab-button-base */
+  @apply tab-button-base; /* Apply the base tab button styles */
+  padding: 0.75rem 1.5rem; /* Specific padding */
+  font-weight: 500; /* Specific font weight */
 }
 .tab-button.active {
   color: #2563eb;

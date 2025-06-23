@@ -4,15 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Statements Converter</title>
-    <!-- Removed: <link rel="stylesheet" href="./style.css" /> -->
-    <!-- Google Fonts - Inter for a modern look -->
+    <script>
+      // Prevents FOUC (Flash of Unstyled Content) by applying the theme early.
+      (() => {
+        const theme = localStorage.getItem("theme");
+        if (
+          theme === "dark" ||
+          (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      })();
+    </script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <!-- Navigation script (remains separate as it's common) -->
     <script type="module" src="./navigation.js"></script>
-    <!-- PDF.js library for PDF parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script>
       // Configure PDF.js worker source globally
@@ -20,7 +30,6 @@
     </script>
   </head>
   <body class="body-base">
-    <!-- Placeholder for navigation bar, populated by navigation.js -->
     <div id="nav-placeholder"></div>
     <div class="container-base">
       <header class="header-base">
@@ -30,7 +39,6 @@
         </p>
       </header>
 
-      <!-- Statement type selection dropdown -->
       <div class="mb-6 flex justify-center">
         <label for="parser-select" class="sr-only">Choose Statement Type</label>
         <select id="parser-select" class="select-base">
@@ -40,7 +48,6 @@
         </select>
       </div>
 
-      <!-- Message container for alerts (error/success) -->
       <div id="message-container" class="message-container-base" role="alert">
         <strong id="message-prefix" class="font-bold"></strong>
         <span id="message-text" class="block sm:inline ml-2"></span>
@@ -61,7 +68,6 @@
       </div>
 
       <main>
-        <!-- File upload area (drag & drop or click) -->
         <div id="upload-area" class="upload-area-base">
           <input
             type="file"
@@ -97,7 +103,6 @@
               </p>
             </div>
           </label>
-          <!-- Display for selected files -->
           <div id="file-info" class="file-info-base">
             <p
               class="font-semibold text-light-text-primary dark:text-dark-text-primary"
@@ -114,7 +119,6 @@
           </div>
         </div>
 
-        <!-- Action buttons -->
         <div class="flex justify-center space-x-2 my-6">
           <button id="process-btn" class="btn-primary" disabled>
             <span id="process-btn-text">Process</span>
@@ -125,12 +129,10 @@
           </button>
         </div>
 
-        <!-- Processing status display -->
         <div id="status-container" class="mt-6 text-center text-sm">
           <p id="status-text" class="p-secondary hidden"></p>
         </div>
 
-        <!-- Results table -->
         <div id="results-container" class="mt-12">
           <h2
             class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4"
@@ -162,8 +164,7 @@
       </main>
     </div>
 
-    <!-- Modal for Gemini API key input -->
-    <div id="api-key-modal" class="modal-base">
+    <div id="api-key-modal" class="modal-base hidden">
       <div class="modal-content-base">
         <h3
           class="text-xl font-bold mb-4 text-light-text-primary dark:text-dark-text-primary"
@@ -201,7 +202,6 @@
       </div>
     </div>
 
-    <!-- Link to the external JavaScript file -->
     <script type="module" src="./index.js"></script>
   </body>
 </html>
