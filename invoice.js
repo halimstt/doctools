@@ -233,7 +233,7 @@ function formatAmountForDisplay(amount) {
 }
 
 /**
- * Formats a date string for display in DD/MM/YY format.
+ * Formats a date string for display in DD/MM/YYYY format.
  * Handles various date formats (DD/MM/YYYY, ISO-MM-DD, or general date strings).
  * @param {string} dateString - The date string to format.
  * @returns {string} The formatted date string or the original string if invalid.
@@ -262,10 +262,10 @@ function formatDateForDisplay(dateString) {
       return dateString;
     }
 
-    // Format to DD/MM/YY
+    // Format to DD/MM/YYYY
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = String(date.getFullYear()).slice(-2); // Get last two digits of year
+    const year = String(date.getFullYear()); // Get full four digits of year
     return `${day}/${month}/${year}`;
   } catch (e) {
     // If any error during parsing/formatting, return original string
@@ -1226,8 +1226,8 @@ function appendExtractedResultToTable(data, index) {
     noDocsRow.parentElement.remove();
   }
 
-  // Insert new row at the top (index 0)
-  const newRow = tableBody.insertRow(0);
+  // Insert new row at the end of the table
+  const newRow = tableBody.insertRow(); // Appends to the end
   newRow.setAttribute("data-index", index);
   newRow.className = "hover:bg-gray-50 dark:hover:bg-gray-700";
 
@@ -1301,6 +1301,23 @@ function appendExtractedResultToTable(data, index) {
 
       updateTemplateTabButtonsState();
     });
+}
+
+/**
+ * Redraws the extracted results table based on the current `allExtractedData`.
+ * This is useful after sorting.
+ */
+function refreshExtractedResultsTable() {
+  extractedResultsTableBody.innerHTML = ""; // Clear existing rows
+  if (allExtractedData.length === 0) {
+    extractedResultsTableBody.innerHTML =
+      '<tr><td colspan="7" class="px-6 py-4 text-center">No documents processed yet.</td></tr>';
+  } else {
+    allExtractedData.forEach((data, index) => {
+      // Pass the current index to appendExtractedResultToTable
+      appendExtractedResultToTable(data, index);
+    });
+  }
 }
 
 /**
@@ -1664,15 +1681,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           configUsedName: configUsedName,
           extractedSupplierName: extractedData.supplierName || "-",
           officialSupplierNameForExport: officialSupplierNameForExport,
-          documentDate: extractedData.documentDate || "-",
+          // Ensure documentDate is stored as DD/MM/YYYY
+          documentDate: extractedData.documentDate
+            ? formatDateForDisplay(extractedData.documentDate)
+            : "-",
           documentNumber: extractedData.documentNumber || "-",
           totalAmount: extractedData.totalAmount || null,
         };
         allExtractedData.push(formattedExtractedData);
-        appendExtractedResultToTable(
-          formattedExtractedData,
-          allExtractedData.length - 1
-        );
       } catch (error) {
         // Log error and store error data for display
         console.error(`Error processing file ${file.name}:`, error);
@@ -1688,10 +1704,19 @@ document.addEventListener("DOMContentLoaded", async () => {
           error: error.message,
         };
         allExtractedData.push(errorData);
-        appendExtractedResultToTable(errorData, allExtractedData.length - 1);
       }
       processedCount++;
     }
+
+    // Sort all extracted data by document date in ascending order
+    allExtractedData.sort((a, b) => {
+      // Convert DD/MM/YYYY strings to Date objects for comparison
+      const dateA = new Date(a.documentDate.split("/").reverse().join("-"));
+      const dateB = new Date(b.documentDate.split("/").reverse().join("-"));
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    refreshExtractedResultsTable(); // Redraw the table with sorted data
 
     processingStatus.textContent = `Finished processing ${processedCount} PDF(s).`;
     updateProcessTabButtonsState(); // Update button states after all files processed
@@ -1730,7 +1755,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
 
       if (refinedData) {
-        // Display extracted data
+        // Display extracted data, ensuring date is formatted as DD/MM/YYYY
         supplierNameSpan.textContent = refinedData.supplierName || "-";
         documentDateSpan.textContent = formatDateForDisplay(
           refinedData.documentDate

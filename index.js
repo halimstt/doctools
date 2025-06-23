@@ -136,25 +136,17 @@ function showApiKeyModal() {
 }
 
 /**
- * Parses a date string (DD/MM/YY) into a Date object for sorting.
+ * Parses a date string (DD/MM/YYYY) into a Date object for sorting.
  * Assumes 2-digit years are in the 21st century (20xx) if <= current year's last two digits,
  * or 20th century (19xx) if > current year's last two digits (e.g., 90 -> 1990, 10 -> 2010).
- * @param {string} dateString - The date string in "DD/MM/YY" format.
+ * @param {string} dateString - The date string in "DD/MM/YYYY" format.
  * @returns {number} The time in milliseconds since the epoch for sorting.
  */
 function parseDateForSorting(dateString) {
   const [day, month, year] = dateString.split("/");
-  // Heuristic for 2-digit year: if 'YY' is less than or equal to current year's 'YY', assume 20YY, else 19YY.
-  const currentFullYear = new Date().getFullYear();
-  const currentTwoDigitYear = parseInt(String(currentFullYear).slice(-2), 10);
-  const parsedTwoDigitYear = parseInt(year, 10);
-
-  const fullYear =
-    parsedTwoDigitYear <= currentTwoDigitYear
-      ? `20${String(parsedTwoDigitYear).padStart(2, "0")}`
-      : `19${String(parsedTwoDigitYear).padStart(2, "0")}`;
-
-  return new Date(`${fullYear}-${month}-${day}`).getTime();
+  // Construct a Date object in YYYY-MM-DD format for reliable parsing
+  // Note: Month is 0-indexed in Date constructor
+  return new Date(`${year}-${month}-${day}`).getTime();
 }
 
 /**
@@ -491,11 +483,11 @@ async function processStatements() {
       allTransactions = allTransactions.concat(fileTransactions); // Aggregate transactions
     }
 
-    // Sort all transactions by date in descending order (latest first)
+    // Sort all transactions by date in ascending order (oldest first)
     allTransactions.sort((a, b) => {
       const dateA = parseDateForSorting(a["Date"]);
       const dateB = parseDateForSorting(b["Date"]);
-      return dateB - dateA;
+      return dateA - dateB; // Changed to ascending order
     });
 
     statusText.textContent = ""; // Clear status message
@@ -652,7 +644,7 @@ function parseTransactionsMaybankPdf(allLinesFromPdf) {
       // Add transaction if a date is found
       if (date) {
         transactions.push({
-          Date: `${date}/${year.slice(-2)}`, // Append 2-digit year
+          Date: `${date}/${year}`, // Append full 4-digit year (DD/MM/YYYY)
           Description: description,
           Amount: amount,
         });
@@ -811,12 +803,12 @@ function parseTextAndGenerateCsvMaybankWeb(text) {
 
   // Format and clean final transactions for CSV export
   return transactions.map((t) => {
-    // Convert date to DD/MM/YY format
+    // Convert date to DD/MM/YYYY format
     const dateObj = new Date(t.date);
     const day = String(dateObj.getDate()).padStart(2, "0");
     const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-    const year = dateObj.getFullYear();
-    const formattedDate = `${day}/${month}/${String(year).slice(-2)}`;
+    const year = dateObj.getFullYear(); // Get full 4-digit year
+    const formattedDate = `${day}/${month}/${year}`; // DD/MM/YYYY
 
     // Clean and normalize description
     const cleanedDescription = t.description.replace(/\s+/g, " ").trim();
@@ -873,7 +865,7 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
       For each transaction, identify the 'Date', 'Description', and 'Amount'.
       
       Rules for extraction:
-      - The Date should be in DD/MM/YYYY format. If only DD/MM is present, assume the current year for a full DD/MM/YY format before outputting as DD/MM/YY.
+      - The Date should be in DD/MM/YYYY format. If only DD/MM is present, assume the current year for a full DD/MM/YYYY format.
       - The Description should be a concise summary of the transaction.
       - The Amount should be a numeric value. It should be positive for incoming funds (credit) and negative for outgoing funds (debit/expense). Do not include currency symbols (like RM).
       - Pay close attention to keywords and common transaction patterns to correctly identify whether an amount is a debit or a credit. For example, 'DUITNOW QR' or direct deposits are typically positive, while 'QR PAY SALES', 'MBB CT', or mentions of purchases/payments are typically negative. If the original text explicitly shows a minus sign or indicates a debit, ensure the output amount is negative.
@@ -957,6 +949,7 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
         // Format extracted transactions (e.g., ensure correct date year, clean description, fix amount)
         const formattedTransactions = parsedTransactions.map((t) => {
           let [day, month, year] = t.Date.split("/");
+          // Ensure year is 4-digits for consistency, assuming AI outputs DD/MM/YYYY as requested.
           if (!year || year.length !== 4) {
             const currentYear = new Date().getFullYear();
             const currentYY = String(currentYear).slice(-2);
@@ -966,7 +959,7 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
                 ? `20${String(parsedYY).padStart(2, "0")}`
                 : `19${String(parsedYY).padStart(2, "0")}`;
           }
-          const formattedYear = String(year).slice(-2); // Use 2-digit year for final output
+          const formattedYear = String(year); // Use full 4-digit year for final output
 
           const cleanedDescription = String(t.Description)
             .replace(/\s+/g, " ")
@@ -983,7 +976,7 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
             Date: `${String(day).padStart(2, "0")}/${String(month).padStart(
               2,
               "0"
-            )}/${formattedYear}`,
+            )}/${formattedYear}`, // Ensure DD/MM/YYYY
             Description: descForCsv,
             Amount: parseFloat(t.Amount).toFixed(2), // Format amount
           };
