@@ -1,5 +1,9 @@
 // index.js
 
+// --- IMPORTANT: Import your main CSS file here to be processed by Vite ---
+// This tells Vite to process 'src/style.css' with PostCSS/Tailwind and include it in the bundle.
+import "./src/style.css";
+
 // --- 1. Global Variables and DOM Elements ---
 // Caching DOM elements for efficient access
 const parserSelect = document.getElementById("parser-select");
@@ -35,60 +39,21 @@ let resolveApiKeyPromise; // Used to resolve the promise from the API key modal
 // --- 2. Utility Functions ---
 
 /**
- * Applies the dark or light theme to the document.
- * @param {boolean} isDarkMode - True if dark mode should be applied, false for light mode.
- */
-function applyTheme(isDarkMode) {
-  if (isDarkMode) {
-    document.documentElement.classList.add("dark");
-  } else {
-    document.documentElement.classList.remove("dark");
-  }
-}
-
-/**
  * Displays a message in the message container.
  * @param {'error'|'success'} type - The type of message (determines styling).
  * @param {string} message - The message content.
  */
 function showMessage(type, message) {
   messageContainer.classList.remove("hidden");
-  // Reset existing classes to avoid conflicts
-  messageContainer.classList.remove(
-    "bg-red-100",
-    "border-red-400",
-    "text-red-700",
-    "bg-green-100",
-    "border-green-400",
-    "text-green-700",
-    "dark:bg-red-900",
-    "dark:border-red-700",
-    "dark:text-red-300",
-    "dark:bg-green-900",
-    "dark:border-green-700",
-    "dark:text-green-300"
-  );
+  // Remove all type-specific classes before adding the new one
+  messageContainer.classList.remove("message-error", "message-success");
 
   // Apply appropriate classes based on message type
   if (type === "error") {
-    messageContainer.classList.add(
-      "bg-red-100",
-      "border-red-400",
-      "text-red-700",
-      "dark:bg-red-900",
-      "dark:border-red-700",
-      "dark:text-red-300"
-    );
+    messageContainer.classList.add("message-error");
     messagePrefix.textContent = "Error!";
   } else if (type === "success") {
-    messageContainer.classList.add(
-      "bg-green-100",
-      "border-green-400",
-      "text-green-700",
-      "dark:bg-green-900",
-      "dark:border-green-700",
-      "dark:text-green-300"
-    );
+    messageContainer.classList.add("message-success");
     messagePrefix.textContent = "Success!";
   }
   messageText.textContent = message;
@@ -144,7 +109,7 @@ function showApiKeyModal() {
  */
 function parseDateForSorting(dateString) {
   const [day, month, year] = dateString.split("/");
-  // Construct a Date object in YYYY-MM-DD format for reliable parsing
+  // Construct a Date object in ISO-MM-DD format for reliable parsing
   // Note: Month is 0-indexed in Date constructor
   return new Date(`${year}-${month}-${day}`).getTime();
 }
@@ -223,11 +188,10 @@ function updateFileDisplay() {
     // Create and append a pill for each selected file
     selectedFiles.forEach((file, index) => {
       const pill = document.createElement("span");
-      pill.className =
-        "inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100 text-xs font-medium mr-2 mb-2";
+      pill.className = "file-pill-base"; // Use the new custom class
       pill.innerHTML = `
         ${file.name}
-        <button type="button" class="ml-2 -mr-0.5 h-4 w-4 inline-flex items-center justify-center rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 dark:text-blue-300 dark:hover:bg-blue-600 dark:hover:text-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500" data-index="${index}">
+        <button type="button" class="file-pill-remove-btn" data-index="${index}">
           <span class="sr-only">Remove file</span>
           <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7" />
@@ -258,7 +222,7 @@ function displayTransactions(data) {
     // Display "No documents processed yet" message if no data
     const noResultsRow = document.createElement("tr");
     noResultsRow.innerHTML = `
-      <td colspan="3" class="px-6 py-4 text-center">
+      <td colspan="3" class="table-cell-base text-center">
         No documents processed yet.
       </td>
     `;
@@ -269,24 +233,23 @@ function displayTransactions(data) {
   try {
     data.forEach((row) => {
       const tr = document.createElement("tr");
-      tr.className =
-        "divide-light-border dark:divide-dark-border hover:bg-gray-50 dark:hover:bg-gray-700";
+      tr.className = "table-row-base"; // Use the new custom class
 
       // Date column
       const tdDate = document.createElement("td");
-      tdDate.className = "px-6 py-4";
+      tdDate.className = "table-cell-base";
       tdDate.textContent = row.Date || "";
       tr.appendChild(tdDate);
 
       // Description column
       const tdDescription = document.createElement("td");
-      tdDescription.className = "px-6 py-4";
+      tdDescription.className = "table-cell-base";
       tdDescription.textContent = row.Description || "";
       tr.appendChild(tdDescription);
 
       // Amount column with conditional styling for positive/negative
       const tdAmount = document.createElement("td");
-      tdAmount.className = "px-6 py-4";
+      tdAmount.className = "table-cell-base";
       const value = row.Amount || "";
       tdAmount.textContent = value;
       if (typeof value === "string" && value.trim() !== "") {
@@ -623,7 +586,8 @@ function parseTransactionsMaybankPdf(allLinesFromPdf) {
       if (sign === "-") amount = -amount; // Apply negative sign if debit
 
       // If date is missing but found in accumulated description parts, extract it
-      if (!date && descriptionParts.length > 0) {
+      if (date === undefined && descriptionParts.length > 0) {
+        // Check for undefined specifically for date
         const dateInDescIndex = descriptionParts.findIndex((p) =>
           /^\d{2}\/\d{2}/.test(p.trim())
         );
@@ -1012,15 +976,6 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
 // --- 6. Initialization (DOMContentLoaded) ---
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Apply theme based on user's system preference initially
-  const prefersDarkMode = window.matchMedia("(prefers-color-scheme: dark)");
-  applyTheme(prefersDarkMode.matches);
-
-  // Listen for changes in system theme preference
-  prefersDarkMode.addEventListener("change", (e) => {
-    applyTheme(e.matches);
-  });
-
   // Initial UI reset
   resetUI();
   updateDownloadButtonState(); // Ensure download button is disabled on load
@@ -1035,30 +990,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // Drag and drop event listeners for the upload area
   uploadArea.addEventListener("dragover", (event) => {
     event.preventDefault(); // Prevent default to allow drop
-    uploadArea.classList.add(
-      "border-accent-blue-light",
-      "bg-blue-50",
-      "dark:border-accent-blue-dark",
-      "dark:bg-gray-700"
-    );
+    uploadArea.classList.add("upload-area-highlight"); // Use custom class
   });
   uploadArea.addEventListener("dragleave", () => {
     // Remove highlight on drag leave
-    uploadArea.classList.remove(
-      "border-accent-blue-light",
-      "bg-blue-50",
-      "dark:border-accent-blue-dark",
-      "dark:bg-gray-700"
-    );
+    uploadArea.classList.remove("upload-area-highlight"); // Use custom class
   });
   uploadArea.addEventListener("drop", (event) => {
     event.preventDefault(); // Prevent default browser behavior (opening file)
-    uploadArea.classList.remove(
-      "border-accent-blue-light",
-      "bg-blue-50",
-      "dark:border-accent-blue-dark",
-      "dark:bg-gray-700"
-    );
+    uploadArea.classList.remove("upload-area-highlight"); // Use custom class
     handleFiles(event.dataTransfer.files); // Handle dropped files
   });
 

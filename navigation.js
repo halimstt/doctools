@@ -1,26 +1,4 @@
 (() => {
-  tailwind.config = {
-    darkMode: "class",
-    theme: {
-      extend: {
-        colors: {
-          "light-bg-primary": "#F9FAFB",
-          "light-bg-secondary": "#FFFFFF",
-          "light-text-primary": "#1F2937",
-          "light-text-secondary": "#4B5563",
-          "light-border": "#E5E7EB",
-          "dark-bg-primary": "#111827",
-          "dark-bg-secondary": "#1F2937",
-          "dark-text-primary": "#F3F4F6",
-          "dark-text-secondary": "#9CA3AF",
-          "dark-border": "#374151",
-          "accent-blue-light": "#2563EB",
-          "accent-blue-dark": "#60A5FA",
-        },
-      },
-    },
-  };
-
   const themeKey = "theme";
 
   const applyTheme = (isDarkMode) => {
@@ -52,14 +30,15 @@
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Navigation HTML structure remains the same, but now uses the new nav-link custom class
   const navHtml = `
     <header class="bg-white shadow-sm dark:bg-gray-800">
       <div class="container mx-auto px-4 py-4 flex justify-between items-center relative">
         <a href="index.html" class="text-2xl font-bold text-accent-blue-light dark:text-accent-blue-dark">Doc Tools</a>
 
         <nav class="hidden md:flex space-x-6 items-center">
-          <a href="index.html" class="text-light-text-secondary hover:text-accent-blue-light dark:text-dark-text-secondary dark:hover:text-accent-blue-dark font-medium transition-colors duration-200">Statement</a>
-          <a href="invoice.html" class="text-light-text-secondary hover:text-accent-blue-light dark:text-dark-text-secondary dark:hover:text-accent-blue-dark font-medium transition-colors duration-200">Invoice</a>
+          <a href="index.html" class="nav-link">Statement</a>
+          <a href="invoice.html" class="nav-link">Invoice</a>
         </nav>
 
         <div class="flex items-center md:hidden space-x-2">
@@ -73,10 +52,10 @@ document.addEventListener("DOMContentLoaded", () => {
         <nav id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-white dark:bg-gray-800 shadow-md py-2 z-50">
           <ul class="flex flex-col space-y-2 px-4">
             <li>
-              <a href="index.html" class="block py-2 text-light-text-secondary hover:text-accent-blue-light dark:text-dark-text-secondary dark:hover:text-accent-blue-dark font-medium transition-colors duration-200">Statement</a>
+              <a href="index.html" class="block py-2 nav-link">Statement</a>
             </li>
             <li>
-              <a href="invoice.html" class="block py-2 text-light-text-secondary hover:text-accent-blue-light dark:text-dark-text-secondary dark:hover:text-accent-blue-dark font-medium transition-colors duration-200">Invoice</a>
+              <a href="invoice.html" class="block py-2 nav-link">Invoice</a>
             </li>
           </ul>
         </nav>
