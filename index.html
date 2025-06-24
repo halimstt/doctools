@@ -11,7 +11,7 @@
           document.documentElement.setAttribute("data-theme", "dracula"); // Set dark theme
           document.documentElement.classList.add("dark"); // Keep 'dark' class for specific tailwind overrides if any
         } else {
-          document.documentElement.setAttribute("data-theme", "emerald"); // Set light theme
+          document.documentElement.setAttribute("data-theme", "pastel"); // Set light theme
           document.documentElement.classList.remove("dark"); // Remove 'dark' class
         }
       })();
@@ -42,7 +42,11 @@
         </select>
       </div>
 
-      <div id="message-container" class="alert hidden mb-4" role="alert">
+      <div
+        id="message-container"
+        class="alert hidden mb-4 relative"
+        role="alert"
+      >
         <strong id="message-prefix" class="font-bold"></strong>
         <span id="message-text" class="block"></span>
         <span class="absolute top-0 bottom-0 right-0 px-4 py-3">

@@ -1348,19 +1348,19 @@ function updateTemplateTabButtonsState() {
  */
 function switchTab(tabName) {
   if (tabName === "Process") {
-    tabButtonProcess.classList.add("tab-button-active");
+    tabButtonProcess.classList.add("tab-active");
     tabButtonProcess.classList.remove("tab-button-inactive");
     tabButtonTemplate.classList.add("tab-button-inactive");
-    tabButtonTemplate.classList.remove("tab-button-active");
+    tabButtonTemplate.classList.remove("tab-active");
     tabContentProcess.classList.remove("hidden");
     tabContentTemplate.classList.add("hidden");
     // Ensure process tab buttons are updated when switching
     updateProcessTabButtonsState();
   } else if (tabName === "Template") {
-    tabButtonTemplate.classList.add("tab-button-active");
+    tabButtonTemplate.classList.add("tab-active");
     tabButtonTemplate.classList.remove("tab-button-inactive");
     tabButtonProcess.classList.add("tab-button-inactive");
-    tabButtonProcess.classList.remove("tab-button-active");
+    tabButtonProcess.classList.remove("tab-active");
     tabContentTemplate.classList.remove("hidden");
     tabContentProcess.classList.add("hidden");
     // Ensure template tab buttons are updated when switching

@@ -13,7 +13,7 @@ export default {
   ],
   theme: {
     extend: {
-      // We are removing custom colors here. DaisyUI themes like 'emerald' and 'dracula'
+      // We are removing custom colors here. DaisyUI themes like 'pastel' and 'dracula'
       // will provide a comprehensive color palette that integrates with component styles.
       // If you need specific custom colors in addition to DaisyUI, you can define them here,
       // but ensure they don't clash with DaisyUI's built-in color names if you intend
@@ -29,7 +29,7 @@ export default {
   // Add the DaisyUI plugin and configure its themes
   daisyui: {
     themes: [
-      "emerald", // Light theme
+      "pastel", // Light theme
       "dracula", // Dark theme
     ],
     darkTheme: "dracula", // Explicitly set the default dark theme

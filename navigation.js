@@ -25,7 +25,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
     document.documentElement.setAttribute("data-theme", "dracula"); // Set dark theme
     document.documentElement.classList.add("dark"); // Keep 'dark' class for specific tailwind overrides if any
   } else {
-    document.documentElement.setAttribute("data-theme", "emerald"); // Set light theme
+    document.documentElement.setAttribute("data-theme", "pastel"); // Set light theme
     document.documentElement.classList.remove("dark"); // Remove 'dark' class
   }
 })();
