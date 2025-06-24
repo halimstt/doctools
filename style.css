@@ -52,6 +52,11 @@
     @apply bg-green-100 border-green-400 text-green-700 dark:bg-green-900 dark:border-green-700 dark:text-green-300;
   }
 
+  /* Message container for warning type */
+  .message-warning {
+    @apply bg-amber-100 border-amber-400 text-amber-700 dark:bg-amber-900 dark:border-amber-700 dark:text-amber-300;
+  }
+
   /* Base styling for file upload area (drag & drop) */
   .upload-area-base {
     @apply border-2 border-dashed border-light-border dark:border-dark-border rounded-xl p-8 text-center bg-light-bg-secondary dark:bg-dark-bg-secondary transition-colors duration-300 ease-in-out;
