@@ -155,7 +155,7 @@
 
   /* Base tab button styling */
   .tab-button-base {
-    @apply py-0 px-3 font-medium cursor-pointer transition-all duration-300 ease-in-out flex-grow text-center border-b-2 border-transparent;
+    @apply py-0 px-3 font-medium cursor-pointer transition-all duration-300 ease-in-out flex-grow text-center border-b-2;
   }
 
   /* Active tab button styling */

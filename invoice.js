@@ -1783,6 +1783,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // AI Suggestion buttons for regex
   aiSuggestDateBtn.addEventListener("click", () => {
+    if (!currentPdfTextForAnalysis) {
+      showConfirmationModal(
+        "No PDF Loaded",
+        "Please upload a PDF and switch to the Template tab to load its text for AI suggestions.",
+        "OK",
+        () => {},
+        () => {}
+      );
+      return;
+    }
     if (!GEMINI_API_KEY) {
       showApiKeyModal();
     } else {
@@ -1790,6 +1800,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
   aiSuggestNumberBtn.addEventListener("click", () => {
+    if (!currentPdfTextForAnalysis) {
+      showConfirmationModal(
+        "No PDF Loaded",
+        "Please upload a PDF and switch to the Template tab to load its text for AI suggestions.",
+        "OK",
+        () => {},
+        () => {}
+      );
+      return;
+    }
     if (!GEMINI_API_KEY) {
       showApiKeyModal();
     } else {
@@ -1797,6 +1817,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
   aiSuggestAmountBtn.addEventListener("click", () => {
+    if (!currentPdfTextForAnalysis) {
+      showConfirmationModal(
+        "No PDF Loaded",
+        "Please upload a PDF and switch to the Template tab to load its text for AI suggestions.",
+        "OK",
+        () => {},
+        () => {}
+      );
+      return;
+    }
     if (!GEMINI_API_KEY) {
       showApiKeyModal();
     } else {
