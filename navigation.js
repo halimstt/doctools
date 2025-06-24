@@ -1,3 +1,26 @@
+// Import Inter font styles for specific subsets and weights
+// If your content is primarily English, you likely only need 'latin' and 'latin-ext'.
+import "@fontsource/inter/latin-400.css";
+import "@fontsource/inter/latin-500.css";
+import "@fontsource/inter/latin-600.css";
+import "@fontsource/inter/latin-700.css";
+
+// Uncomment the line below if you also need latin-extended characters (e.g., for some European languages)
+// import '@fontsource/inter/latin-ext-400.css';
+// import '@fontsource/inter/latin-ext-500.css';
+// import '@fontsource/inter/latin-ext-600.css';
+// import '@fontsource/inter/latin-ext-700.css';
+
+// Import pdfjs-dist
+import * as pdfjsLib from "pdfjs-dist";
+
+// Set the worker source using new URL() and import.meta.url
+// This tells Vite to treat the worker file as an asset and provide its URL.
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs", // Or 'pdfjs-dist/build/pdf.worker.min.mjs'
+  import.meta.url
+).toString();
+
 // Prevents FOUC (Flash of Unstyled Content) by applying the theme early.
 (() => {
   const theme = localStorage.getItem("theme");
