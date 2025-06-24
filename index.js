@@ -350,7 +350,7 @@ async function processStatements() {
     if (allTransactions.length > 0) {
       showMessage(
         "success",
-        `${selectedFiles.length} PDF(s) processed and combined CSV ready for download!`
+        `${selectedFiles.length} PDF(s) processed and converted file ready for download!`
       );
     } else {
       showMessage(

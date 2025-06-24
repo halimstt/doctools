@@ -262,11 +262,3 @@ body {
 #dropArea.highlight {
   @apply upload-area-highlight; /* Apply the highlight class when active */
 }
-
-/* File pill styling is now handled by .file-pill-base directly */
-.file-pill {
-  @apply file-pill-base;
-}
-.file-pill .remove-button {
-  @apply file-pill-remove-btn;
-}
