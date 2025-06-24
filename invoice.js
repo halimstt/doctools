@@ -48,10 +48,10 @@ const configNameInput = document.getElementById("configName");
 const officialSupplierNameForExportInput = document.getElementById(
   "officialSupplierNameForExportInput"
 );
-const supplierNameHintInput = document.getElementById("supplierNameHint");
-const documentDateHintInput = document.getElementById("documentDateHint");
-const documentNumberHintInput = document.getElementById("documentNumberHint");
-const totalAmountHintInput = document.getElementById("totalAmountHint");
+const supplierNameRegexInput = document.getElementById("supplierNameRegex");
+const documentDateRegexInput = document.getElementById("documentDateRegex");
+const documentNumberRegexInput = document.getElementById("documentNumberRegex");
+const totalAmountRegexInput = document.getElementById("totalAmountRegex");
 const configSelect = document.getElementById("configSelect");
 const previewButton = document.getElementById("previewButton");
 const dropArea = document.getElementById("dropArea");
@@ -231,11 +231,11 @@ function useSelectedRegex() {
     const selectedRegex = decodeURIComponent(selectedRadio.value); // Decode URL-encoded regex
     // Assign selected regex to the correct input field
     if (currentRegexTargetField === "documentDate") {
-      documentDateHintInput.value = selectedRegex;
+      documentDateRegexInput.value = selectedRegex;
     } else if (currentRegexTargetField === "documentNumber") {
-      documentNumberHintInput.value = selectedRegex;
+      documentNumberRegexInput.value = selectedRegex;
     } else if (currentRegexTargetField === "totalAmount") {
-      totalAmountHintInput.value = selectedRegex;
+      totalAmountRegexInput.value = selectedRegex;
     }
     hideRegexSuggestModal(); // Close modal
     previewButton.click(); // Trigger a preview to see the effect of the new regex
@@ -349,7 +349,7 @@ async function callGeminiApi(
   // Logic for direct regex extraction (no LLM)
   else if (!useLlmsForOperation) {
     processingStatus.textContent = isRefine
-      ? "Previewing with current hints (using regex)..."
+      ? "Previewing with current regex..."
       : "Processing with selected template (using regex)...";
     normalizedResult = extractDataWithRegex(pdfText, config);
     processingStatus.textContent = isRefine
@@ -369,13 +369,13 @@ async function callGeminiApi(
     if (config) {
       prompt += `Here are some extraction guidelines. For each field, **strictly attempt to extract using the provided pattern first.** If the pattern does not yield a result, or if no pattern is provided, then use general knowledge to find the best match:\n`;
       if (config.supplierNamePattern)
-        prompt += `- Supplier Name Hint: "${config.supplierNamePattern}"\n`;
+        prompt += `- Supplier Name Regex: "${config.supplierNamePattern}"\n`;
       if (config.documentDatePattern)
-        prompt += `- Document Date Hint: "${config.documentDatePattern}"\n`;
+        prompt += `- Document Date Regex: "${config.documentDatePattern}"\n`;
       if (config.documentNumberPattern)
-        prompt += `- Document Number Hint: "${config.documentNumberPattern}"\n`;
+        prompt += `- Document Number Regex: "${config.documentNumberPattern}"\n`;
       if (config.totalAmountPattern)
-        prompt += `- Total Amount Hint: "${config.totalAmountPattern}"\n`;
+        prompt += `- Total Amount Regex: "${config.totalAmountPattern}"\n`;
       prompt += "\n";
     }
     prompt += `Invoice/Receipt Text:\n\n${pdfText}\n\nJSON Output:`;
@@ -715,10 +715,10 @@ function saveTemplateToLocalStorage() {
     name: templateName,
     officialSupplierNameForExport:
       officialSupplierNameForExportInput.value.trim(),
-    supplierNamePattern: supplierNameHintInput.value,
-    documentDatePattern: documentDateHintInput.value,
-    documentNumberPattern: documentNumberHintInput.value,
-    totalAmountPattern: totalAmountHintInput.value,
+    supplierNamePattern: supplierNameRegexInput.value,
+    documentDatePattern: documentDateRegexInput.value,
+    documentNumberPattern: documentNumberRegexInput.value,
+    totalAmountPattern: totalAmountRegexInput.value,
   };
 
   const existingIndex = localConfigurations.findIndex(
@@ -1026,10 +1026,10 @@ function autoLoadSelectedConfiguration() {
     configNameInput.value = activeConfig.name || "";
     officialSupplierNameForExportInput.value =
       activeConfig.officialSupplierNameForExport || "";
-    supplierNameHintInput.value = activeConfig.supplierNamePattern || "";
-    documentDateHintInput.value = activeConfig.documentDatePattern || "";
-    documentNumberHintInput.value = activeConfig.documentNumberPattern || "";
-    totalAmountHintInput.value = activeConfig.totalAmountPattern || "";
+    supplierNameRegexInput.value = activeConfig.supplierNamePattern || "";
+    documentDateRegexInput.value = activeConfig.documentDatePattern || "";
+    documentNumberRegexInput.value = activeConfig.documentNumberPattern || "";
+    totalAmountRegexInput.value = activeConfig.totalAmountPattern || "";
   } else {
     // This case should ideally not happen if dropdown is populated correctly
     showConfirmationModal(
@@ -1248,10 +1248,10 @@ function downloadCSVHandler() {
 function resetConfigInputFields() {
   configNameInput.value = "";
   officialSupplierNameForExportInput.value = "";
-  supplierNameHintInput.value = "";
-  documentDateHintInput.value = "";
-  documentNumberHintInput.value = "";
-  totalAmountHintInput.value = "";
+  supplierNameRegexInput.value = "";
+  documentDateRegexInput.value = "";
+  documentNumberRegexInput.value = "";
+  totalAmountRegexInput.value = "";
   activeConfig = null; // Clear active config
   configSelect.value = ""; // Reset dropdown
   updateTemplateTabButtonsState();
@@ -1615,18 +1615,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     try {
-      // Get current regex hints from input fields
-      const currentHints = {
-        supplierNamePattern: supplierNameHintInput.value,
-        documentDatePattern: documentDateHintInput.value,
-        documentNumberPattern: documentNumberHintInput.value,
-        totalAmountPattern: totalAmountHintInput.value,
+      // Get current regexs from input fields
+      const currentRegexs = {
+        supplierNamePattern: supplierNameRegexInput.value,
+        documentDatePattern: documentDateRegexInput.value,
+        documentNumberPattern: documentNumberRegexInput.value,
+        totalAmountPattern: totalAmountRegexInput.value,
       };
 
-      // Perform extraction using current hints (direct regex, no LLM for preview)
+      // Perform extraction using current regexs (no LLM for preview)
       const refinedData = await callGeminiApi(
         currentPdfTextForAnalysis,
-        currentHints,
+        currentRegexs,
         true, // This is a refinement/preview
         false,
         false // Do not use LLM for preview extraction itself
@@ -1713,17 +1713,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     "input",
     updateTemplateTabButtonsState
   );
-  supplierNameHintInput.addEventListener(
+  supplierNameRegexInput.addEventListener(
     "input",
     updateTemplateTabButtonsState
   );
-  documentDateHintInput.addEventListener(
+  documentDateRegexInput.addEventListener(
     "input",
     updateTemplateTabButtonsState
   );
-  documentNumberHintInput.addEventListener(
+  documentNumberRegexInput.addEventListener(
     "input",
     updateTemplateTabButtonsState
   );
-  totalAmountHintInput.addEventListener("input", updateTemplateTabButtonsState);
+  totalAmountRegexInput.addEventListener(
+    "input",
+    updateTemplateTabButtonsState
+  );
 });
