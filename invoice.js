@@ -132,6 +132,19 @@ function logDebug(message) {
 }
 
 /**
+ * Shows a confirmation modal indicating that no document is selected.
+ */
+function showNoDocumentSelectedModal() {
+  showConfirmationModal(
+    "No Document Selected",
+    "Please select a document from the 'Extract' tab first to proceed.",
+    "OK",
+    () => {},
+    () => {}
+  );
+}
+
+/**
  * Shows the regex suggestion modal for a specific field.
  * @param {string} fieldName - The name of the field for which regex is suggested (e.g., "documentDate").
  */
@@ -1214,8 +1227,7 @@ function downloadCSVHandler() {
 
   const dataToExport = allExtractedData.map((data) => {
     const formattedDate = formatDateForDisplay(data.documentDate); // Use utility function
-    const formattedAmount =
-      formatAmountForDisplay(data.totalAmount) || ""; // Use utility function
+    const formattedAmount = formatAmountForDisplay(data.totalAmount) || ""; // Use utility function
     return {
       "Supplier Name":
         data.officialSupplierNameForExport || data.extractedSupplierName,
@@ -1428,7 +1440,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Process PDF button click handler
   processPdfButton.addEventListener("click", async () => {
     if (uploadedFiles.length === 0) {
-      showMessage("error", "Please select PDF file(s) first."); // Use showMessage for user feedback
+      showNoDocumentSelectedModal();
       return;
     }
 
@@ -1598,10 +1610,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Preview button click handler in "Template" tab
   previewButton.addEventListener("click", async () => {
     if (!currentPdfTextForAnalysis) {
-      showMessage(
-        "error",
-        "No document selected for analysis. Please select a document from the 'Extract' tab first."
-      ); // Use showMessage for feedback
+      showNoDocumentSelectedModal();
       return;
     }
 
@@ -1656,30 +1665,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (currentPdfTextForAnalysis) {
       showRegexSuggestModal("documentDate");
     } else {
-      showMessage(
-        "error",
-        "Please select a PDF document first to enable AI suggestions."
-      );
+      showNoDocumentSelectedModal();
     }
   });
   aiSuggestNumberBtn.addEventListener("click", () => {
     if (currentPdfTextForAnalysis) {
       showRegexSuggestModal("documentNumber");
     } else {
-      showMessage(
-        "error",
-        "Please select a PDF document first to enable AI suggestions."
-      );
+      showNoDocumentSelectedModal();
     }
   });
   aiSuggestAmountBtn.addEventListener("click", () => {
     if (currentPdfTextForAnalysis) {
       showRegexSuggestModal("totalAmount");
     } else {
-      showMessage(
-        "error",
-        "Please select a PDF document first to enable AI suggestions."
-      );
+      showNoDocumentSelectedModal();
     }
   });
 
