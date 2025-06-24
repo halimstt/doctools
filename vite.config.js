@@ -17,9 +17,8 @@ export default defineConfig({
     // Clear the output directory before building
     emptyOutDir: true,
   },
-  // IMPORTANT: Remove explicit postcss configuration here.
-  // Vite will automatically pick up your 'postcss.config.js' file
-  // and use it to process any CSS imported in your JavaScript.
-  // This simplifies the Vite config and relies on the dedicated PostCSS config.
-  // If you previously had 'css: { postcss: { plugins: [...] } }' here, remove it.
+  // Add optimizeDeps configuration to exclude pdfjs-dist
+  optimizeDeps: {
+    exclude: ["pdfjs-dist"], // Exclude pdfjs-dist from Vite's pre-bundling
+  },
 });

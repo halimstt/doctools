@@ -76,12 +76,12 @@ function updateFileDisplay() {
     // Create and append a pill for each selected file
     selectedFiles.forEach((file, index) => {
       const pill = document.createElement("span");
-      pill.className = "file-pill-base"; // Use the new custom class
+      // Use DaisyUI badge class instead of custom file-pill-base
+      pill.className = "badge badge-lg badge-info mr-2 mb-2"; // DaisyUI badge class
       pill.innerHTML = `
         ${file.name}
-        <button type="button" class="file-pill-remove-btn" data-index="${index}">
-          <span class="sr-only">Remove file</span>
-          <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
+        <button type="button" class="btn btn-xs btn-circle ml-2" data-index="${index}">
+          <svg class="h-3 w-3" stroke="currentColor" fill="none" viewBox="0 0 8 8">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7" />
           </svg>
         </button>
@@ -110,7 +110,7 @@ function displayTransactions(data) {
     // Display "No documents processed yet" message if no data
     const noResultsRow = document.createElement("tr");
     noResultsRow.innerHTML = `
-      <td colspan="3" class="table-cell-base text-center">
+      <td colspan="3" class="text-center">
         No documents processed yet.
       </td>
     `;
@@ -121,32 +121,30 @@ function displayTransactions(data) {
   try {
     data.forEach((row) => {
       const tr = document.createElement("tr");
-      tr.className = "table-row-base"; // Use the new custom class
+      // DaisyUI table rows don't need a specific class like table-row-base
+      // unless you're applying specific effects.
+      // tr.className = "table-row-base"; // Removed
 
       // Date column
       const tdDate = document.createElement("td");
-      tdDate.className = "table-cell-base";
       tdDate.textContent = row.Date || "";
       tr.appendChild(tdDate);
 
       // Description column
       const tdDescription = document.createElement("td");
-      tdDescription.className = "table-cell-base";
       tdDescription.textContent = row.Description || "";
       tr.appendChild(tdDescription);
 
       // Amount column with conditional styling for positive/negative
       const tdAmount = document.createElement("td");
-      tdAmount.className = "table-cell-base";
       const value = row.Amount || "";
       tdAmount.textContent = value;
       if (typeof value === "string" && value.trim() !== "") {
         const amount = parseFloat(value);
         tdAmount.classList.add("text-right", "font-mono"); // Right-align and monospace font
-        tdAmount.classList.toggle("text-green-600", amount > 0); // Green for positive
-        tdAmount.classList.toggle("text-red-600", amount < 0); // Red for negative
-        tdAmount.classList.toggle("dark:text-green-400", amount > 0);
-        tdAmount.classList.toggle("dark:text-red-400", amount < 0);
+        // DaisyUI uses color names like 'success' for green, 'error' for red
+        tdAmount.classList.toggle("text-success", amount > 0); // Green for positive
+        tdAmount.classList.toggle("text-error", amount < 0); // Red for negative
       }
       tr.appendChild(tdAmount);
       tableBody.appendChild(tr);

@@ -1,46 +1,44 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  // Configure dark mode to be based on the 'class' attribute on the html element
-  darkMode: "class",
-  // Specify all files that should be scanned for Tailwind classes.
-  // This is crucial for Tailwind's JIT mode to work correctly and purge unused CSS.
+  // Configure dark mode to be based on the 'data-theme' attribute on the html element
+  // DaisyUI automatically handles this with its theme system.
+  darkMode: ["class", '[data-theme="dracula"]'], // Use class strategy for theme toggle
   content: [
-    "./index.html", // Include your main HTML files
+    "./index.html",
     "./invoice.html",
-    // Include all JavaScript files that contain or import Tailwind classes.
-    // Vite will resolve these imports and process the CSS.
     "./index.js",
     "./invoice.js",
     "./navigation.js",
-    // If you have any other JS/TS/JSX/TSX files that use Tailwind classes, add them here.
-    "./src/**/*.{js,ts,jsx,tsx}", // General glob pattern for files in src/
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
-      colors: {
-        // Define custom color palette based on your existing theme
-        "light-bg-primary": "#F9FAFB",
-        "light-bg-secondary": "#FFFFFF",
-        "light-text-primary": "#1F2937",
-        "light-text-secondary": "#4B5563",
-        "light-border": "#E5E7EB",
-        "dark-bg-primary": "#111827",
-        "dark-bg-secondary": "#1F2937",
-        "dark-text-primary": "#F3F4F6",
-        "dark-text-secondary": "#9CA3AF",
-        "dark-border": "#374151",
-        "accent-blue-light": "#2563EB",
-        "accent-blue-dark": "#60A5FA",
-      },
-      // Extend the default z-index values to include z-1000 for modals
+      // We are removing custom colors here. DaisyUI themes like 'emerald' and 'dracula'
+      // will provide a comprehensive color palette that integrates with component styles.
+      // If you need specific custom colors in addition to DaisyUI, you can define them here,
+      // but ensure they don't clash with DaisyUI's built-in color names if you intend
+      // to override primary, secondary, accent, etc.
       zIndex: {
-        1000: "1000",
+        1000: "1000", // Keep for modals
       },
-      // Extend the default width values to include w-90 for modal content
       width: {
-        90: "22.5rem", // 90 * 0.25rem = 22.5rem, assuming Tailwind's default base of 4 (16px) units for width
+        90: "22.5rem", // Keep for modal content
       },
     },
   },
-  plugins: [],
+  // Add the DaisyUI plugin and configure its themes
+  daisyui: {
+    themes: [
+      "emerald", // Light theme
+      "dracula", // Dark theme
+    ],
+    darkTheme: "dracula", // Explicitly set the default dark theme
+    // Add other DaisyUI configuration options if needed, e.g.,
+    // styled: true, // include daisyUI colors and design system
+    // base: true, // include base styles
+    // utils: true, // adds responsive and other utility classes
+    // logs: false, // shows daisyUI info in browser console (default is true)
+    // prefix: "", // prefix for daisyUI classes (default is "")
+  },
+  plugins: [require("daisyui")], // Require the daisyUI plugin
 };

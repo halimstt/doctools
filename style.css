@@ -5,217 +5,48 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Define custom utility classes using @apply directive */
-@layer components {
-  /* Base styles for the body */
-  .body-base {
-    @apply bg-light-bg-primary text-light-text-primary dark:bg-dark-bg-primary dark:text-dark-text-primary;
-  }
+/*
+  Removed all custom @layer components definitions.
+  DaisyUI will provide component styles.
+  Any remaining custom utility classes not directly replaced by DaisyUI
+  or basic Tailwind utilities should be kept or re-evaluated.
+*/
 
-  /* Base container for content centering and padding */
-  .container-base {
-    @apply container max-w-5xl mx-auto p-4 sm:p-8;
-  }
+/* Specific styles for spinner animation (non-Tailwind/DaisyUI).
+   DaisyUI has a spinner component, but if you want to keep this custom one,
+   ensure its classes don't conflict. Adapting it to DaisyUI's color variables
+   is a good idea.
+*/
+.spinner {
+  animation: spin 1s linear infinite;
+  border-top-color: hsl(var(--p));
+  border-color: hsl(var(--bc));
+}
 
-  /* Header section styling */
-  .header-base {
-    @apply text-center mb-8;
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
   }
-
-  /* Primary heading style */
-  .h1-base {
-    @apply text-3xl sm:text-4xl font-bold text-light-text-primary dark:text-dark-text-primary;
-  }
-
-  /* Secondary heading style */
-  .h2-base {
-    @apply text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4;
-  }
-
-  /* Secondary paragraph text style */
-  .p-secondary {
-    @apply mt-2 text-light-text-secondary dark:text-dark-text-secondary;
-  }
-
-  /* Base styling for select dropdowns */
-  .select-base {
-    @apply block w-full py-2 px-3 border border-light-border dark:border-dark-border bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-md shadow-sm focus:outline-none focus:ring-accent-blue-light focus:border-accent-blue-light dark:focus:ring-accent-blue-dark dark:focus:border-accent-blue-dark sm:text-sm text-light-text-primary dark:text-dark-text-primary;
-  }
-
-  /* Message container for alerts (error/success) */
-  .message-container-base {
-    @apply border px-4 py-3 rounded relative mb-4;
-  }
-
-  /* Message container for error type */
-  .message-error {
-    @apply bg-red-100 border-red-400 text-red-700 dark:bg-red-900 dark:border-red-700 dark:text-red-300;
-  }
-
-  /* Message container for success type */
-  .message-success {
-    @apply bg-green-100 border-green-400 text-green-700 dark:bg-green-900 dark:border-green-700 dark:text-green-300;
-  }
-
-  /* Message container for warning type */
-  .message-warning {
-    @apply bg-amber-100 border-amber-400 text-amber-700 dark:bg-amber-900 dark:border-amber-700 dark:text-amber-300;
-  }
-
-  /* Base styling for file upload area (drag & drop) */
-  .upload-area-base {
-    @apply border-2 border-dashed border-light-border dark:border-dark-border rounded-xl p-8 text-center bg-light-bg-secondary dark:bg-dark-bg-secondary transition-colors duration-300 ease-in-out min-h-[180px] flex flex-col;
-  }
-
-  /* Highlight state for upload area on drag over */
-  .upload-area-highlight {
-    @apply border-accent-blue-light bg-blue-50 dark:border-accent-blue-dark dark:bg-gray-700;
-  }
-
-  /* Styling for file information display area */
-  .file-info-base {
-    @apply text-left mt-4;
-  }
-
-  /* Styling for individual file "pills" */
-  .file-pill-base {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mr-2 mb-2
-           bg-blue-100 text-blue-800
-           dark:bg-blue-700 dark:text-blue-100;
-  }
-
-  /* Styling for the remove button within a file pill */
-  .file-pill-remove-btn {
-    @apply ml-2 -mr-0.5 h-4 w-4 inline-flex items-center justify-center rounded-full font-bold text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors
-           text-blue-500 hover:text-red-500
-           dark:text-blue-300 dark:hover:text-red-400;
-  }
-
-  /* Primary button style */
-  .btn-primary {
-    @apply w-full sm:w-auto bg-blue-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-300 ease-in-out flex items-center justify-center;
-  }
-
-  /* Secondary button style */
-  .btn-secondary {
-    @apply bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors;
-  }
-
-  /* Danger button style (e.g., for removing all files) */
-  .btn-danger {
-    @apply text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-semibold text-sm mt-2;
-  }
-
-  /* Spinner animation (animation keyframes are kept in global CSS) */
-  .spinner-base {
-    @apply spinner w-5 h-5 border-2 border-white border-t-transparent rounded-full ml-3 hidden;
-  }
-
-  /* Container for results table */
-  .results-table-container {
-    @apply overflow-x-auto bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-lg shadow;
-  }
-
-  /* Base table styling */
-  .table-base {
-    @apply w-full text-sm text-left text-light-text-secondary dark:text-dark-text-secondary;
-  }
-
-  /* Table header styling */
-  .table-header-base {
-    @apply text-xs uppercase bg-gray-200 text-light-text-secondary dark:bg-gray-600 dark:text-dark-text-secondary;
-  }
-
-  /* Base table row styling */
-  .table-row-base {
-    @apply divide-light-border dark:divide-dark-border hover:bg-gray-50 dark:hover:bg-gray-700;
-  }
-
-  /* Base table cell styling */
-  .table-cell-base {
-    @apply px-6 py-4;
-  }
-
-  /* Modal overlay base styles */
-  .modal-base {
-    @apply fixed z-1000 left-0 top-0 w-full h-full overflow-auto bg-black bg-opacity-40 flex justify-center items-center;
-  }
-
-  /* Modal content box styles */
-  .modal-content-base {
-    @apply p-6 rounded-lg shadow-lg relative w-90 max-w-xl bg-white text-gray-800 dark:bg-gray-800 dark:text-gray-100;
-  }
-
-  /* Base input field styling */
-  .input-field-base {
-    @apply w-full p-2 border border-light-border dark:border-dark-border rounded-md mb-4 bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary focus:outline-none focus:ring-accent-blue-light focus:border-accent-blue-light dark:focus:ring-accent-blue-dark dark:focus:border-accent-blue-dark;
-  }
-
-  /* Accent blue link styling */
-  .link-accent {
-    @apply text-accent-blue-light dark:text-accent-blue-dark hover:underline;
-  }
-
-  /* Navigation link styles */
-  .nav-link {
-    @apply text-light-text-secondary hover:text-accent-blue-light dark:text-dark-text-secondary dark:hover:text-accent-blue-dark font-medium transition-colors duration-200;
-  }
-
-  /* Base tab button styling */
-  .tab-button-base {
-    @apply py-0 px-3 font-medium cursor-pointer transition-all duration-300 ease-in-out flex-grow text-center border-b-2;
-  }
-
-  /* Active tab button styling */
-  .tab-button-active {
-    @apply text-accent-blue-light border-accent-blue-light dark:text-accent-blue-dark dark:border-accent-blue-dark;
-  }
-
-  /* Inactive tab button styling */
-  .tab-button-inactive {
-    @apply text-light-text-secondary hover:text-accent-blue-light dark:text-dark-text-secondary dark:hover:text-accent-blue-dark;
-  }
-
-  /* Extracted information display box */
-  .extracted-info-box {
-    @apply bg-light-bg-secondary dark:bg-dark-bg-secondary p-4 rounded-lg shadow space-y-2;
-  }
-
-  /* Textarea for raw text preview */
-  .textarea-base {
-    @apply w-full h-96 p-4 border border-light-border dark:border-dark-border rounded-lg bg-light-bg-primary dark:bg-dark-bg-primary text-light-text-primary dark:text-dark-text-primary font-mono text-xs overflow-auto;
-  }
-
-  /* Specific styles for spinner animation (non-Tailwind) */
-  .spinner {
-    animation: spin 1s linear infinite;
-    border-top-color: white; /* Default for light mode */
-  }
-
-  .dark .spinner {
-    border-top-color: #60a5fa; /* Accent blue for dark mode */
-  }
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
+  100% {
+    transform: rotate(360deg);
   }
 }
 
-/* Base font and theme transition (can remain global if desired) */
+/* Base font and theme transition.
+   DaisyUI manages theme transitions via the data-theme attribute.
+   The font-family will be handled by the @fontsource imports.
+*/
 body {
   font-family: "Inter", sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  /* DaisyUI handles background and text color based on data-theme */
+  /* transition: background-color 0.3s ease, color 0.3s ease; */
 }
 
 /* Specific styles for navigation placeholder, handled by navigation.js */
+/* Adapt these to use DaisyUI theme colors or simple Tailwind classes */
 #nav-placeholder {
   height: 64px;
-  background-color: #ffffff;
+  background-color: hsl(var(--b1)); /* Use DaisyUI base color for background */
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: space-between;
@@ -223,47 +54,24 @@ body {
   padding: 0 1rem;
   box-sizing: border-box;
 }
-.dark #nav-placeholder {
-  background-color: #1f2937;
-}
 
-/* Responsive hiding for skeleton mobile button */
+/* Responsive hiding for skeleton mobile button - keep if still relevant */
 @media (min-width: 768px) {
   .skeleton-mobile-button {
     display: none;
   }
 }
 
-/* Tab button specific styles (overriding .tab-button-base for active/inactive states) */
-/* This specific selector is needed because .tab-button is applied directly in HTML,
-   and Tailwind's @apply might resolve differently than direct class application */
-.tab-button {
-  @apply tab-button-base; /* Apply the base tab button styles */
-  padding: 0.75rem 1.5rem; /* Specific padding */
-  font-weight: 500; /* Specific font weight */
-}
-.tab-button.active {
-  color: #2563eb;
-  border-color: #2563eb;
-}
-.dark .tab-button.active {
-  color: #60a5fa;
-  border-color: #60a5fa;
-}
-.tab-button:not(.active) {
-  color: #4b5563;
-}
-.dark .tab-button:not(.active) {
-  color: #9ca3af;
-}
-.tab-button:not(.active):hover {
-  color: #2563eb;
-}
-.dark .tab-button:not(.active):hover {
-  color: #60a5fa;
-}
+/*
+  Removed custom tab-button-base, tab-button-active, tab-button-inactive.
+  We will use DaisyUI's `tab` components directly in HTML/JS.
+*/
 
 /* Drag and drop area styling specific to invoice.html, applies .upload-area-base */
-#dropArea.highlight {
-  @apply upload-area-highlight; /* Apply the highlight class when active */
+/* This can be adapted to DaisyUI specific classes or kept if no direct equivalent */
+.upload-area-highlight {
+  border-color: hsl(var(--p)); /* Use DaisyUI primary color for highlight */
+  background-color: hsla(
+    var(--p) / 0.1
+  ); /* Lighter shade of primary for background */
 }

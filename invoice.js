@@ -661,13 +661,13 @@ async function generateRegexSuggestions() {
       );
     } else {
       regexSuggestionsContainer.innerHTML =
-        '<p class="text-sm text-red-600">No regex suggestions could be generated. Try a different prompt.</p>';
+        '<p class="text-sm text-error">No regex suggestions could be generated. Try a different prompt.</p>';
       regexSuggestStatus.textContent = "No suggestions.";
     }
   } catch (error) {
     console.error("Error generating regex suggestions:", error);
     regexSuggestionsContainer.innerHTML =
-      '<p class="text-sm text-red-600">Failed to get suggestions. Check console for details.</p>';
+      '<p class="text-sm text-error">Failed to get suggestions. Check console for details.</p>';
     regexSuggestStatus.textContent = "Error generating suggestions.";
   } finally {
     generateRegexButton.disabled = false; // Re-enable generate button
@@ -1079,10 +1079,10 @@ function updateInvoiceFileDisplay() {
 
     uploadedFiles.forEach((file, index) => {
       const filePill = document.createElement("div");
-      filePill.className = "file-pill-base"; // Use the new custom class
+      filePill.className = "badge badge-lg badge-info"; // Use the new custom class
       filePill.innerHTML = `
                 <span>${file.name}</span>
-                <button data-index="${index}" class="file-pill-remove-btn"> &times; </button>
+                <button data-index="${index}" class="btn btn-xs btn-circle"> &times; </button>
             `;
       fileList.appendChild(filePill);
     });
@@ -1113,23 +1113,23 @@ function appendExtractedResultToTable(data, index) {
 
   // Populate row cells with data
   newRow.innerHTML = `
-      <td class="table-cell-base text-sm break-words max-w-[150px] overflow-hidden">${
+      <td class="text-sm break-words max-w-[150px] overflow-hidden">${
         data.fileName
       }</td>
-      <td class="table-cell-base text-xs">${data.configUsedName || "-"}</td>
-      <td class="table-cell-base text-sm">${
+      <td class="text-xs">${data.configUsedName || "-"}</td>
+      <td class="text-sm">${
         data.officialSupplierNameForExport || data.extractedSupplierName || "-"
       }</td>
-      <td class="table-cell-base text-sm">${formatDateForDisplay(
+      <td class="text-sm">${formatDateForDisplay(
         // Use utility function
         data.documentDate
       )}</td>
-      <td class="table-cell-base text-sm">${data.documentNumber || "-"}</td>
-      <td class="table-cell-base text-sm">${formatAmountForDisplay(
+      <td class="text-sm">${data.documentNumber || "-"}</td>
+      <td class="text-sm">${formatAmountForDisplay(
         // Use utility function
         data.totalAmount
       )}</td>
-      <td class="table-cell-base">
+      <td>
           <button data-index="${index}" class="analyze-row-button bg-blue-500 text-white p-2 rounded-md hover:bg-blue-700 flex items-center justify-center">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
           </button>
@@ -1195,7 +1195,7 @@ function refreshExtractedResultsTable() {
   extractedResultsTableBody.innerHTML = ""; // Clear existing rows
   if (allExtractedData.length === 0) {
     extractedResultsTableBody.innerHTML =
-      '<tr><td colspan="7" class="table-cell-base text-center">No documents processed yet.</td></tr>';
+      '<tr><td colspan="7" class="text-center">No documents processed yet.</td></tr>';
   } else {
     allExtractedData.forEach((data, index) => {
       // Pass the current index to appendExtractedResultToTable
@@ -1277,7 +1277,7 @@ function resetExtractedFieldsForAnalysisTab() {
 function clearAllResults() {
   allExtractedData = [];
   extractedResultsTableBody.innerHTML =
-    '<tr><td colspan="7" class="table-cell-base text-center">No documents processed yet.</td></tr>';
+    '<tr><td colspan="7" class="text-center">No documents processed yet.</td></tr>';
   updateProcessTabButtonsState(); // Update download button status
 }
 
@@ -1403,7 +1403,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Delegated event listener for removing individual file pills
   uploadedFilesList.addEventListener("click", (e) => {
-    if (e.target.matches(".file-pill-remove-btn")) {
+    if (e.target.matches(".btn btn-xs btn-circle")) {
       // Use the custom class
       const indexToRemove = parseInt(e.target.dataset.index, 10);
       uploadedFiles.splice(indexToRemove, 1);
@@ -1420,14 +1420,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Drag and drop events for PDF upload area
   dropArea.addEventListener("dragover", (e) => {
     e.preventDefault();
-    dropArea.classList.add("upload-area-highlight"); // Use custom class
+    dropArea.classList.add("border-primary bg-primary bg-opacity-10"); // Use custom class
   });
   dropArea.addEventListener("dragleave", () => {
-    dropArea.classList.remove("upload-area-highlight"); // Use custom class
+    dropArea.classList.remove("border-primary bg-primary bg-opacity-10"); // Use custom class
   });
   dropArea.addEventListener("drop", (e) => {
     e.preventDefault();
-    dropArea.classList.remove("upload-area-highlight"); // Use custom class
+    dropArea.classList.remove("border-primary bg-primary bg-opacity-10"); // Use custom class
     const files = e.dataTransfer.files; // Get dropped files
     const dataTransfer = new DataTransfer();
     for (let i = 0; i < files.length; i++) {
@@ -1447,7 +1447,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     clearAllResults(); // Clear previous results
     // Display processing message in table
     extractedResultsTableBody.innerHTML =
-      '<tr><td colspan="7" class="table-cell-base text-center">Processing...</td></tr>';
+      '<tr><td colspan="7" class="text-center">Processing...</td></tr>';
     processingStatus.textContent = `Processing 0/${uploadedFiles.length} PDFs...`;
     updateProcessTabButtonsState();
 
