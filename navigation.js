@@ -1,32 +1,14 @@
+// Prevents FOUC (Flash of Unstyled Content) by applying the theme early.
 (() => {
-  const themeKey = "theme";
-
-  const applyTheme = (isDarkMode) => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
-
-  const loadThemePreference = () => {
-    const savedTheme = localStorage.getItem(themeKey);
-    if (savedTheme) {
-      applyTheme(savedTheme === "dark");
-    } else {
-      applyTheme(window.matchMedia("(prefers-color-scheme: dark)").matches);
-    }
-  };
-
-  loadThemePreference();
-
-  window
-    .matchMedia("(prefers-color-scheme: dark)")
-    .addEventListener("change", (e) => {
-      if (!localStorage.getItem(themeKey)) {
-        applyTheme(e.matches);
-      }
-    });
+  const theme = localStorage.getItem("theme");
+  if (
+    theme === "dark" ||
+    (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches)
+  ) {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
 })();
 
 document.addEventListener("DOMContentLoaded", () => {

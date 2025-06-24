@@ -144,7 +144,7 @@
 
           <div id="results-container" class="mt-12">
             <h2
-              class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4"
+              class="h2-base"
             >
               Processed Results
             </h2>
@@ -184,9 +184,48 @@
           id="tabContentTemplate"
           class="w-full flex flex-col md:flex-row gap-8"
         >
-          <div class="flex-1 md:pr-4">
+          <div class="flex-1 mt-8 md:mt-0 space-y-6">
             <h2
-              class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4"
+              class="h2-base"
+            >
+              Extracted Information
+            </h2>
+            <div class="extracted-info-box">
+              <p>
+                <strong>Supplier Name:</strong>
+                <span id="supplierName">-</span>
+              </p>
+              <p>
+                <strong>Document Date:</strong>
+                <span id="documentDate">-</span>
+              </p>
+              <p>
+                <strong>Document Number:</strong>
+                <span id="documentNumber">-</span>
+              </p>
+              <p>
+                <strong>Total Amount:</strong> <span id="totalAmount">-</span>
+              </p>
+            </div>
+
+            <h2
+              class="h2-base"
+            >
+              Raw Text Preview (<span id="currentAnalysisFileName">-</span>)
+            </h2>
+            <div class="mb-4">
+              <textarea
+                id="pdfRawTextPreview"
+                class="textarea-base"
+                readonly
+                placeholder="Upload a PDF and switch to the Template tab to see its raw text content here."
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="flex-1 mt-8 md:mt-0 space-y-6">
+            <h2
+              class="h2-base"
             >
               Template Editor
             </h2>
@@ -227,243 +266,203 @@
                   >Select Template</label
                 >
                 <select id="configSelect" class="select-base"></select>
-                <div class="flex space-x-2 mt-2">
-                  <button
-                    id="saveTemplateButton"
-                    class="flex-1 btn-primary py-3 px-6 !w-auto"
-                  >
-                    Save
-                  </button>
-                  <button
-                    id="deleteTemplateButton"
-                    class="flex-1 bg-red-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
-                <div class="flex space-x-2 pt-4">
-                  <button
-                    id="importConfigButton"
-                    class="flex-1 btn-primary py-3 px-6 !w-auto"
-                  >
-                    Import
-                  </button>
-                  <button
-                    id="exportAllConfigsButton"
-                    class="flex-1 btn-primary py-3 px-6 !w-auto"
-                  >
-                    Export All
-                  </button>
-                </div>
               </div>
-              <h3
-                class="text-xl font-bold text-light-text-primary dark:text-dark-text-primary pt-4"
-              >
-                Extraction Hints (Regex)
-              </h3>
+              <div class="flex space-x-2">
+                <button
+                  id="saveTemplateButton"
+                  class="flex-1 btn-primary py-3 px-6 !w-auto"
+                >
+                  Save
+                </button>
+                <button
+                  id="deleteTemplateButton"
+                  class="flex-1 bg-red-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+              <div class="flex space-x-2">
+                <button
+                  id="importConfigButton"
+                  class="flex-1 btn-primary py-3 px-6 !w-auto"
+                >
+                  Import
+                </button>
+                <button
+                  id="exportAllConfigsButton"
+                  class="flex-1 btn-primary py-3 px-6 !w-auto"
+                >
+                  Export All
+                </button>
+              </div>
+            </div>
+            <h2
+              class="h2-base"
+            >
+              Extraction Hints (Regex)
+            </h3>
 
-              <div class="space-y-4">
-                <div>
-                  <label
-                    for="supplierNameHint"
-                    class="block text-sm font-medium p-secondary mb-1"
-                    >Supplier Name Hint</label
-                  >
+            <div class="space-y-4">
+              <div>
+                <label
+                  for="supplierNameHint"
+                  class="block text-sm font-medium p-secondary mb-1"
+                  >Supplier Name Hint</label
+                >
+                <input
+                  type="text"
+                  id="supplierNameHint"
+                  class="input-field-base !mb-0 bg-light-bg-secondary dark:bg-dark-bg-secondary focus:ring-accent-blue-light dark:focus:ring-accent-blue-dark"
+                  placeholder="e.g., (.*) Sdn Bhd"
+                />
+              </div>
+              <div>
+                <label
+                  for="documentDateHint"
+                  class="block text-sm font-medium p-secondary mb-1"
+                >
+                  Document Date Hint
+                </label>
+                <div
+                  class="flex items-center border border-light-border dark:border-dark-border rounded-md focus-within:ring-2 focus-within:ring-accent-blue-light dark:focus-within:ring-accent-blue-dark bg-light-bg-secondary dark:bg-dark-bg-secondary"
+                >
                   <input
                     type="text"
-                    id="supplierNameHint"
-                    class="input-field-base !mb-0 bg-light-bg-secondary dark:bg-dark-bg-secondary focus:ring-accent-blue-light dark:focus:ring-accent-blue-dark"
-                    placeholder="e.g., (.*) Sdn Bhd"
+                    id="documentDateHint"
+                    class="flex-1 p-2 border-none rounded-l-md focus:outline-none bg-transparent"
+                    placeholder="e.g., Date: (\d{2}/\d{2}/\d{4})"
                   />
-                </div>
-                <div>
-                  <label
-                    for="documentDateHint"
-                    class="block text-sm font-medium p-secondary mb-1"
+                  <button
+                    id="aiSuggestDateBtn"
+                    class="border-light-border dark:border-dark-border border-l text-secondary font-bold p-2 rounded-r-md hover:opacity-90 transition-opacity"
+                    title="Get AI-suggested regex for Document Date"
                   >
-                    Document Date Hint
-                  </label>
-                  <div
-                    class="flex items-center border border-light-border dark:border-dark-border rounded-md focus-within:ring-2 focus-within:ring-accent-blue-light dark:focus-within:ring-accent-blue-dark bg-light-bg-secondary dark:bg-dark-bg-secondary"
-                  >
-                    <input
-                      type="text"
-                      id="documentDateHint"
-                      class="flex-1 p-2 border-none rounded-l-md focus:outline-none bg-transparent"
-                      placeholder="e.g., Date: (\d{2}/\d{2}/\d{4})"
-                    />
-                    <button
-                      id="aiSuggestDateBtn"
-                      class="border-light-border dark:border-dark-border border-l text-secondary font-bold p-2 rounded-r-md hover:opacity-90 transition-opacity"
-                      title="Get AI-suggested regex for Document Date"
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        width="24"
-                        height="24"
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        fill="none"
+                      />
+                      <text
+                        x="12"
+                        y="17"
+                        font-size="16"
+                        text-anchor="middle"
+                        fill="currentColor"
                       >
-                        <circle
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          fill="none"
-                        />
-                        <text
-                          x="12"
-                          y="17"
-                          font-size="16"
-                          text-anchor="middle"
-                          fill="currentColor"
-                        >
-                          ?
-                        </text>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label
-                    for="documentNumberHint"
-                    class="block text-sm font-medium p-secondary mb-1"
-                  >
-                    Document Number Hint
-                  </label>
-                  <div
-                    class="flex items-center border border-light-border dark:border-dark-border rounded-md focus-within:ring-2 focus-within:ring-accent-blue-light dark:focus-within:ring-accent-blue-dark bg-light-bg-secondary dark:bg-dark-bg-secondary"
-                  >
-                    <input
-                      type="text"
-                      id="documentNumberHint"
-                      class="flex-1 p-2 border-none rounded-l-md focus:outline-none bg-transparent"
-                      placeholder="e.g., INV-(\d+)"
-                    />
-                    <button
-                      id="aiSuggestNumberBtn"
-                      class="border-light-border dark:border-dark-border border-l text-secondary font-bold p-2 rounded-r-md hover:opacity-90 transition-opacity"
-                      title="Get AI-suggested regex for Document Number"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        width="24"
-                        height="24"
-                      >
-                        <circle
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          fill="none"
-                        />
-                        <text
-                          x="12"
-                          y="17"
-                          font-size="16"
-                          text-anchor="middle"
-                          fill="currentColor"
-                        >
-                          ?
-                        </text>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label
-                    for="totalAmountHint"
-                    class="block text-sm font-medium p-secondary mb-1"
-                  >
-                    Total Amount Hint
-                  </label>
-                  <div
-                    class="flex items-center border border-light-border dark:border-dark-border rounded-md focus-within:ring-2 focus-within:ring-accent-blue-light dark:focus-within:ring-accent-blue-dark bg-light-bg-secondary dark:bg-dark-bg-secondary"
-                  >
-                    <input
-                      type="text"
-                      id="totalAmountHint"
-                      class="flex-1 p-2 border-none rounded-l-md focus:outline-none bg-transparent"
-                      placeholder="e.g., Total Price \(MYR\)\s*RM([\d\.]+)"
-                    />
-                    <button
-                      id="aiSuggestAmountBtn"
-                      class="border-light-border dark:border-dark-border border-l text-secondary font-bold p-2 rounded-r-md hover:opacity-90 transition-opacity"
-                      title="Get AI-suggested regex for Total Amount"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        width="24"
-                        height="24"
-                      >
-                        <circle
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          fill="none"
-                        />
-                        <text
-                          x="12"
-                          y="17"
-                          font-size="16"
-                          text-anchor="middle"
-                          fill="currentColor"
-                        >
-                          ?
-                        </text>
-                      </svg>
-                    </button>
-                  </div>
+                        ?
+                      </text>
+                    </svg>
+                  </button>
                 </div>
               </div>
-
-              <div class="flex space-x-2 pt-4">
+              <div>
+                <label
+                  for="documentNumberHint"
+                  class="block text-sm font-medium p-secondary mb-1"
+                >
+                  Document Number Hint
+                </label>
+                <div
+                  class="flex items-center border border-light-border dark:border-dark-border rounded-md focus-within:ring-2 focus-within:ring-accent-blue-light dark:focus-within:ring-accent-blue-dark bg-light-bg-secondary dark:bg-dark-bg-secondary"
+                >
+                  <input
+                    type="text"
+                    id="documentNumberHint"
+                    class="flex-1 p-2 border-none rounded-l-md focus:outline-none bg-transparent"
+                    placeholder="e.g., INV-(\d+)"
+                  />
+                  <button
+                    id="aiSuggestNumberBtn"
+                    class="border-light-border dark:border-dark-border border-l text-secondary font-bold p-2 rounded-r-md hover:opacity-90 transition-opacity"
+                    title="Get AI-suggested regex for Document Number"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        fill="none"
+                      />
+                      <text
+                        x="12"
+                        y="17"
+                        font-size="16"
+                        text-anchor="middle"
+                        fill="currentColor"
+                      >
+                        ?
+                      </text>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label
+                  for="totalAmountHint"
+                  class="block text-sm font-medium p-secondary mb-1"
+                >
+                  Total Amount Hint
+                </label>
+                <div
+                  class="flex items-center border border-light-border dark:border-dark-border rounded-md focus-within:ring-2 focus-within:ring-accent-blue-light dark:focus-within:ring-accent-blue-dark bg-light-bg-secondary dark:bg-dark-bg-secondary"
+                >
+                  <input
+                    type="text"
+                    id="totalAmountHint"
+                    class="flex-1 p-2 border-none rounded-l-md focus:outline-none bg-transparent"
+                    placeholder="e.g., Total Price \(MYR\)\s*RM([\d\.]+)"
+                  />
+                  <button
+                    id="aiSuggestAmountBtn"
+                    class="border-light-border dark:border-dark-border border-l text-secondary font-bold p-2 rounded-r-md hover:opacity-90 transition-opacity"
+                    title="Get AI-suggested regex for Total Amount"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        fill="none"
+                      />
+                      <text
+                        x="12"
+                        y="17"
+                        font-size="16"
+                        text-anchor="middle"
+                        fill="currentColor"
+                      >
+                        ?
+                      </text>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="flex space-x-2">
                 <button id="previewButton" class="btn-primary">Preview</button>
               </div>
-            </div>
-          </div>
-
-          <div class="flex-1 md:pl-4 mt-8 md:mt-0">
-            <h2
-              class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4"
-            >
-              Extracted Information
-            </h2>
-            <div class="extracted-info-box">
-              <p>
-                <strong>Supplier Name:</strong>
-                <span id="supplierName">-</span>
-              </p>
-              <p>
-                <strong>Document Date:</strong>
-                <span id="documentDate">-</span>
-              </p>
-              <p>
-                <strong>Document Number:</strong>
-                <span id="documentNumber">-</span>
-              </p>
-              <p>
-                <strong>Total Amount:</strong> <span id="totalAmount">-</span>
-              </p>
-            </div>
-
-            <h2
-              class="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mt-8 mb-4"
-            >
-              Raw Text Preview (<span id="currentAnalysisFileName">-</span>)
-            </h2>
-            <div class="mb-4">
-              <textarea
-                id="pdfRawTextPreview"
-                class="textarea-base"
-                readonly
-                placeholder="Upload a PDF and switch to the Template tab to see its raw text content here."
-              ></textarea>
             </div>
           </div>
         </div>
@@ -515,7 +514,7 @@
       <div class="modal-content-base">
         <h2
           id="confirmationModalTitle"
-          class="text-xl font-bold mb-4 text-light-text-primary dark:text-dark-text-primary"
+          class="h2-base"
         >
           Confirmation
         </h2>
@@ -543,7 +542,7 @@
       <div class="modal-content-base w-full max-w-lg">
         <h2
           id="regexSuggestModalTitle"
-          class="text-xl font-bold mb-4 text-light-text-primary dark:text-dark-text-primary"
+          class="h2-base"
         >
           AI Regex Suggestions for ...
         </h2>

@@ -27,6 +27,11 @@
     @apply text-3xl sm:text-4xl font-bold text-light-text-primary dark:text-dark-text-primary;
   }
 
+  /* Secondary heading style */
+  .h2-base {
+    @apply text-2xl font-bold text-light-text-primary dark:text-dark-text-primary mb-4;
+  }
+
   /* Secondary paragraph text style */
   .p-secondary {
     @apply mt-2 text-light-text-secondary dark:text-dark-text-secondary;
@@ -59,7 +64,7 @@
 
   /* Base styling for file upload area (drag & drop) */
   .upload-area-base {
-    @apply border-2 border-dashed border-light-border dark:border-dark-border rounded-xl p-8 text-center bg-light-bg-secondary dark:bg-dark-bg-secondary transition-colors duration-300 ease-in-out min-h-[220px] flex flex-col;
+    @apply border-2 border-dashed border-light-border dark:border-dark-border rounded-xl p-8 text-center bg-light-bg-secondary dark:bg-dark-bg-secondary transition-colors duration-300 ease-in-out min-h-[180px] flex flex-col;
   }
 
   /* Highlight state for upload area on drag over */
