@@ -47,6 +47,30 @@
         </button>
       </div>
 
+      <!-- Message Container (Added) -->
+      <div
+        id="message-container"
+        class="message-container-base hidden"
+        role="alert"
+      >
+        <strong id="message-prefix" class="font-bold"></strong>
+        <span id="message-text" class="block sm:inline ml-2"></span>
+        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+          <svg
+            class="fill-current h-6 w-6 text-red-500 dark:text-red-400"
+            role="button"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            id="close-message-btn"
+          >
+            <title>Close</title>
+            <path
+              d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.029a1.2 1.2 0 1 1 1.697 1.697L11.819 10l3.029 2.651a1.2 1.2 0 0 1 0 1.698z"
+            />
+          </svg>
+        </span>
+      </div>
+
       <main>
         <div id="tabContentProcess" class="tab-content w-full">
           <div
@@ -447,7 +471,8 @@
       </main>
     </div>
 
-    <div id="apiKeyModal" class="modal-base hidden">
+    <!-- Shared API Key Modal -->
+    <div id="shared-api-key-modal" class="modal-base hidden">
       <div class="modal-content-base">
         <h3
           class="text-xl font-bold mb-4 text-light-text-primary dark:text-dark-text-primary"
@@ -467,16 +492,19 @@
         </p>
         <input
           type="text"
-          id="apiKeyValueInput"
+          id="shared-api-key-input"
           class="input-field-base !mb-4 bg-light-bg-primary dark:bg-dark-bg-primary focus:ring-accent-blue-light focus:border-accent-blue-light dark:focus:ring-accent-blue-dark dark:focus:border-accent-blue-dark"
           placeholder="Your Gemini API Key"
         />
         <div class="flex justify-end gap-2">
-          <button id="saveApiKeyButton" class="btn-primary py-3 px-6 !w-auto">
+          <button
+            id="shared-api-key-save-btn"
+            class="btn-primary py-3 px-6 !w-auto"
+          >
             Save Key
           </button>
           <button
-            id="cancelApiKeyButton"
+            id="shared-api-key-cancel-btn"
             class="btn-secondary py-3 px-6 !w-auto"
           >
             Cancel
@@ -575,6 +603,7 @@
         </div>
       </div>
     </div>
+    <script type="module" src="./utils.js"></script>
     <script type="module" src="./invoice.js"></script>
   </body>
 </html>

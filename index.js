@@ -1,11 +1,20 @@
 // index.js
 
 // --- IMPORTANT: Import your main CSS file here to be processed by Vite ---
-// This tells Vite to process 'style.css' with PostCSS/Tailwind and include it in the bundle.
 import "./style.css";
 
+// --- Import utility functions ---
+import {
+  getGeminiApiKey,
+  showApiKeyModal,
+  showMessage,
+  hideMessage,
+  parseDateForSorting,
+  downloadCSV,
+  // showConfirmationModal, // Commented out as it's not directly used here yet, but available if needed
+} from "./utils.js";
+
 // --- 1. Global Variables and DOM Elements ---
-// Caching DOM elements for efficient access
 const parserSelect = document.getElementById("parser-select");
 const uploadArea = document.getElementById("upload-area");
 const fileInput = document.getElementById("file-input");
@@ -21,11 +30,7 @@ const spinner = document.getElementById("spinner");
 const resultsContainer = document.getElementById("results-container");
 const tableBody = document.getElementById("results-table-body");
 
-const apiKeyModal = document.getElementById("api-key-modal");
-const geminiApiKeyInput = document.getElementById("gemini-api-key-input");
-const apiKeySaveBtn = document.getElementById("api-key-save-btn");
-const apiKeyCancelBtn = document.getElementById("api-key-cancel-btn");
-
+// Message container elements (still specific to index.html structure)
 const messageContainer = document.getElementById("message-container");
 const messagePrefix = document.getElementById("message-prefix");
 const messageText = document.getElementById("message-text");
@@ -34,127 +39,9 @@ const closeMessageBtn = document.getElementById("close-message-btn");
 // Application state variables
 let selectedFiles = [];
 let allTransactions = [];
-let geminiApiKey = localStorage.getItem("geminiApiKey") || "";
-let resolveApiKeyPromise; // Used to resolve the promise from the API key modal
+// Gemini API key is now managed via getGeminiApiKey/setGeminiApiKey from utils.js
 
-// --- 2. Utility Functions ---
-
-/**
- * Displays a message in the message container.
- * @param {'error'|'success'} type - The type of message (determines styling).
- * @param {string} message - The message content.
- */
-function showMessage(type, message) {
-  messageContainer.classList.remove("hidden");
-  // Remove all type-specific classes before adding the new one
-  messageContainer.classList.remove("message-error", "message-success");
-
-  // Apply appropriate classes based on message type
-  if (type === "error") {
-    messageContainer.classList.add("message-error");
-    messagePrefix.textContent = "Error!";
-  } else if (type === "success") {
-    messageContainer.classList.add("message-success");
-    messagePrefix.textContent = "Success!";
-  }
-  messageText.textContent = message;
-}
-
-/**
- * Hides the message container.
- */
-function hideMessage() {
-  messageContainer.classList.add("hidden");
-  messagePrefix.textContent = "";
-  messageText.textContent = "";
-}
-
-/**
- * Displays the API key modal and returns a promise that resolves with the entered key or null.
- * @returns {Promise<string|null>} A promise that resolves with the Gemini API key or null if canceled.
- */
-function showApiKeyModal() {
-  return new Promise((resolve) => {
-    resolveApiKeyPromise = resolve; // Store resolve for external access
-
-    geminiApiKeyInput.value = geminiApiKey; // Pre-fill with existing key
-    apiKeyModal.classList.remove("hidden"); // Show modal
-
-    // Event listener for saving the API key
-    apiKeySaveBtn.onclick = () => {
-      const key = geminiApiKeyInput.value.trim();
-      if (key) {
-        localStorage.setItem("geminiApiKey", key); // Save to local storage
-        geminiApiKey = key; // Update global variable
-        apiKeyModal.classList.add("hidden"); // Hide modal
-        resolve(key); // Resolve the promise with the key
-      } else {
-        showMessage("error", "Please enter a valid Gemini API key.");
-      }
-    };
-
-    // Event listener for canceling API key input
-    apiKeyCancelBtn.onclick = () => {
-      apiKeyModal.classList.add("hidden"); // Hide modal
-      resolve(null); // Resolve the promise with null
-    };
-  });
-}
-
-/**
- * Parses a date string (DD/MM/YYYY) into a Date object for sorting.
- * Assumes 2-digit years are in the 21st century (20xx) if <= current year's last two digits,
- * or 20th century (19xx) if > current year's last two digits (e.g., 90 -> 1990, 10 -> 2010).
- * @param {string} dateString - The date string in "DD/MM/YYYY" format.
- * @returns {number} The time in milliseconds since the epoch for sorting.
- */
-function parseDateForSorting(dateString) {
-  const [day, month, year] = dateString.split("/");
-  // Construct a Date object in ISO-MM-DD format for reliable parsing
-  // Note: Month is 0-indexed in Date constructor
-  return new Date(`${year}-${month}-${day}`).getTime();
-}
-
-/**
- * Downloads the given data as a CSV file.
- * @param {Array<Object>} data - The array of transaction objects to convert to CSV.
- */
-function downloadCSV(data) {
-  if (!data.length) return; // Exit if no data
-
-  const headers = ["Date", "Description", "Amount"];
-  const csvRows = [
-    headers.join(","), // CSV header row
-    ...data.map((row) =>
-      headers
-        .map((fieldName) => {
-          const value = row[fieldName];
-          const stringValue = value === null ? "" : String(value); // Handle null/undefined
-          // Enclose values with commas, double quotes, or newlines in double quotes
-          // and escape existing double quotes by doubling them.
-          return stringValue.includes(",") ||
-            stringValue.includes('"') ||
-            stringValue.includes("\n")
-            ? `"${stringValue.replace(/"/g, '""')}"`
-            : stringValue;
-        })
-        .join(",")
-    ),
-  ];
-  const csvString = csvRows.join("\n"); // Join all rows with newlines
-
-  // Create a Blob and initiate download
-  const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute("download", "transactions.csv");
-  link.style.visibility = "hidden"; // Hide the link
-  document.body.appendChild(link);
-  link.click(); // Programmatically click to trigger download
-  document.body.removeChild(link); // Clean up
-  URL.revokeObjectURL(url); // Release the object URL
-}
+// --- 2. Utility Functions (Removed local ones, using imported) ---
 
 // --- 3. UI Management Functions ---
 
@@ -169,7 +56,7 @@ function resetUI() {
   uploadLabel.classList.remove("hidden"); // Show upload label
   processBtn.disabled = true; // Disable process button
   statusText.textContent = ""; // Clear status text
-  hideMessage(); // Hide any active messages
+  hideMessage(); // Hide any active messages using imported function
   updateFileDisplay(); // Update file display (should show no files)
   processBtnText.textContent = "Process"; // Reset process button text
   spinner.classList.add("hidden"); // Hide spinner
@@ -277,7 +164,6 @@ function displayTransactions(data) {
  * Updates the enabled/disabled state of the download button based on whether there are results.
  */
 function updateDownloadButtonState() {
-  // Check if the table body has content other than the "No documents processed yet" message
   const hasResults =
     tableBody.children.length > 0 &&
     tableBody.children[0].textContent.trim() !== "No documents processed yet.";
@@ -368,10 +254,12 @@ async function processStatements() {
   allTransactions = []; // Reset transactions for new processing
   const currentParser = parserSelect.value;
 
+  let currentGeminiApiKey = getGeminiApiKey(); // Get current API key using utility
+
   // Prompt for Gemini API key if required and not present
-  if (currentParser === "gemini-parser" && !geminiApiKey) {
+  if (currentParser === "gemini-parser" && !currentGeminiApiKey) {
     try {
-      const key = await showApiKeyModal(); // Wait for key input
+      const key = await showApiKeyModal(); // Wait for key input using utility
       if (!key) {
         showMessage(
           "error",
@@ -380,6 +268,7 @@ async function processStatements() {
         resetUI(); // Reset UI if key not provided
         return;
       }
+      currentGeminiApiKey = key; // Update key if saved
     } catch (error) {
       showMessage(
         "error",
@@ -434,7 +323,7 @@ async function processStatements() {
           statusText.textContent = `Sending pages of ${file.name} to AI for processing...`;
           fileTransactions = await processGeminiStatementWithAI(
             pdf,
-            geminiApiKey
+            currentGeminiApiKey // Use the potentially updated key
           );
           break;
         default:
@@ -449,8 +338,8 @@ async function processStatements() {
 
     // Sort all transactions by date in ascending order (oldest first)
     allTransactions.sort((a, b) => {
-      const dateA = parseDateForSorting(a["Date"]);
-      const dateB = parseDateForSorting(b["Date"]);
+      const dateA = parseDateForSorting(a["Date"]); // Use imported function
+      const dateB = parseDateForSorting(b["Date"]); // Use imported function
       return dateA - dateB; // Changed to ascending order
     });
 
@@ -484,7 +373,7 @@ async function processStatements() {
   }
 }
 
-// --- 5. Core Parsing Logic Functions ---
+// --- 5. Core Parsing Logic Functions (remain in index.js as they are specific) ---
 
 /**
  * Extracts text lines from a PDF document, preserving vertical order, for Maybank PDF parsing.
@@ -626,24 +515,17 @@ function parseTransactionsMaybankPdf(allLinesFromPdf) {
   // Reverse the transactions to correct order and format descriptions and amounts
   const finalTransactions = transactions.reverse().map((t) => {
     // Clean and normalize description
-    const cleanedDesc = t.Description.replace(/TRANSFER FR A\/C/gi, "")
+    const cleanedDesc = String(t.Description)
+      .replace(/TRANSFER FR A\/C/gi, "")
       .replace(/TRANSFER TO A\/C/gi, "")
       .replace(/PAYMENT FR A\/C/gi, "")
       .replace(/MBB CT-?/gi, "")
       .replace(/\s+/g, " ") // Replace multiple spaces with single space
       .trim();
 
-    // CSV escape description if necessary
-    const finalDescription =
-      cleanedDesc.includes(",") ||
-      cleanedDesc.includes('"') ||
-      cleanedDesc.includes("\n")
-        ? `"${cleanedDesc.replace(/"/g, '""')}"`
-        : cleanedDesc;
-
     return {
       Date: t.Date,
-      Description: finalDescription,
+      Description: cleanedDesc, // Desc will be escaped by generic downloadCSV
       Amount: parseFloat(t.Amount).toFixed(2), // Format amount to 2 decimal places
     };
   });
@@ -776,7 +658,9 @@ function parseTextAndGenerateCsvMaybankWeb(text) {
     const formattedDate = `${day}/${month}/${year}`; // DD/MM/YYYY
 
     // Clean and normalize description
-    const cleanedDescription = t.description.replace(/\s+/g, " ").trim();
+    const cleanedDescription = String(t.description)
+      .replace(/\s+/g, " ")
+      .trim();
 
     // Handle descriptions that might be unintentionally wrapped in quotes from PDF extraction
     const finalDescriptionUnescaped =
@@ -784,17 +668,9 @@ function parseTextAndGenerateCsvMaybankWeb(text) {
         ? cleanedDescription.substring(1, cleanedDescription.length - 1)
         : cleanedDescription;
 
-    // CSV escape description
-    const descForCsv =
-      finalDescriptionUnescaped.includes(",") ||
-      finalDescriptionUnescaped.includes('"') ||
-      finalDescriptionUnescaped.includes("\n")
-        ? `"${finalDescriptionUnescaped.replace(/"/g, '""')}"`
-        : finalDescriptionUnescaped;
-
     return {
       Date: formattedDate,
-      Description: descForCsv,
+      Description: finalDescriptionUnescaped, // Desc will be escaped by generic downloadCSV
       Amount: parseFloat(t.amount).toFixed(2), // Format amount to 2 decimal places
     };
   });
@@ -828,7 +704,7 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
     const prompt = `You are an expert at extracting financial transactions from bank statements.
       Extract all transactions from the following page text.
       For each transaction, identify the 'Date', 'Description', and 'Amount'.
-      
+
       Rules for extraction:
       - The Date should be in DD/MM/YYYY format. If only DD/MM is present, assume the current year for a full DD/MM/YYYY format.
       - The Description should be a concise summary of the transaction.
@@ -929,20 +805,13 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
           const cleanedDescription = String(t.Description)
             .replace(/\s+/g, " ")
             .trim();
-          // CSV escape description
-          const descForCsv =
-            cleanedDescription.includes(",") ||
-            cleanedDescription.includes('"') ||
-            cleanedDescription.includes("\n")
-              ? `"${cleanedDescription.replace(/"/g, '""')}"`
-              : cleanedDescription;
 
           return {
             Date: `${String(day).padStart(2, "0")}/${String(month).padStart(
               2,
               "0"
             )}/${formattedYear}`, // Ensure DD/MM/YYYY
-            Description: descForCsv,
+            Description: cleanedDescription, // Description will be escaped by generic downloadCSV
             Amount: parseFloat(t.Amount).toFixed(2), // Format amount
           };
         });
@@ -1007,6 +876,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Process and Download buttons
   processBtn.addEventListener("click", processStatements);
   downloadBtn.addEventListener("click", () => {
-    downloadCSV(allTransactions); // Download current transactions
+    const headers = ["Date", "Description", "Amount"];
+    downloadCSV(allTransactions, headers, "transactions.csv"); // Download current transactions using utility
   });
 });

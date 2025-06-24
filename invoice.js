@@ -1,8 +1,21 @@
 // invoice.js
 
 // --- IMPORTANT: Import your main CSS file here to be processed by Vite ---
-// This tells Vite to process 'style.css' with PostCSS/Tailwind and include it in the bundle.
 import "./style.css";
+
+// --- Import utility functions ---
+import {
+  getGeminiApiKey,
+  showApiKeyModal,
+  showConfirmationModal,
+  hideConfirmationModal,
+  downloadCSV,
+  formatAmountForDisplay,
+  formatDateForDisplay,
+  FileListShim,
+  showMessage, // <-- Imported showMessage
+  hideMessage, // <-- Imported hideMessage
+} from "./utils.js";
 
 // --- 1. Global Variables and DOM Element References ---
 
@@ -17,15 +30,12 @@ let currentRegexTargetField = null; // Field for which AI regex suggestions are 
 // API related constants
 const GEMINI_API_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-let GEMINI_API_KEY = localStorage.getItem("geminiApiKey"); // Retrieve API key from local storage
+// let GEMINI_API_KEY = localStorage.getItem("geminiApiKey"); // NO LONGER USED, use getGeminiApiKey()
 
 // Debugging flag
 const DEBUG_MODE = true;
 
 // DOM Element References (cached for performance)
-const userIconContainer = document.getElementById("userIconContainer");
-const userIcon = document.getElementById("userIcon");
-const defaultUserSvg = document.getElementById("defaultUserSvg");
 const pdfUpload = document.getElementById("pdfUpload");
 const pdfRawTextPreview = document.getElementById("pdfRawTextPreview");
 const processPdfButton = document.getElementById("processPdfButton");
@@ -64,12 +74,14 @@ const tabContentTemplate = document.getElementById("tabContentTemplate");
 const aiSuggestDateBtn = document.getElementById("aiSuggestDateBtn");
 const aiSuggestNumberBtn = document.getElementById("aiSuggestNumberBtn");
 const aiSuggestAmountBtn = document.getElementById("aiSuggestAmountBtn");
-const apiKeyModal = document.getElementById("apiKeyModal");
-const apiKeyValueInput = document.getElementById("apiKeyValueInput");
-const saveApiKeyButton = document.getElementById("saveApiKeyButton");
-const cancelApiKeyButton = document.getElementById("cancelApiKeyButton");
 
-// New confirmation modal elements
+// API key modal elements - now handled by shared utils.js showApiKeyModal, but still need to target them for display
+// const apiKeyModal = document.getElementById("apiKeyModal"); // No longer directly referenced
+// const apiKeyValueInput = document.getElementById("apiKeyValueInput"); // No longer directly referenced
+// const saveApiKeyButton = document.getElementById("saveApiKeyButton"); // No longer directly referenced
+// const cancelApiKeyButton = document.getElementById("cancelApiKeyButton"); // No longer directly referenced
+
+// New confirmation modal elements (still specific to invoice.html structure)
 const confirmationModal = document.getElementById("confirmationModal");
 const confirmationModalTitle = document.getElementById(
   "confirmationModalTitle"
@@ -107,7 +119,7 @@ const exportAllConfigsButton = document.getElementById(
   "exportAllConfigsButton"
 );
 
-// --- 2. Utility Functions ---
+// --- 2. Utility Functions (Removed local ones, using imported) ---
 
 /**
  * Logs a message to the console if DEBUG_MODE is enabled.
@@ -117,178 +129,6 @@ function logDebug(message) {
   if (DEBUG_MODE) {
     console.log("[DEBUG]", message);
   }
-}
-
-/**
- * Shows the API key input modal.
- */
-function showApiKeyModal() {
-  apiKeyModal.classList.remove("hidden");
-}
-
-/**
- * Hides the API key input modal.
- */
-function hideApiKeyModal() {
-  apiKeyModal.classList.add("hidden");
-}
-
-/**
- * Shows a generic confirmation modal.
- * @param {string} title - The title of the modal.
- * @param {string} message - The message to display.
- * @param {string} confirmText - Text for the confirm button.
- * @param {Function} onConfirm - Callback function when confirm is clicked.
- * @param {Function} onCancel - Callback function when cancel is clicked.
- */
-function showConfirmationModal(
-  title,
-  message,
-  confirmText,
-  onConfirm,
-  onCancel
-) {
-  confirmationModalTitle.textContent = title;
-  confirmationModalText.textContent = message;
-  confirmActionButton.textContent = confirmText;
-
-  // Clear previous listeners to prevent multiple calls
-  confirmActionButton.onclick = null;
-  cancelConfirmationButton.onclick = null;
-
-  confirmActionButton.onclick = () => {
-    hideConfirmationModal();
-    onConfirm();
-  };
-  cancelConfirmationButton.onclick = () => {
-    hideConfirmationModal();
-    onCancel();
-  };
-
-  confirmationModal.classList.remove("hidden");
-}
-
-/**
- * Hides the generic confirmation modal.
- */
-function hideConfirmationModal() {
-  confirmationModal.classList.add("hidden");
-}
-
-/**
- * Switches between the "Process" and "Template" tabs.
- * @param {string} tabId - The ID of the tab to switch to ("Process" or "Template").
- */
-function switchTab(tabId) {
-  const tabs = document.querySelectorAll(".tab-button");
-  const contents = document.querySelectorAll(".tab-content");
-
-  tabs.forEach((tab) => {
-    if (tab.id === `tabButton${tabId}`) {
-      tab.classList.add("tab-button-active");
-      tab.classList.remove("tab-button-inactive");
-    } else {
-      tab.classList.remove("tab-button-active");
-      tab.classList.add("tab-button-inactive");
-    }
-  });
-
-  contents.forEach((content) => {
-    if (content.id === `tabContent${tabId}`) {
-      content.classList.remove("hidden");
-      if (tabId === "Template") {
-        content.classList.add("flex"); // Ensure flex display for Template tab layout
-      }
-    } else {
-      content.classList.add("hidden");
-      if (content.id === "tabContentTemplate") {
-        content.classList.remove("flex");
-      }
-    }
-  });
-
-  updateTemplateTabButtonsState();
-  updateProcessTabButtonsState();
-}
-
-/**
- * Formats an amount for display, ensuring 2 decimal places and locale-specific formatting.
- * Handles null, NaN, and error strings gracefully.
- * @param {number|string|null} amount - The amount to format.
- * @returns {string} The formatted amount string or "-" / "Error".
- */
-function formatAmountForDisplay(amount) {
-  if (
-    amount === null ||
-    isNaN(amount) ||
-    amount === "-" ||
-    amount === "Error" ||
-    amount === undefined
-  ) {
-    return amount;
-  }
-  let parsedAmount = parseFloat(amount);
-  if (isNaN(parsedAmount)) {
-    return "-";
-  }
-  // Format with thousands separators and two decimal places
-  return parsedAmount.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-/**
- * Formats a date string for display in DD/MM/YYYY format.
- * Handles various date formats (DD/MM/YYYY, ISO-MM-DD, or general date strings).
- * @param {string} dateString - The date string to format.
- * @returns {string} The formatted date string or the original string if invalid.
- */
-function formatDateForDisplay(dateString) {
-  if (!dateString || dateString === "-" || dateString === "Error")
-    return dateString;
-  try {
-    let date;
-    // Attempt to parse DD/MM/YYYY
-    if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-      const parts = dateString.split("/");
-      date = new Date(parts[2], parts[1] - 1, parts[0]);
-    }
-    // Attempt to parse ISO-MM-DD
-    else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      date = new Date(dateString);
-    }
-    // Fallback for other formats
-    else {
-      date = new Date(dateString);
-    }
-
-    if (isNaN(date.getTime())) {
-      // If date is invalid, return original string
-      return dateString;
-    }
-
-    // Format to DD/MM/YYYY
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = String(date.getFullYear()); // Get full four digits of year
-    return `${day}/${month}/${year}`;
-  } catch (e) {
-    // If any error during parsing/formatting, return original string
-    console.error("Error formatting date:", e);
-    return dateString;
-  }
-}
-
-/**
- * Clears all extracted results from the table and resets relevant UI states.
- */
-function clearAllResults() {
-  allExtractedData = []; // Clear array of extracted data
-  // Reset table body to "No documents processed yet." message
-  extractedResultsTableBody.innerHTML =
-    '<tr><td colspan="7" class="table-cell-base text-center">No documents processed yet.</td></tr>';
-  updateProcessTabButtonsState(); // Update process tab button states
 }
 
 /**
@@ -398,18 +238,6 @@ function useSelectedRegex() {
   }
 }
 
-/**
- * Simulates a FileList object from an array of files.
- * This is sometimes needed for compatibility with DOM APIs expecting a FileList.
- * @param {Array<File>} files - An array of File objects.
- * @returns {FileList} A FileList-like object.
- */
-function FileListShim(files) {
-  const dt = new DataTransfer();
-  files.forEach((file) => dt.items.add(file));
-  return dt.files;
-}
-
 // --- 3. Data Extraction and AI Interaction Functions ---
 
 /**
@@ -435,9 +263,33 @@ async function callGeminiApi(
   generateRegexForField = null,
   userContextForRegex = null
 ) {
-  if (useLlmsForOperation && !GEMINI_API_KEY) {
-    showApiKeyModal();
-    return null;
+  let currentGeminiApiKey = getGeminiApiKey(); // Get current API key
+
+  if (useLlmsForOperation && !currentGeminiApiKey) {
+    try {
+      const key = await showApiKeyModal(); // Use utility function to show modal
+      if (!key) {
+        // If user cancels or doesn't provide a key
+        showConfirmationModal(
+          "API Key Required",
+          "Gemini API key is required for AI-powered features. Operation canceled.",
+          "OK",
+          () => {},
+          () => {}
+        );
+        return null;
+      }
+      currentGeminiApiKey = key; // Update key if saved
+    } catch (error) {
+      showConfirmationModal(
+        "API Key Error",
+        "Could not get Gemini API key. Operation canceled.",
+        "OK",
+        () => {},
+        () => {}
+      );
+      return null;
+    }
   }
 
   // Disable buttons during API call
@@ -518,7 +370,7 @@ async function callGeminiApi(
 
   try {
     const response = await fetch(
-      `${GEMINI_API_ENDPOINT}?key=${GEMINI_API_KEY}`,
+      `${GEMINI_API_ENDPOINT}?key=${currentGeminiApiKey}`, // Use current key
       {
         method: "POST",
         headers: {
@@ -582,15 +434,9 @@ async function callGeminiApi(
       return normalizedResult;
     }
   } catch (error) {
-    processingStatus.textContent = `AI operation failed: ${error.message}`;
-    // Use custom modal for alerts instead of browser alert()
-    showConfirmationModal(
-      "AI Operation Error",
-      "Error during AI operation. See console for details: " + error.message,
-      "OK",
-      () => {},
-      () => {}
-    );
+    // Show error message using the utility function
+    showMessage("error", `AI operation failed: ${error.message}`);
+    // No need to update processingStatus.textContent as showMessage handles it
     regexSuggestStatus.textContent = `Error: ${error.message}`; // Update status in regex modal
     throw error; // Re-throw to propagate error
   } finally {
@@ -729,8 +575,8 @@ function classifyDocumentHeuristically(pdfText, configurations) {
  */
 async function generateRegexSuggestions() {
   if (!currentPdfTextForAnalysis) {
-    // Use a custom modal for alerts instead of browser alert()
     showConfirmationModal(
+      // Use utility function
       "Missing PDF",
       "A PDF must be loaded for analysis to generate regex suggestions.",
       "OK",
@@ -740,11 +586,22 @@ async function generateRegexSuggestions() {
     return;
   }
 
-  if (!GEMINI_API_KEY) {
-    showApiKeyModal(); // Prompt for API key if missing
-    generateRegexButton.disabled = false; // Re-enable button if modal shown
-    updateTemplateTabButtonsState();
-    return;
+  if (!getGeminiApiKey()) {
+    // Use utility function
+    await showApiKeyModal(); // Use utility function to prompt for key
+    if (!getGeminiApiKey()) {
+      // Check again after modal closes
+      showConfirmationModal(
+        "API Key Required",
+        "Gemini API key is required for AI-powered features. Operation canceled.",
+        "OK",
+        () => {},
+        () => {}
+      );
+      generateRegexButton.disabled = false; // Re-enable button if no key
+      updateTemplateTabButtonsState();
+      return;
+    }
   }
 
   const userPrompt = regexUserPrompt.value.trim();
@@ -831,6 +688,7 @@ function saveTemplateToLocalStorage() {
   const templateName = configNameInput.value.trim();
   if (!templateName) {
     showConfirmationModal(
+      // Use utility function
       "Missing Template Name",
       "Please enter a template name to save the configuration.",
       "OK",
@@ -856,6 +714,7 @@ function saveTemplateToLocalStorage() {
 
   if (existingIndex !== -1) {
     showConfirmationModal(
+      // Use utility function
       "Overwrite Template?",
       `A template named "${templateName}" already exists. Do you want to overwrite it?`,
       "Overwrite",
@@ -867,6 +726,7 @@ function saveTemplateToLocalStorage() {
         );
         populateConfigSelect();
         showConfirmationModal(
+          // Use utility function
           "Success",
           "Template updated successfully.",
           "OK",
@@ -884,6 +744,7 @@ function saveTemplateToLocalStorage() {
     );
     populateConfigSelect();
     showConfirmationModal(
+      // Use utility function
       "Success",
       "Template saved successfully.",
       "OK",
@@ -901,6 +762,7 @@ function deleteTemplateFromLocalStorage() {
   const selectedConfigName = configSelect.value;
   if (!selectedConfigName) {
     showConfirmationModal(
+      // Use utility function
       "No Template Selected",
       "Please select a template to delete.",
       "OK",
@@ -911,6 +773,7 @@ function deleteTemplateFromLocalStorage() {
   }
 
   showConfirmationModal(
+    // Use utility function
     "Confirm Deletion",
     `Are you sure you want to delete the template "${selectedConfigName}"? This action cannot be undone.`,
     "Delete",
@@ -925,6 +788,7 @@ function deleteTemplateFromLocalStorage() {
       resetConfigInputFields(); // Clear fields
       populateConfigSelect(); // Update dropdown
       showConfirmationModal(
+        // Use utility function
         "Success",
         "Template deleted successfully.",
         "OK",
@@ -961,6 +825,7 @@ function populateConfigSelect() {
 function exportAllConfigsToJson() {
   if (localConfigurations.length === 0) {
     showConfirmationModal(
+      // Use utility function
       "No Data to Export",
       "There are no saved templates to export.",
       "OK",
@@ -983,6 +848,7 @@ function exportAllConfigsToJson() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showConfirmationModal(
+    // Use utility function
     "Export Complete",
     "All templates exported successfully.",
     "OK",
@@ -1045,6 +911,7 @@ function importConfigsFromJson() {
         );
         populateConfigSelect();
         showConfirmationModal(
+          // Use utility function
           "Import Complete",
           `Successfully imported ${importedCount} new templates and updated ${overwrittenCount} existing templates.`,
           "OK",
@@ -1053,6 +920,7 @@ function importConfigsFromJson() {
         );
       } catch (error) {
         showConfirmationModal(
+          // Use utility function
           "Import Error",
           "Failed to import configurations: " + error.message,
           "OK",
@@ -1108,6 +976,7 @@ async function displayPdfTextForAnalysis(file) {
     } catch (error) {
       pdfRawTextPreview.value = ""; // Clear text area on error
       showConfirmationModal(
+        // Use utility function
         "PDF Text Extraction Error",
         "Error extracting text from PDF: " + error.message,
         "OK",
@@ -1151,6 +1020,7 @@ function autoLoadSelectedConfiguration() {
   } else {
     // This case should ideally not happen if dropdown is populated correctly
     showConfirmationModal(
+      // Use utility function
       "Template Not Found",
       "Selected template not found in local storage.",
       "OK",
@@ -1187,6 +1057,8 @@ function updateInvoiceFileDisplay() {
     uploadLabel.classList.remove("hidden");
     fileInfo.classList.add("hidden");
     fileList.innerHTML = "";
+    processingStatus.textContent = ""; // Clear the text when no files are selected
+    hideMessage(); // Hide any message box when no files are selected
   } else {
     uploadLabel.classList.add("hidden");
     fileInfo.classList.remove("hidden");
@@ -1201,8 +1073,9 @@ function updateInvoiceFileDisplay() {
             `;
       fileList.appendChild(filePill);
     });
+    processingStatus.textContent = `${uploadedFiles.length} file(s) selected. Click Process PDF(s).`;
+    hideMessage(); // Hide any message box when files are selected
   }
-  processingStatus.textContent = `${uploadedFiles.length} file(s) selected. Click Process PDF(s).`;
   updateProcessTabButtonsState();
 }
 
@@ -1235,10 +1108,12 @@ function appendExtractedResultToTable(data, index) {
         data.officialSupplierNameForExport || data.extractedSupplierName || "-"
       }</td>
       <td class="table-cell-base text-sm">${formatDateForDisplay(
+        // Use utility function
         data.documentDate
       )}</td>
       <td class="table-cell-base text-sm">${data.documentNumber || "-"}</td>
       <td class="table-cell-base text-sm">${formatAmountForDisplay(
+        // Use utility function
         data.totalAmount
       )}</td>
       <td class="table-cell-base">
@@ -1264,10 +1139,12 @@ function appendExtractedResultToTable(data, index) {
       supplierNameSpan.textContent =
         dataToTemplate.extractedSupplierName || "-";
       documentDateSpan.textContent = formatDateForDisplay(
+        // Use utility function
         dataToTemplate.documentDate
       );
       documentNumberSpan.textContent = dataToTemplate.documentNumber || "-";
       totalAmountSpan.textContent = formatAmountForDisplay(
+        // Use utility function
         dataToTemplate.totalAmount
       );
 
@@ -1317,15 +1194,13 @@ function refreshExtractedResultsTable() {
 /**
  * Downloads all extracted data as a CSV file.
  */
-function downloadCSV() {
+function downloadCSVHandler() {
+  // Renamed to avoid clash with imported downloadCSV
   if (allExtractedData.length === 0) {
-    // Use a custom modal for alerts instead of browser alert()
-    showConfirmationModal(
-      "No Data to Export",
-      "No data to export to CSV.",
-      "OK",
-      () => {},
-      () => {}
+    showMessage(
+      // Use utility function for info message
+      "info",
+      "No data to export to CSV."
     );
     return;
   }
@@ -1336,52 +1211,21 @@ function downloadCSV() {
     "Document Number",
     "Total Amount",
   ];
-  const csvRows = [headers.join(",")]; // CSV header row
 
-  for (const data of allExtractedData) {
-    const formattedDate = formatDateForDisplay(data.documentDate);
-    const formattedAmount = (
-      formatAmountForDisplay(data.totalAmount) || ""
-    ).replace(/,/g, ""); // Remove commas for raw number in CSV
-
-    // Helper to escape CSV values
-    const escapeCsv = (value) => {
-      if (value === null || value === undefined) return "";
-      let stringValue = String(value);
-      if (
-        stringValue.includes(",") ||
-        stringValue.includes("\n") ||
-        stringValue.includes('"')
-      ) {
-        return `"${stringValue.replace(/"/g, '""')}"`;
-      }
-      return stringValue;
+  const dataToExport = allExtractedData.map((data) => {
+    const formattedDate = formatDateForDisplay(data.documentDate); // Use utility function
+    const formattedAmount =
+      formatAmountForDisplay(data.totalAmount) || ""; // Use utility function
+    return {
+      "Supplier Name":
+        data.officialSupplierNameForExport || data.extractedSupplierName,
+      "Document Date": formattedDate,
+      "Document Number": data.documentNumber,
+      "Total Amount": formattedAmount,
     };
+  });
 
-    // Push formatted row to CSV rows
-    csvRows.push(
-      [
-        escapeCsv(
-          data.officialSupplierNameForExport || data.extractedSupplierName
-        ),
-        escapeCsv(formattedDate),
-        escapeCsv(data.documentNumber),
-        escapeCsv(formattedAmount),
-      ].join(",")
-    );
-  }
-
-  const csvString = csvRows.join("\n"); // Join all rows
-  const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute("download", "invoices.csv");
-  link.style.visibility = "hidden"; // Hide the link
-  document.body.appendChild(link);
-  link.click(); // Trigger download
-  document.body.removeChild(link); // Clean up
-  URL.revokeObjectURL(url); // Release object URL
+  downloadCSV(dataToExport, headers, "invoices.csv"); // Use imported downloadCSV
 }
 
 // --- 6. UI State Management and Reset Functions ---
@@ -1416,6 +1260,16 @@ function resetExtractedFieldsForAnalysisTab() {
 }
 
 /**
+ * Clears all data from the extracted results table.
+ */
+function clearAllResults() {
+  allExtractedData = [];
+  extractedResultsTableBody.innerHTML =
+    '<tr><td colspan="7" class="table-cell-base text-center">No documents processed yet.</td></tr>';
+  updateProcessTabButtonsState(); // Update download button status
+}
+
+/**
  * Resets the entire UI of the Invoice Converter application.
  */
 function resetUI() {
@@ -1426,8 +1280,7 @@ function resetUI() {
   resetConfigInputFields(); // Reset template editor fields
   processingStatus.textContent = ""; // Clear processing status
   populateConfigSelect(); // Reload config dropdown from local storage
-  hideApiKeyModal();
-  hideConfirmationModal(); // Hide the confirmation modal
+  hideConfirmationModal(); // Hide the confirmation modal (API key modal hidden by utils.js)
   clearAllResults(); // Clear extracted results table
   switchTab("Process"); // Go back to Process tab
   updateTemplateTabButtonsState();
@@ -1477,6 +1330,38 @@ function updateTemplateTabButtonsState() {
   });
 }
 
+/**
+ * Switches between the "Process" and "Template" tabs.
+ * @param {string} tabName - The name of the tab to switch to ("Process" or "Template").
+ */
+function switchTab(tabName) {
+  if (tabName === "Process") {
+    tabButtonProcess.classList.add("tab-button-active");
+    tabButtonProcess.classList.remove("tab-button-inactive");
+    tabButtonTemplate.classList.add("tab-button-inactive");
+    tabButtonTemplate.classList.remove("tab-button-active");
+    tabContentProcess.classList.remove("hidden");
+    tabContentTemplate.classList.add("hidden");
+    // Ensure process tab buttons are updated when switching
+    updateProcessTabButtonsState();
+  } else if (tabName === "Template") {
+    tabButtonTemplate.classList.add("tab-button-active");
+    tabButtonTemplate.classList.remove("tab-button-inactive");
+    tabButtonProcess.classList.add("tab-button-inactive");
+    tabButtonProcess.classList.remove("tab-button-active");
+    tabContentTemplate.classList.remove("hidden");
+    tabContentProcess.classList.add("hidden");
+    // Ensure template tab buttons are updated when switching
+    updateTemplateTabButtonsState();
+    // Reset extracted fields display and raw text when entering template tab
+    resetExtractedFieldsForAnalysisTab();
+    // If there are uploaded files, automatically load the first one for analysis
+    if (uploadedFiles.length > 0) {
+      displayPdfTextForAnalysis(uploadedFiles[0]);
+    }
+  }
+}
+
 // --- 7. Main Initialization (DOMContentLoaded) ---
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -1495,28 +1380,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   tabButtonProcess.addEventListener("click", () => switchTab("Process"));
   tabButtonTemplate.addEventListener("click", () => switchTab("Template"));
 
-  // API Key modal buttons
-  saveApiKeyButton.addEventListener("click", () => {
-    const enteredKey = apiKeyValueInput.value.trim();
-    if (enteredKey) {
-      localStorage.setItem("geminiApiKey", enteredKey);
-      GEMINI_API_KEY = enteredKey;
-      hideApiKeyModal();
-    } else {
-      // Use a custom modal for alerts instead of browser alert()
-      showConfirmationModal(
-        "API Key Required",
-        "Please enter a valid Gemini API Key.",
-        "OK",
-        () => {},
-        () => {}
-      );
-    }
-  });
-  cancelApiKeyButton.addEventListener("click", () => {
-    hideApiKeyModal();
-    updateTemplateTabButtonsState(); // Re-enable buttons if API key was mandatory
-  });
+  // API Key modal buttons - now handled by the shared modal in utils.js
+  // We don't need to add specific event listeners here anymore because showApiKeyModal() from utils handles them.
+  // We just ensure the buttons are present in the HTML and match the shared IDs.
+  // The event listener logic for save/cancel is moved into showApiKeyModal in utils.js.
 
   // PDF Upload and Display
   pdfUpload.addEventListener("change", handlePdfUpload);
@@ -1561,14 +1428,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Process PDF button click handler
   processPdfButton.addEventListener("click", async () => {
     if (uploadedFiles.length === 0) {
-      // Use a custom modal for alerts instead of browser alert()
-      showConfirmationModal(
-        "No Files Selected",
-        "Please select PDF file(s) first.",
-        "OK",
-        () => {},
-        () => {}
-      );
+      showMessage("error", "Please select PDF file(s) first."); // Use showMessage for user feedback
       return;
     }
 
@@ -1674,7 +1534,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           officialSupplierNameForExport: officialSupplierNameForExport,
           // Ensure documentDate is stored as DD/MM/YYYY
           documentDate: extractedData.documentDate
-            ? formatDateForDisplay(extractedData.documentDate)
+            ? formatDateForDisplay(extractedData.documentDate) // Use utility function
             : "-",
           documentNumber: extractedData.documentNumber || "-",
           totalAmount: extractedData.totalAmount || null,
@@ -1695,6 +1555,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           error: error.message,
         };
         allExtractedData.push(errorData);
+        showMessage(
+          "error",
+          `Error processing file "${file.name}": ${error.message}`
+        ); // Use showMessage for error feedback
       }
       processedCount++;
     }
@@ -1702,28 +1566,42 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Sort all extracted data by document date in ascending order
     allExtractedData.sort((a, b) => {
       // Convert DD/MM/YYYY strings to Date objects for comparison
+      // The parseDateForSorting utility expects the format DD/MM/YYYY already.
       const dateA = new Date(a.documentDate.split("/").reverse().join("-"));
       const dateB = new Date(b.documentDate.split("/").reverse().join("-"));
+
+      // Handle invalid dates by placing them at the end or beginning
+      if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0;
+      if (isNaN(dateA.getTime())) return 1; // a is invalid, so b comes first
+      if (isNaN(dateB.getTime())) return -1; // b is invalid, so a comes first
+
       return dateA.getTime() - dateB.getTime();
     });
 
     refreshExtractedResultsTable(); // Redraw the table with sorted data
 
-    processingStatus.textContent = `Finished processing ${processedCount} PDF(s).`;
+    processingStatus.textContent = ``; // Clear processing status text
+    if (allExtractedData.length > 0) {
+      showMessage(
+        "success",
+        `Finished processing ${processedCount} PDF(s). Data ready for download.`
+      ); // Use showMessage for success
+    } else {
+      showMessage(
+        "warning",
+        `Finished processing ${processedCount} PDF(s), but no data was extracted.`
+      ); // Use showMessage for warning
+    }
     updateProcessTabButtonsState(); // Update button states after all files processed
   });
 
   // Preview button click handler in "Template" tab
   previewButton.addEventListener("click", async () => {
     if (!currentPdfTextForAnalysis) {
-      // Use a custom modal for alerts instead of browser alert()
-      showConfirmationModal(
-        "No Document Selected",
-        "No document selected for analysis. Please select a document from the 'Extract' tab first.",
-        "OK",
-        () => {},
-        () => {}
-      );
+      showMessage(
+        "error",
+        "No document selected for analysis. Please select a document from the 'Extract' tab first."
+      ); // Use showMessage for feedback
       return;
     }
 
@@ -1749,31 +1627,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Display extracted data, ensuring date is formatted as DD/MM/YYYY
         supplierNameSpan.textContent = refinedData.supplierName || "-";
         documentDateSpan.textContent = formatDateForDisplay(
+          // Use utility function
           refinedData.documentDate
         );
         documentNumberSpan.textContent = refinedData.documentNumber || "-";
         totalAmountSpan.textContent = formatAmountForDisplay(
+          // Use utility function
           refinedData.totalAmount
         );
+        showMessage("success", "Preview complete!");
       } else {
-        // Use a custom modal for alerts instead of browser alert()
-        showConfirmationModal(
-          "No Data Extracted",
-          "No refined data extracted during preview.",
-          "OK",
-          () => {},
-          () => {}
-        );
+        showMessage("warning", "No refined data extracted during preview."); // Use showMessage for feedback
       }
     } catch (error) {
-      // Use a custom modal for alerts instead of browser alert()
-      showConfirmationModal(
-        "Preview Error",
-        "Error during preview. Check console for details: " + error.message,
-        "OK",
-        () => {},
-        () => {}
-      );
+      showMessage(
+        "error",
+        `Error during preview: ${error.message}. Check console for details.`
+      ); // Use showMessage for error feedback
       console.error("Preview error:", error);
     } finally {
       updateTemplateTabButtonsState();
@@ -1783,58 +1653,36 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // AI Suggestion buttons for regex
   aiSuggestDateBtn.addEventListener("click", () => {
-    if (!currentPdfTextForAnalysis) {
-      showConfirmationModal(
-        "No PDF Loaded",
-        "Please upload a PDF and switch to the Template tab to load its text for AI suggestions.",
-        "OK",
-        () => {},
-        () => {}
-      );
-      return;
-    }
-    if (!GEMINI_API_KEY) {
-      showApiKeyModal();
-    } else {
+    if (currentPdfTextForAnalysis) {
       showRegexSuggestModal("documentDate");
+    } else {
+      showMessage(
+        "error",
+        "Please select a PDF document first to enable AI suggestions."
+      );
     }
   });
   aiSuggestNumberBtn.addEventListener("click", () => {
-    if (!currentPdfTextForAnalysis) {
-      showConfirmationModal(
-        "No PDF Loaded",
-        "Please upload a PDF and switch to the Template tab to load its text for AI suggestions.",
-        "OK",
-        () => {},
-        () => {}
-      );
-      return;
-    }
-    if (!GEMINI_API_KEY) {
-      showApiKeyModal();
-    } else {
+    if (currentPdfTextForAnalysis) {
       showRegexSuggestModal("documentNumber");
+    } else {
+      showMessage(
+        "error",
+        "Please select a PDF document first to enable AI suggestions."
+      );
     }
   });
   aiSuggestAmountBtn.addEventListener("click", () => {
-    if (!currentPdfTextForAnalysis) {
-      showConfirmationModal(
-        "No PDF Loaded",
-        "Please upload a PDF and switch to the Template tab to load its text for AI suggestions.",
-        "OK",
-        () => {},
-        () => {}
-      );
-      return;
-    }
-    if (!GEMINI_API_KEY) {
-      showApiKeyModal();
-    } else {
+    if (currentPdfTextForAnalysis) {
       showRegexSuggestModal("totalAmount");
+    } else {
+      showMessage(
+        "error",
+        "Please select a PDF document first to enable AI suggestions."
+      );
     }
   });
 
-  // Regex suggestion modal buttons
   generateRegexButton.addEventListener("click", generateRegexSuggestions);
   cancelRegexSuggestButton.addEventListener("click", hideRegexSuggestModal);
   useSelectedRegexButton.addEventListener("click", useSelectedRegex);
@@ -1852,7 +1700,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   configSelect.addEventListener("change", autoLoadSelectedConfiguration);
 
   // Download CSV button
-  downloadCsvButton.addEventListener("click", downloadCSV);
+  downloadCsvButton.addEventListener("click", downloadCSVHandler);
 
   // Update analyze tab buttons state when config selection changes
   configSelect.addEventListener("change", () => {

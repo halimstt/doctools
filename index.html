@@ -158,7 +158,8 @@
       </main>
     </div>
 
-    <div id="api-key-modal" class="modal-base hidden">
+    <!-- Shared API Key Modal -->
+    <div id="shared-api-key-modal" class="modal-base hidden">
       <div class="modal-content-base">
         <h3
           class="text-xl font-bold mb-4 text-light-text-primary dark:text-dark-text-primary"
@@ -166,8 +167,8 @@
           Enter Gemini API Key
         </h3>
         <p class="mb-4 p-secondary">
-          To use the Gemini AI-powered parser, please enter your Gemini API key.
-          You can get one from
+          To use AI-powered features, please enter your Gemini API key. You can
+          get one from
           <a
             href="https://aistudio.google.com/apikey"
             target="_blank"
@@ -178,17 +179,20 @@
         </p>
         <input
           type="text"
-          id="gemini-api-key-input"
-          class="input-field-base !mb-4"
-          placeholder="Enter your Gemini API key here"
+          id="shared-api-key-input"
+          class="input-field-base !mb-4 bg-light-bg-primary dark:bg-dark-bg-primary focus:ring-accent-blue-light focus:border-accent-blue-light dark:focus:ring-accent-blue-dark dark:focus:border-accent-blue-dark"
+          placeholder="Your Gemini API Key"
         />
         <div class="flex justify-end gap-2">
-          <button id="api-key-save-btn" class="btn-primary py-2 px-4 !w-auto">
+          <button
+            id="shared-api-key-save-btn"
+            class="btn-primary py-3 px-6 !w-auto"
+          >
             Save Key
           </button>
           <button
-            id="api-key-cancel-btn"
-            class="btn-secondary py-2 px-4 !w-auto"
+            id="shared-api-key-cancel-btn"
+            class="btn-secondary py-3 px-6 !w-auto"
           >
             Cancel
           </button>
@@ -196,6 +200,36 @@
       </div>
     </div>
 
+    <!-- Shared Confirmation Modal -->
+    <div id="confirmationModal" class="modal-base hidden">
+      <div class="modal-content-base">
+        <h2
+          id="confirmationModalTitle"
+          class="text-xl font-bold mb-4 text-light-text-primary dark:text-dark-text-primary"
+        >
+          Confirmation
+        </h2>
+        <p id="confirmationModalText" class="text-sm p-secondary mb-4">
+          Are you sure?
+        </p>
+        <div class="flex justify-end space-x-2">
+          <button
+            id="cancelConfirmationButton"
+            class="btn-secondary py-3 px-6 !w-auto"
+          >
+            Cancel
+          </button>
+          <button
+            id="confirmActionButton"
+            class="btn-primary py-3 px-6 !w-auto"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./utils.js"></script>
     <script type="module" src="./index.js"></script>
   </body>
 </html>
