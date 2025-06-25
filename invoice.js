@@ -1079,7 +1079,7 @@ function updateInvoiceFileDisplay() {
 
     uploadedFiles.forEach((file, index) => {
       const filePill = document.createElement("div");
-      filePill.className = "badge badge-lg badge-info"; // Use the new custom class
+      filePill.className = "badge badge-sm badge-info"; // Use the new custom class
       filePill.innerHTML = `
                 <span>${file.name}</span>
                 <button data-index="${index}" class="btn btn-xs btn-circle"> &times; </button>
@@ -1368,7 +1368,7 @@ function switchTab(tabName) {
     // Reset extracted fields display and raw text when entering template tab
     resetExtractedFieldsForAnalysisTab();
     // If there are uploaded files, automatically load the first one for analysis
-    if (uploadedFiles.length > 0) {
+    if (!currentPdfTextForAnalysis && uploadedFiles.length > 0) {
       displayPdfTextForAnalysis(uploadedFiles[0]);
     }
   }
