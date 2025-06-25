@@ -77,10 +77,10 @@ function updateFileDisplay() {
     selectedFiles.forEach((file, index) => {
       const pill = document.createElement("span");
       // Use DaisyUI badge class instead of custom file-pill-base
-      pill.className = "badge badge-sm badge-info mr-2 mb-2"; // DaisyUI badge class
+      pill.className = "badge badge-md badge-info mr-2 mb-2"; // DaisyUI badge class
       pill.innerHTML = `
         ${file.name}
-        <button type="button" class="btn btn-xs btn-circle ml-2" data-index="${index}">
+        <button type="button" class="ml-2" data-index="${index}">
           <svg class="h-3 w-3" stroke="currentColor" fill="none" viewBox="0 0 8 8">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7" />
           </svg>

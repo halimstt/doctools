@@ -29,16 +29,17 @@ export default {
   // Add the DaisyUI plugin and configure its themes
   daisyui: {
     themes: [
-      "pastel", // Light theme
+      "emerald", // Light theme
       "dracula", // Dark theme
     ],
     darkTheme: "dracula", // Explicitly set the default dark theme
     // Add other DaisyUI configuration options if needed, e.g.,
-    // styled: true, // include daisyUI colors and design system
-    // base: true, // include base styles
-    // utils: true, // adds responsive and other utility classes
-    // logs: false, // shows daisyUI info in browser console (default is true)
-    // prefix: "", // prefix for daisyUI classes (default is "")
+    base: true, // applies background color and foreground color for root element by default
+    styled: true, // include daisyUI colors and design decisions for all components
+    utils: true, // adds responsive and modifier utility classes
+    prefix: "", // prefix for daisyUI classnames (components, modifiers and responsive class names. Not colors)
+    logs: true, // Shows info about daisyUI version and used config in the console when building your CSS
+    themeRoot: ":root", // The element that receives theme color CSS variables
   },
   plugins: [require("daisyui")], // Require the daisyUI plugin
 };

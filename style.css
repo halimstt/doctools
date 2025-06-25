@@ -4,33 +4,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/*
-  Removed all custom @layer components definitions.
-  DaisyUI will provide component styles.
-  Any remaining custom utility classes not directly replaced by DaisyUI
-  or basic Tailwind utilities should be kept or re-evaluated.
-*/
-
-/* Specific styles for spinner animation (non-Tailwind/DaisyUI).
-   DaisyUI has a spinner component, but if you want to keep this custom one,
-   ensure its classes don't conflict. Adapting it to DaisyUI's color variables
-   is a good idea.
-*/
-.spinner {
-  animation: spin 1s linear infinite;
-  border-top-color: hsl(var(--p));
-  border-color: hsl(var(--bc));
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
+@plugin "daisyui";
 
 /* Base font and theme transition.
    DaisyUI manages theme transitions via the data-theme attribute.
@@ -41,31 +15,6 @@ body {
   /* DaisyUI handles background and text color based on data-theme */
   /* transition: background-color 0.3s ease, color 0.3s ease; */
 }
-
-/* Specific styles for navigation placeholder, handled by navigation.js */
-/* Adapt these to use DaisyUI theme colors or simple Tailwind classes */
-#nav-placeholder {
-  height: 64px;
-  background-color: hsl(var(--b1)); /* Use DaisyUI base color for background */
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 1rem;
-  box-sizing: border-box;
-}
-
-/* Responsive hiding for skeleton mobile button - keep if still relevant */
-@media (min-width: 768px) {
-  .skeleton-mobile-button {
-    display: none;
-  }
-}
-
-/*
-  Removed custom tab-button-base, tab-button-active, tab-button-inactive.
-  We will use DaisyUI's `tab` components directly in HTML/JS.
-*/
 
 /* Drag and drop area styling specific to invoice.html, applies .upload-area-base */
 /* This can be adapted to DaisyUI specific classes or kept if no direct equivalent */

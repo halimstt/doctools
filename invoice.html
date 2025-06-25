@@ -4,18 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Invoices Converter</title>
-    <script>
-      // Prevents FOUC by applying the theme early using data-theme attribute, based on system preference.
-      (() => {
-        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-          document.documentElement.setAttribute("data-theme", "dracula"); // Set dark theme
-          document.documentElement.classList.add("dark"); // Keep 'dark' class for specific tailwind overrides if any
-        } else {
-          document.documentElement.setAttribute("data-theme", "pastel"); // Set light theme
-          document.documentElement.classList.remove("dark"); // Remove 'dark' class
-        }
-      })();
-    </script>
     <script type="module" src="./navigation.js"></script>
   </head>
   <body class="min-h-screen flex flex-col bg-base-200 text-base-content">
@@ -25,36 +13,43 @@
         <h1 class="text-3xl sm:text-4xl font-bold mb-2">Invoices Converter</h1>
       </header>
 
-      <div role="tablist" class="tabs tabs-lift md:mb-6">
-        <a id="tabButtonProcess" role="tab" class="tab tab-active">Extract</a>
-        <a id="tabButtonTemplate" role="tab" class="tab">Template</a>
-      </div>
-
       <div
         id="message-container"
         class="alert hidden mb-4 relative"
         role="alert"
       >
-        <strong id="message-prefix" class="font-bold"></strong>
+        <span id="message-prefix" class="font-bold"></span>
         <span id="message-text" class="block"></span>
-        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+        <span class="relative top-0 px-4 py-3">
           <svg
-            class="fill-current h-6 w-6"
+            class="h-3 w-3"
             role="button"
             xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
+            stroke="currentColor"
+            fill="none"
+            viewBox="0 0 8 8"
             id="close-message-btn"
           >
-            <title>Close</title>
             <path
-              d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.029a1.2 1.2 0 1 1 1.697 1.697L11.819 10l3.029 2.651a1.2 1.2 0 0 1 0 1.698z"
-            />
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M1 1l6 6m0-6L1 7"
+            ></path>
           </svg>
         </span>
       </div>
 
-      <main>
-        <div id="tabContentProcess" class="tab-content w-full">
+      <div role="tablist" class="tabs tabs-lifted">
+        <a id="tabButtonProcess" role="tab" class="tab tab-active">Extract</a>
+        <a id="tabButtonTemplate" role="tab" class="tab">Template</a>
+      </div>
+
+      <main class="bg-base-100 rounded-b-box p-8">
+        <div
+          id="tabContentProcess"
+          class="tab-content w-full flex flex-col gap-8"
+        >
           <div
             id="dropArea"
             class="border-2 border-dashed border-base-content border-opacity-20 rounded-xl p-8 text-center bg-base-100 transition-colors duration-300 ease-in-out min-h-[180px] flex flex-col justify-center items-center mb-4"
@@ -99,7 +94,7 @@
               ></div>
               <button
                 id="clearUploadFormButton"
-                class="btn btn-error btn-sm mt-2"
+                class="btn btn-error btn-xs mt-2"
               >
                 Remove All
               </button>
@@ -153,7 +148,7 @@
 
         <div
           id="tabContentTemplate"
-          class="w-full flex flex-col md:flex-row gap-8"
+          class="tab-content w-full flex flex-col md:flex-row gap-8"
         >
           <div class="flex-1 mt-8 md:mt-0 space-y-6">
             <h2 class="text-2xl font-bold mb-4">Extracted Information</h2>

@@ -13,7 +13,7 @@ export default defineConfig({
       },
     },
     // Specify the output directory for the build (default is 'dist')
-    outDir: "dist",
+    outDir: "docs",
     // Clear the output directory before building
     emptyOutDir: true,
   },

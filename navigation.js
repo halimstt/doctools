@@ -25,7 +25,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
     document.documentElement.setAttribute("data-theme", "dracula"); // Set dark theme
     document.documentElement.classList.add("dark"); // Keep 'dark' class for specific tailwind overrides if any
   } else {
-    document.documentElement.setAttribute("data-theme", "pastel"); // Set light theme
+    document.documentElement.setAttribute("data-theme", "emerald"); // Set light theme
     document.documentElement.classList.remove("dark"); // Remove 'dark' class
   }
 })();
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </button>
       </div>
     </header>
-<nav id="mobile-menu" class="hidden md:hidden fixed top-16 left-0 right-0 bg-base-100 shadow-md py-2 z-50">
+    <nav id="mobile-menu" class="hidden md:hidden fixed top-16 left-0 right-0 bg-base-100 shadow-md py-2 z-50">
       <ul class="menu menu-vertical px-4">
         <li><a href="index.html" class="block py-2 nav-link">Statement</a></li>
         <li><a href="invoice.html" class="block py-2 nav-link">Invoice</a></li>

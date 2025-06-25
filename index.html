@@ -4,18 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Statements Converter</title>
-    <script>
-      // Prevents FOUC by applying the theme early using data-theme attribute, based on system preference.
-      (() => {
-        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-          document.documentElement.setAttribute("data-theme", "dracula"); // Set dark theme
-          document.documentElement.classList.add("dark"); // Keep 'dark' class for specific tailwind overrides if any
-        } else {
-          document.documentElement.setAttribute("data-theme", "pastel"); // Set light theme
-          document.documentElement.classList.remove("dark"); // Remove 'dark' class
-        }
-      })();
-    </script>
     <script type="module" src="./navigation.js"></script>
   </head>
   <body class="min-h-screen flex flex-col bg-base-200 text-base-content">
@@ -25,47 +13,51 @@
         <h1 class="text-3xl sm:text-4xl font-bold mb-2">
           Statements Converter
         </h1>
-        <p class="text-sm opacity-80">
-          Select parser type and upload your PDF files.
-        </p>
       </header>
-
-      <div class="mb-6 flex justify-center">
-        <label for="parser-select" class="sr-only">Choose Parser Type</label>
-        <select
-          id="parser-select"
-          class="select select-bordered w-full max-w-xs"
-        >
-          <option value="maybank-pdf">Maybank PDF Statement</option>
-          <option value="maybank-web">Maybank Web Download</option>
-          <option value="gemini-parser">Others (AI-Powered)</option>
-        </select>
-      </div>
 
       <div
         id="message-container"
         class="alert hidden mb-4 relative"
         role="alert"
       >
-        <strong id="message-prefix" class="font-bold"></strong>
+        <span id="message-prefix" class="font-bold"></span>
         <span id="message-text" class="block"></span>
-        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+        <span class="relative top-0 px-4 py-3">
           <svg
-            class="fill-current h-6 w-6"
+            class="h-3 w-3"
             role="button"
             xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
+            stroke="currentColor"
+            fill="none"
+            viewBox="0 0 8 8"
             id="close-message-btn"
           >
-            <title>Close</title>
             <path
-              d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.029a1.2 1.2 0 1 1 1.697 1.697L11.819 10l3.029 2.651a1.2 1.2 0 0 1 0 1.698z"
-            />
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M1 1l6 6m0-6L1 7"
+            ></path>
           </svg>
         </span>
       </div>
 
-      <main>
+      <main class="bg-base-100 rounded-box p-8">
+        <div class="mb-6 flex justify-center">
+          <label class="form-control w-full max-w-xs">
+            <div class="label">
+              <span class="label-text"
+                >Select parser type and upload your PDF files.</span
+              >
+            </div>
+            <select id="parser-select" class="select select-bordered">
+              <option value="maybank-pdf">Maybank PDF Statement</option>
+              <option value="maybank-web">Maybank Web Download</option>
+              <option value="gemini-parser">Others (AI-Powered)</option>
+            </select>
+          </label>
+        </div>
+
         <div
           id="upload-area"
           class="border-2 border-dashed border-base-content border-opacity-20 rounded-xl p-8 text-center bg-base-100 transition-colors duration-300 ease-in-out min-h-[180px] flex flex-col justify-center items-center"
@@ -106,7 +98,7 @@
               id="file-pills-container"
               class="flex flex-wrap gap-2 mt-2"
             ></div>
-            <button id="remove-all-files-btn" class="btn btn-error btn-sm mt-2">
+            <button id="remove-all-files-btn" class="btn btn-error btn-xs mt-2">
               Remove All
             </button>
           </div>
