@@ -1,0 +1,19 @@
+/* src/style.css */
+
+@import "tailwindcss/preflight";
+@import "tailwindcss/theme";
+@import "tailwindcss/utilities";
+
+/*
+  DaisyUI v5 themes declaration using the @plugin directive.
+  List ALL the themes you want to include here.
+  - `--default` sets the default theme for the entire application.
+  - `--prefersdark` sets the theme for users with dark mode preference.
+*/
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, cupcake, bumblebee, emerald,
+    corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest,
+    aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn,
+    business, acid, lemonade, night, coffee, winter, dim, nord, sunset,
+    caramellatte, abyss, silk;
+}

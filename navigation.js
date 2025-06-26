@@ -221,8 +221,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Theme selection logic
   // The initial checked state setting should also use setTheme to ensure consistency
-  const initialTheme = localStorage.getItem("theme") || "light";
-  setTheme(initialTheme); // Apply theme and set radio button checked state on load
+  //const initialTheme = localStorage.getItem("theme") || "light";
+  //setTheme(initialTheme); // Apply theme and set radio button checked state on load
 
   const themeControllers = document.querySelectorAll(".theme-controller");
   themeControllers.forEach((controller) => {
