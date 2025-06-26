@@ -1,8 +1,9 @@
 import { resolve } from "path";
 import { defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  // Configure the build process for Rollup (used by Vite internally)
+  plugins: [tailwindcss()],
   build: {
     rollupOptions: {
       input: {

@@ -1,4 +1,4 @@
-// utils.js
+// src/utils.js
 
 /**
  * Global function to get Gemini API key from localStorage.

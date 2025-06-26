@@ -1,8 +1,6 @@
 /* src/style.css */
 
-@import "tailwindcss/preflight";
-@import "tailwindcss/theme";
-@import "tailwindcss/utilities";
+@import "tailwindcss";
 
 /*
   DaisyUI v5 themes declaration using the @plugin directive.

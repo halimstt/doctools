@@ -1,4 +1,4 @@
-// index.js
+// src/index.js
 
 // --- Import utility functions ---
 import {
