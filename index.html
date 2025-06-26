@@ -227,7 +227,7 @@
         window.addEventListener("load", () => {
           // Ensure the path is correct relative to the root of your deployment
           navigator.serviceWorker
-            .register("/sw.js")
+            .register("./sw.js")
             .then((registration) => {
               console.log(
                 "ServiceWorker registration successful with scope: ",
