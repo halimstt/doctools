@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statements Converter</title>
+    <script>
+      // Basic setTheme function (only the part needed for initial FOUC prevention)
+      function setTheme(themeName) {
+        document.documentElement.setAttribute("data-theme", themeName);
+        // localStorage.setItem("theme", themeName); // You can keep this here or move to the main navigation.js
+      }
+
+      // Immediately apply the theme from localStorage or system preference
+      (() => {
+        const storedTheme = localStorage.getItem("theme");
+        if (
+          !storedTheme &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        ) {
+          setTheme("dark");
+        } else if (!storedTheme) {
+          setTheme("light");
+        } else {
+          setTheme(storedTheme);
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/main-CiyQvECc.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/utils-DwjmsMEf.js">
+    <link rel="stylesheet" crossorigin href="/assets/utils-BdWej8Mr.css">
+  </head>
+  <body class="min-h-screen flex flex-col bg-base-200 text-base-content">
+    <div id="nav-placeholder">
+      <header class="navbar bg-base-100 shadow-sm"></header>
+      <nav
+        id="mobile-menu"
+        class="hidden md:hidden fixed top-16 left-0 right-0 bg-base-100 shadow-md py-2 z-50"
+      ></nav>
+    </div>
+    <div class="container mx-auto p-4 sm:p-8 flex-grow">
+      <header class="text-center mb-8">
+        <h1 class="text-3xl sm:text-4xl font-bold mb-2">
+          Statements Converter
+        </h1>
+      </header>
+
+      <div
+        id="message-container"
+        class="alert hidden mb-4 relative"
+        role="alert"
+      >
+        <span id="message-prefix" class="font-bold"></span>
+        <span id="message-text" class="block"></span>
+        <span class="relative top-0 px-4 py-3">
+          <svg
+            class="h-3 w-3"
+            role="button"
+            xmlns="http://www.w3.org/2000/svg"
+            stroke="currentColor"
+            fill="none"
+            viewBox="0 0 8 8"
+            id="close-message-btn"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M1 1l6 6m0-6L1 7"
+            ></path>
+          </svg>
+        </span>
+      </div>
+
+      <main class="bg-base-200 rounded-box py-8">
+        <div class="mb-6 flex justify-center">
+          <label class="form-control w-full max-w-xs">
+            <div class="label">
+              <span class="label-text"
+                >Select parser type and upload your PDF files.</span
+              >
+            </div>
+            <select id="parser-select" class="select">
+              <option value="maybank-pdf">Maybank PDF Statement</option>
+              <option value="maybank-web">Maybank Web Download</option>
+              <option value="gemini-parser">Others (AI-Powered)</option>
+            </select>
+          </label>
+        </div>
+
+        <div
+          id="upload-area"
+          class="border-2 border-dashed border-base-mute border-opacity-20 rounded-xl p-8 text-center bg-base-100 transition-colors duration-300 ease-in-out min-h-[180px] flex flex-col justify-center items-center"
+        >
+          <input
+            type="file"
+            id="file-input"
+            class="hidden"
+            accept=".pdf"
+            multiple
+          />
+          <label
+            for="file-input"
+            id="upload-label"
+            class="cursor-pointer flex flex-col items-center"
+          >
+            <svg
+              class="w-16 h-16 text-gray-400 mb-4"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 16.5V9.75m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
+              />
+            </svg>
+            <p class="text-lg font-semibold opacity-80">
+              Upload your statement(s) here
+            </p>
+          </label>
+          <div id="file-info" class="text-left mt-4 hidden">
+            <p class="font-semibold">Selected Files:</p>
+            <div
+              id="file-pills-container"
+              class="flex flex-wrap gap-2 mt-2"
+            ></div>
+            <button id="remove-all-files-btn" class="btn btn-error btn-xs mt-2">
+              Remove All
+            </button>
+          </div>
+        </div>
+
+        <div class="flex justify-center space-x-2 my-6">
+          <button id="process-btn" class="btn btn-primary" disabled>
+            <span id="process-btn-text">Process</span>
+            <span id="spinner" class="spinner"></span>
+          </button>
+          <button id="download-btn" class="btn btn-primary" disabled>
+            Download
+          </button>
+        </div>
+
+        <div id="status-container" class="mt-6 text-center text-sm">
+          <p id="status-text" class="opacity-80 hidden"></p>
+        </div>
+
+        <div id="results-container" class="mt-12">
+          <h2 class="text-2xl font-bold mb-4">Processed Results</h2>
+          <div class="overflow-x-auto bg-base-100 rounded-lg shadow">
+            <table class="table w-full">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody id="results-table-body">
+                <tr>
+                  <td colspan="3" class="text-center">
+                    No documents processed yet.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Shared API Key Modal -->
+    <dialog id="shared-api-key-modal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Enter Gemini API Key</h3>
+        <p class="py-4 text-sm opacity-80">
+          To use AI-powered features, please enter your Gemini API key. Your key
+          is stored locally in your browser. You can get one from
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="link link-primary"
+            >Google AI Studio</a
+          >.
+        </p>
+        <input
+          type="password"
+          id="shared-api-key-input"
+          class="input w-full mb-4"
+          placeholder="Your Gemini API Key"
+        />
+        <div class="modal-action">
+          <button id="shared-api-key-save-btn" class="btn btn-primary">
+            Save Key
+          </button>
+          <button id="shared-api-key-cancel-btn" class="btn btn-ghost">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Shared Confirmation Modal -->
+    <dialog id="confirmationModal" class="modal">
+      <div class="modal-box">
+        <h2 id="confirmationModalTitle" class="font-bold text-lg">
+          Confirmation
+        </h2>
+        <p id="confirmationModalText" class="py-4 text-sm opacity-80">
+          Are you sure?
+        </p>
+        <div class="modal-action">
+          <button id="cancelConfirmationButton" class="btn btn-ghost">
+            Cancel
+          </button>
+          <button id="confirmActionButton" class="btn btn-primary">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          // Ensure the path is correct relative to the root of your deployment
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log(
+                "ServiceWorker registration successful with scope: ",
+                registration.scope
+              );
+            })
+            .catch((error) => {
+              console.log("ServiceWorker registration failed: ", error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

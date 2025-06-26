@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoices Converter</title>
+    <script>
+      // Basic setTheme function (only the part needed for initial FOUC prevention)
+      function setTheme(themeName) {
+        document.documentElement.setAttribute("data-theme", themeName);
+        // localStorage.setItem("theme", themeName); // You can keep this here or move to the main navigation.js
+      }
+
+      // Immediately apply the theme from localStorage or system preference
+      (() => {
+        const storedTheme = localStorage.getItem("theme");
+        if (
+          !storedTheme &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        ) {
+          setTheme("dark");
+        } else if (!storedTheme) {
+          setTheme("light");
+        } else {
+          setTheme(storedTheme);
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/invoice-DJKiKdNi.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/utils-DwjmsMEf.js">
+    <link rel="stylesheet" crossorigin href="/assets/utils-BdWej8Mr.css">
+  </head>
+  <body class="min-h-screen flex flex-col bg-base-200 text-base-content">
+    <div id="nav-placeholder">
+      <header class="navbar bg-base-100 shadow-sm"></header>
+      <nav
+        id="mobile-menu"
+        class="hidden md:hidden fixed top-16 left-0 right-0 bg-base-100 shadow-md py-2 z-50"
+      ></nav>
+    </div>
+    <div class="container mx-auto p-4 sm:p-8 flex-grow">
+      <header class="text-center mb-8 relative">
+        <h1 class="text-3xl sm:text-4xl font-bold mb-2">Invoices Converter</h1>
+      </header>
+
+      <div
+        id="message-container"
+        class="alert hidden mb-4 relative"
+        role="alert"
+      >
+        <span id="message-prefix" class="font-bold"></span>
+        <span id="message-text" class="block"></span>
+        <span class="relative top-0 px-4 py-3">
+          <svg
+            class="h-3 w-3"
+            role="button"
+            xmlns="http://www.w3.org/2000/svg"
+            stroke="currentColor"
+            fill="none"
+            viewBox="0 0 8 8"
+            id="close-message-btn"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M1 1l6 6m0-6L1 7"
+            ></path>
+          </svg>
+        </span>
+      </div>
+
+      <div role="tablist" class="tabs tabs-border">
+        <a id="tabButtonProcess" role="tab" class="tab tab-active">Extract</a>
+        <a id="tabButtonTemplate" role="tab" class="tab">Template</a>
+      </div>
+
+      <main class="rounded-b-box py-8">
+        <div
+          id="tabContentProcess"
+          class="tab-content w-full flex flex-col gap-8"
+        >
+          <div
+            id="dropArea"
+            class="border-2 border-dashed border-base-mute border-opacity-20 rounded-xl p-8 text-center bg-base-100 transition-colors duration-300 ease-in-out min-h-[180px] flex flex-col justify-center items-center"
+          >
+            <input
+              type="file"
+              id="pdfUpload"
+              accept=".pdf"
+              multiple
+              class="hidden"
+            />
+
+            <label
+              for="pdfUpload"
+              id="upload-label-invoice"
+              class="cursor-pointer flex flex-col items-center"
+            >
+              <svg
+                class="w-16 h-16 text-gray-400 mb-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 16.5V9.75m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
+                />
+              </svg>
+              <p class="text-lg font-semibold opacity-80">
+                Uploads your invoice(s) here
+              </p>
+            </label>
+
+            <div id="file-info-invoice" class="text-left mt-4 hidden">
+              <p class="font-semibold">Selected Files:</p>
+              <div
+                id="uploadedFilesList"
+                class="flex flex-wrap gap-2 mt-2"
+              ></div>
+              <button
+                id="clearUploadFormButton"
+                class="btn btn-error btn-xs mt-2"
+              >
+                Remove All
+              </button>
+            </div>
+          </div>
+
+          <div class="flex justify-center space-x-2">
+            <button id="processPdfButton" class="btn btn-primary" disabled>
+              Process
+            </button>
+            <button id="downloadCsvButton" class="btn btn-primary" disabled>
+              Download
+            </button>
+          </div>
+
+          <div id="results-container">
+            <h2 class="text-2xl font-bold mb-4">Processed Results</h2>
+
+            <div
+              class="overflow-x-auto bg-base-100 rounded-lg shadow"
+              id="allExtractedResultsContainer"
+            >
+              <table class="table w-full">
+                <thead>
+                  <tr>
+                    <th>Filename</th>
+                    <th>Template</th>
+                    <th>Supplier</th>
+                    <th>Date</th>
+                    <th>Document</th>
+                    <th>Amount</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="extractedResultsTableBody">
+                  <tr>
+                    <td colspan="7" class="text-center">
+                      No documents processed yet.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="tabContentTemplate"
+          class="tab-content w-full flex flex-col md:flex-row gap-8 hidden"
+        >
+          <div class="flex-1 md:mt-0 space-y-6">
+            <h2 class="text-2xl font-bold mb-4">Extracted Information</h2>
+            <div class="card card-border bg-base-100">
+              <div class="card-body">
+                <p>
+                  <strong>Supplier Name:</strong>
+                  <span id="supplierName">-</span>
+                </p>
+                <p>
+                  <strong>Document Date:</strong>
+                  <span id="documentDate">-</span>
+                </p>
+                <p>
+                  <strong>Document Number:</strong>
+                  <span id="documentNumber">-</span>
+                </p>
+                <p>
+                  <strong>Total Amount:</strong> <span id="totalAmount">-</span>
+                </p>
+              </div>
+            </div>
+
+            <h2 class="text-2xl font-bold mb-4">
+              Raw Text Preview (<span id="currentAnalysisFileName">-</span>)
+            </h2>
+            <div class="mb-4">
+              <textarea
+                id="pdfRawTextPreview"
+                class="textarea w-full h-96"
+                readonly
+                placeholder="Upload a PDF and switch to the Template tab to see its raw text content here."
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="flex-1 md:mt-0 space-y-6">
+            <h2 class="text-2xl font-bold mb-4">Template Editor</h2>
+
+            <div class="space-y-4">
+              <div>
+                <label for="configName" class="label">
+                  <span class="label-text">Template Name</span>
+                </label>
+                <input
+                  type="text"
+                  id="configName"
+                  class="input w-full"
+                  placeholder="e.g., Lalamove Invoice Template"
+                />
+              </div>
+
+              <div>
+                <label for="officialSupplierNameForExportInput" class="label">
+                  <span class="label-text">Supplier Name (for Export)</span>
+                </label>
+                <input
+                  type="text"
+                  id="officialSupplierNameForExportInput"
+                  class="input w-full"
+                  placeholder="e.g., Lalamove Pte Ltd (for QuickBooks)"
+                />
+              </div>
+
+              <div>
+                <label for="configSelect" class="label">
+                  <span class="label-text">Select Template</span>
+                </label>
+                <select id="configSelect" class="select w-full">
+                  <option value="">-- Select a template --</option>
+                </select>
+              </div>
+              <div class="flex space-x-2">
+                <button id="saveTemplateButton" class="btn btn-primary flex-1">
+                  Save
+                </button>
+                <button id="deleteTemplateButton" class="btn btn-error flex-1">
+                  Delete
+                </button>
+              </div>
+              <div class="flex space-x-2">
+                <button
+                  id="importConfigButton"
+                  class="btn btn-secondary flex-1"
+                >
+                  Import
+                </button>
+                <button
+                  id="exportAllConfigsButton"
+                  class="btn btn-secondary flex-1"
+                >
+                  Export
+                </button>
+              </div>
+            </div>
+            <h2 class="text-2xl font-bold mb-4">Extraction Regex</h2>
+
+            <div class="space-y-4">
+              <div>
+                <label for="supplierNameRegex" class="label">
+                  <span class="label-text">Supplier Name Regex</span>
+                </label>
+                <input
+                  type="text"
+                  id="supplierNameRegex"
+                  class="input w-full"
+                  placeholder="e.g., (.*) Sdn Bhd"
+                />
+              </div>
+              <div>
+                <label for="documentDateRegex" class="label">
+                  <span class="label-text">Document Date Regex</span>
+                </label>
+                <div class="join w-full">
+                  <input
+                    type="text"
+                    id="documentDateRegex"
+                    class="input join-item w-full"
+                    placeholder="e.g., Date: (\d{2}/\d{2}/\d{4})"
+                  />
+                  <button
+                    id="aiSuggestDateBtn"
+                    class="btn btn-primary join-item tooltip tooltip-left"
+                    data-tip="Get AI-suggested regex"
+                  >
+                    ?
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label for="documentNumberRegex" class="label">
+                  <span class="label-text">Document Number Regex</span>
+                </label>
+                <div class="join w-full">
+                  <input
+                    type="text"
+                    id="documentNumberRegex"
+                    class="input join-item w-full"
+                    placeholder="e.g., INV-(\d+)"
+                  />
+                  <button
+                    id="aiSuggestNumberBtn"
+                    class="btn btn-primary join-item tooltip tooltip-left"
+                    data-tip="Get AI-suggested regex"
+                  >
+                    ?
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label for="totalAmountRegex" class="label">
+                  <span class="label-text">Total Amount Regex</span>
+                </label>
+                <div class="join w-full">
+                  <input
+                    type="text"
+                    id="totalAmountRegex"
+                    class="input join-item w-full"
+                    placeholder="e.g., Total Price \(MYR\)\s*RM([\d\.]+)"
+                  />
+                  <button
+                    id="aiSuggestAmountBtn"
+                    class="btn btn-primary join-item tooltip tooltip-left"
+                    data-tip="Get AI-suggested regex"
+                  >
+                    ?
+                  </button>
+                </div>
+              </div>
+              <div class="flex space-x-2">
+                <button id="previewButton" class="btn btn-info flex-1">
+                  Preview
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Shared API Key Modal -->
+    <dialog id="shared-api-key-modal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Enter Gemini API Key</h3>
+        <p class="py-4 text-sm opacity-80">
+          To use AI-powered features, please enter your Gemini API key. You can
+          get one from
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="link link-primary"
+            >Google AI Studio</a
+          >.
+        </p>
+        <input
+          type="password"
+          id="shared-api-key-input"
+          class="input w-full mb-4"
+          placeholder="Your Gemini API Key"
+        />
+        <div class="modal-action">
+          <button id="shared-api-key-save-btn" class="btn btn-primary">
+            Save Key
+          </button>
+          <button id="shared-api-key-cancel-btn" class="btn btn-ghost">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="confirmationModal" class="modal">
+      <div class="modal-box">
+        <h2 id="confirmationModalTitle" class="font-bold text-lg">
+          Confirmation
+        </h2>
+        <p id="confirmationModalText" class="py-4 text-sm opacity-80">
+          Are you sure?
+        </p>
+        <div class="modal-action">
+          <button id="cancelConfirmationButton" class="btn btn-ghost">
+            Cancel
+          </button>
+          <button id="confirmActionButton" class="btn btn-primary">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="regexSuggestModal" class="modal">
+      <div class="modal-box w-full max-w-lg">
+        <h2 id="regexSuggestModalTitle" class="font-bold text-lg">
+          AI Regex Suggestions for ...
+        </h2>
+
+        <div class="mb-4">
+          <label for="regexUserPrompt" class="label">
+            <span class="label-text"
+              >Additional Context/Prompt for AI (Optional):</span
+            >
+          </label>
+          <textarea
+            id="regexUserPrompt"
+            class="textarea w-full"
+            rows="3"
+            placeholder="e.g., 'The date is always after 'Doc Date :'' or 'Amount is usually after 'Total:'"
+          ></textarea>
+        </div>
+
+        <button id="generateRegexButton" class="btn btn-primary mb-4">
+          Generate Suggestions
+        </button>
+
+        <div
+          id="regexSuggestionsContainer"
+          class="mb-4 max-h-48 overflow-y-auto border border-base-content border-opacity-20 p-2 rounded-box bg-base-100"
+        >
+          <p id="noSuggestionsText" class="text-sm opacity-80">
+            Click "Generate Suggestions" to get AI help.
+          </p>
+        </div>
+
+        <div
+          id="regexTestResult"
+          class="mt-2 p-2 border border-base-content border-opacity-20 bg-base-100 rounded-box text-sm break-words min-h-[3rem]"
+        >
+          Test Result: No regex tested yet.
+        </div>
+
+        <p id="regexSuggestStatus" class="text-sm opacity-80 my-4"></p>
+        <div class="modal-action">
+          <button id="cancelRegexSuggestButton" class="btn btn-ghost">
+            Cancel
+          </button>
+          <button
+            id="useSelectedRegexButton"
+            class="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            Use Selected Regex
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          // Ensure the path is correct relative to the root of your deployment
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log(
+                "ServiceWorker registration successful with scope: ",
+                registration.scope
+              );
+            })
+            .catch((error) => {
+              console.log("ServiceWorker registration failed: ", error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>
