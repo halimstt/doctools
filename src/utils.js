@@ -1,4 +1,4 @@
-// utils.js
+// src/utils.js
 
 /**
  * Global function to get Gemini API key from localStorage.
@@ -19,7 +19,7 @@ export function setGeminiApiKey(key) {
 /**
  * Displays the API key modal and returns a promise that resolves with the entered key or null.
  * It expects the following DOM elements to be present:
- * - #shared-api-key-modal
+ * - <dialog id="shared-api-key-modal">
  * - #shared-api-key-input
  * - #shared-api-key-save-btn
  * - #shared-api-key-cancel-btn
@@ -39,26 +39,24 @@ export function showApiKeyModal() {
     }
 
     input.value = getGeminiApiKey(); // Pre-fill with existing key
-    modal.classList.remove("hidden"); // Show modal
+    modal.showModal(); // Show modal using DaisyUI's method
 
     const handleSave = () => {
       const key = input.value.trim();
       if (key) {
         setGeminiApiKey(key);
-        modal.classList.add("hidden");
+        modal.close(); // Close modal using DaisyUI's method
         saveBtn.removeEventListener("click", handleSave);
         cancelBtn.removeEventListener("click", handleCancel);
         resolve(key);
       } else {
-        // This message should ideally be handled by a page-specific message system,
-        // or the modal itself would need a message display area.
-        // For simplicity, we'll assume the calling page has its own message display.
-        console.warn("Please enter a valid Gemini API key.");
+        // Use showMessage for feedback if input is empty
+        showMessage("warning", "Please enter a valid Gemini API key.");
       }
     };
 
     const handleCancel = () => {
-      modal.classList.add("hidden");
+      modal.close(); // Close modal using DaisyUI's method
       saveBtn.removeEventListener("click", handleSave);
       cancelBtn.removeEventListener("click", handleCancel);
       resolve(null);
@@ -66,6 +64,14 @@ export function showApiKeyModal() {
 
     saveBtn.addEventListener("click", handleSave);
     cancelBtn.addEventListener("click", handleCancel);
+
+    // Handle closing via backdrop click (ESC key is handled by default for <dialog>)
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        // Only close if clicked on the backdrop
+        handleCancel();
+      }
+    });
   });
 }
 
@@ -76,7 +82,7 @@ export function showApiKeyModal() {
  * - #message-prefix
  * - #message-text
  * - #close-message-btn
- * @param {'error'|'success'|'warning'} type - The type of message (determines styling).
+ * @param {'error'|'success'|'warning'|'info'} type - The type of message (determines styling).
  * @param {string} message - The message content.
  */
 export function showMessage(type, message) {
@@ -93,24 +99,31 @@ export function showMessage(type, message) {
     return;
   }
 
-  messageContainer.classList.remove("hidden");
+  // Remove all previous alert type classes
   messageContainer.classList.remove(
-    "message-error",
-    "message-success",
-    "message-warning"
+    "alert-error",
+    "alert-success",
+    "alert-warning",
+    "alert-info"
   );
 
+  // Add DaisyUI alert type class
   if (type === "error") {
-    messageContainer.classList.add("message-error");
+    messageContainer.classList.add("alert-error");
     messagePrefix.textContent = "Error!";
   } else if (type === "success") {
-    messageContainer.classList.add("message-success");
+    messageContainer.classList.add("alert-success");
     messagePrefix.textContent = "Success!";
   } else if (type === "warning") {
-    messageContainer.classList.add("message-warning");
+    messageContainer.classList.add("alert-warning");
     messagePrefix.textContent = "Warning!";
+  } else if (type === "info") {
+    messageContainer.classList.add("alert-info");
+    messagePrefix.textContent = "Info!";
   }
   messageText.textContent = message;
+
+  messageContainer.classList.remove("hidden"); // Show the alert
 
   closeMessageBtn.onclick = hideMessage; // Set listener to hide on click
 }
@@ -120,10 +133,11 @@ export function showMessage(type, message) {
  */
 export function hideMessage() {
   const messageContainer = document.getElementById("message-container");
-  const messagePrefix = document.getElementById("message-prefix");
-  const messageText = document.getElementById("message-text");
   if (messageContainer) {
     messageContainer.classList.add("hidden");
+    // Optionally clear text content
+    const messagePrefix = document.getElementById("message-prefix");
+    const messageText = document.getElementById("message-text");
     if (messagePrefix) messagePrefix.textContent = "";
     if (messageText) messageText.textContent = "";
   }
@@ -132,7 +146,7 @@ export function hideMessage() {
 /**
  * Shows a generic confirmation modal.
  * It expects the following DOM elements to be present:
- * - #confirmationModal
+ * - <dialog id="confirmationModal">
  * - #confirmationModalTitle
  * - #confirmationModalText
  * - #confirmActionButton
@@ -174,28 +188,47 @@ export function showConfirmationModal(
   confirmBtn.textContent = confirmText;
 
   // Clear previous listeners to prevent multiple calls
-  confirmBtn.onclick = null;
-  cancelBtn.onclick = null;
+  // Use .removeEventListener for safety
+  const oldConfirmListener = confirmBtn.onclick;
+  const oldCancelListener = cancelBtn.onclick;
+  if (oldConfirmListener)
+    confirmBtn.removeEventListener("click", oldConfirmListener);
+  if (oldCancelListener)
+    cancelBtn.removeEventListener("click", oldCancelListener);
 
-  confirmBtn.onclick = () => {
-    hideConfirmationModal();
+  const newConfirmListener = () => {
+    modal.close(); // Close modal using DaisyUI's method
     onConfirm();
   };
-  cancelBtn.onclick = () => {
-    hideConfirmationModal();
+  const newCancelListener = () => {
+    modal.close(); // Close modal using DaisyUI's method
     onCancel();
   };
 
-  modal.classList.remove("hidden");
+  confirmBtn.addEventListener("click", newConfirmListener);
+  cancelBtn.addEventListener("click", newCancelListener);
+
+  modal.showModal(); // Show modal using DaisyUI's method
+
+  // Handle closing via backdrop click (ESC key is handled by default for <dialog>)
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      // Only close if clicked on the backdrop
+      newCancelListener(); // Treat backdrop click as cancel
+    }
+  });
 }
 
 /**
  * Hides the generic confirmation modal.
+ * (Note: With <dialog>.close(), this function might not be directly called from UI elements,
+ * but it's good to keep for programmatic hiding if needed.)
  */
 export function hideConfirmationModal() {
   const modal = document.getElementById("confirmationModal");
-  if (modal) {
-    modal.classList.add("hidden");
+  if (modal && modal.open) {
+    // Check if modal is currently open
+    modal.close();
   }
 }
 
@@ -329,7 +362,7 @@ export function formatDateForDisplay(dateString) {
       const parts = dateString.split("/");
       date = new Date(parts[2], parts[1] - 1, parts[0]);
     }
-    // Attempt to parse ISO-MM-DD
+    // Attempt to parse YYYY-MM-DD
     else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
       date = new Date(dateString);
     }
