@@ -6,11 +6,16 @@
     <title>Statements Converter</title>
     <!-- DaisyUI v5 CDN -->
     <link
-      href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css"
+      href="https://cdn.jsdelivr.net/npm/daisyui@5"
       rel="stylesheet"
       type="text/css"
     />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css"
+      rel="stylesheet"
+      type="text/css"
+    />
     <!-- Inter Font CDN -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
@@ -65,7 +70,7 @@
                 >Select parser type and upload your PDF files.</span
               >
             </div>
-            <select id="parser-select" class="select select-bordered">
+            <select id="parser-select" class="select">
               <option value="maybank-pdf">Maybank PDF Statement</option>
               <option value="maybank-web">Maybank Web Download</option>
               <option value="gemini-parser">Others (AI-Powered)</option>
@@ -175,7 +180,7 @@
         <input
           type="password"
           id="shared-api-key-input"
-          class="input input-bordered w-full mb-4"
+          class="input w-full mb-4"
           placeholder="Your Gemini API Key"
         />
         <div class="modal-action">

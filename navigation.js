@@ -163,9 +163,9 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     </header>
     <nav id="mobile-menu" class="hidden md:hidden fixed top-16 left-0 right-0 bg-base-100 shadow-md py-2 z-50">
-      <ul class="menu menu-vertical px-4">
-        <li><a href="index.html" class="block py-4 nav-link">Statement</a></li>
-        <li><a href="invoice.html" class="block py-4 nav-link">Invoice</a></li>
+      <ul class="menu menu-vertical w-full px-4">
+        <li><a href="index.html" class="block py-3 nav-link">Statement</a></li>
+        <li><a href="invoice.html" class="block py-3 nav-link">Invoice</a></li>
         <!-- Theme selector for smaller screens - REMOVED from here -->
       </ul>
     </nav>

@@ -6,11 +6,16 @@
     <title>Invoices Converter</title>
     <!-- DaisyUI v5 CDN -->
     <link
-      href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css"
+      href="https://cdn.jsdelivr.net/npm/daisyui@5"
       rel="stylesheet"
       type="text/css"
     />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css"
+      rel="stylesheet"
+      type="text/css"
+    />
     <!-- Inter Font CDN -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
@@ -55,7 +60,7 @@
         </span>
       </div>
 
-      <div role="tablist" class="tabs tabs-bordered">
+      <div role="tablist" class="tabs tabs-border">
         <a id="tabButtonProcess" role="tab" class="tab tab-active">Extract</a>
         <a id="tabButtonTemplate" role="tab" class="tab">Template</a>
       </div>
@@ -188,7 +193,7 @@
             <div class="mb-4">
               <textarea
                 id="pdfRawTextPreview"
-                class="textarea textarea-bordered w-full h-96"
+                class="textarea w-full h-96"
                 readonly
                 placeholder="Upload a PDF and switch to the Template tab to see its raw text content here."
               ></textarea>
@@ -206,7 +211,7 @@
                 <input
                   type="text"
                   id="configName"
-                  class="input input-bordered w-full"
+                  class="input w-full"
                   placeholder="e.g., Lalamove Invoice Template"
                 />
               </div>
@@ -218,7 +223,7 @@
                 <input
                   type="text"
                   id="officialSupplierNameForExportInput"
-                  class="input input-bordered w-full"
+                  class="input w-full"
                   placeholder="e.g., Lalamove Pte Ltd (for QuickBooks)"
                 />
               </div>
@@ -227,7 +232,7 @@
                 <label for="configSelect" class="label">
                   <span class="label-text">Select Template</span>
                 </label>
-                <select id="configSelect" class="select select-bordered w-full">
+                <select id="configSelect" class="select w-full">
                   <option value="">-- Select a template --</option>
                 </select>
               </div>
@@ -264,7 +269,7 @@
                 <input
                   type="text"
                   id="supplierNameRegex"
-                  class="input input-bordered w-full"
+                  class="input w-full"
                   placeholder="e.g., (.*) Sdn Bhd"
                 />
               </div>
@@ -276,7 +281,7 @@
                   <input
                     type="text"
                     id="documentDateRegex"
-                    class="input input-bordered join-item w-full"
+                    class="input join-item w-full"
                     placeholder="e.g., Date: (\d{2}/\d{2}/\d{4})"
                   />
                   <button
@@ -296,7 +301,7 @@
                   <input
                     type="text"
                     id="documentNumberRegex"
-                    class="input input-bordered join-item w-full"
+                    class="input join-item w-full"
                     placeholder="e.g., INV-(\d+)"
                   />
                   <button
@@ -316,7 +321,7 @@
                   <input
                     type="text"
                     id="totalAmountRegex"
-                    class="input input-bordered join-item w-full"
+                    class="input join-item w-full"
                     placeholder="e.g., Total Price \(MYR\)\s*RM([\d\.]+)"
                   />
                   <button
@@ -357,7 +362,7 @@
         <input
           type="password"
           id="shared-api-key-input"
-          class="input input-bordered w-full mb-4"
+          class="input w-full mb-4"
           placeholder="Your Gemini API Key"
         />
         <div class="modal-action">
@@ -404,7 +409,7 @@
           </label>
           <textarea
             id="regexUserPrompt"
-            class="textarea textarea-bordered w-full"
+            class="textarea w-full"
             rows="3"
             placeholder="e.g., 'The date is always after 'Doc Date :'' or 'Amount is usually after 'Total:'"
           ></textarea>
