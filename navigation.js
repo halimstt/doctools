@@ -13,10 +13,21 @@ function setTheme(themeName) {
   document.documentElement.setAttribute("data-theme", themeName);
   localStorage.setItem("theme", themeName);
 
-  // --- IMPORTANT FIX: Update checked state for ALL theme controllers ---
+  // --- IMPORTANT FIX: Update checked state and button classes for ALL theme controllers ---
   const themeControllers = document.querySelectorAll(".theme-controller");
   themeControllers.forEach((controller) => {
-    controller.checked = controller.value === themeName;
+    if (controller.value === themeName) {
+      controller.checked = true;
+      // Remove btn-ghost and add a more prominent class for the active theme
+      controller.classList.remove("btn-ghost");
+      // Choose a class that gives a clear visual active state, e.g., 'btn-primary' or 'btn-active' if you have specific styles for it
+      controller.classList.add("btn-primary"); // Or 'btn-active', 'bg-primary', etc. depending on desired look
+    } else {
+      controller.checked = false;
+      // Ensure non-active themes revert to btn-ghost
+      controller.classList.remove("btn-primary"); // Remove other active classes
+      controller.classList.add("btn-ghost");
+    }
   });
   // --- END IMPORTANT FIX ---
 }
@@ -199,9 +210,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   navLinks.forEach((link) => {
     if (link.getAttribute("href") === currentPath) {
-      link.classList.add("active");
+      link.classList.add("menu-active");
     } else {
-      link.classList.remove("active");
+      link.classList.remove("menu-active");
     }
   });
 
