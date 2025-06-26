@@ -85,6 +85,9 @@ document.addEventListener("DOMContentLoaded", () => {
     "dim",
     "nord",
     "sunset",
+    "caramellatte",
+    "abyss",
+    "silk",
   ];
 
   // Helper to generate theme list items HTML
