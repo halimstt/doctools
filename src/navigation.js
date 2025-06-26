@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const navHtml = `
     <header class="navbar bg-base-100 shadow-sm">
       <div class="navbar-start">
-        <a href="index.html" class="btn btn-ghost normal-case text-xl text-primary">Doc Tools</a>
+        <a href="index.html" class="btn btn-ghost normal-case text-xl text-primary">Doctools</a>
       </div>
       <div class="navbar-center hidden md:flex">
         <ul class="menu menu-horizontal px-1">
