@@ -1,8 +1,5 @@
 // invoice.js
 
-// --- IMPORTANT: Import your main CSS file here to be processed by Vite ---
-import "./style.css";
-
 // --- Import utility functions ---
 import {
   getGeminiApiKey,
@@ -12,7 +9,7 @@ import {
   downloadCSV,
   formatAmountForDisplay,
   formatDateForDisplay,
-  FileListShim, // Keep if still used elsewhere, otherwise can be removed if not needed for file handling
+  FileListShim,
   showMessage,
   hideMessage,
 } from "./utils.js";
@@ -614,7 +611,7 @@ async function generateRegexSuggestions() {
   generateRegexButton.disabled = true; // Disable button during generation
   useSelectedRegexButton.disabled = true; // Disable "Use Selected" button
   regexSuggestionsContainer.innerHTML =
-    '<p class="text-center"><div class="spinner border-t-blue-500 border-4 border-gray-200 h-6 w-6 rounded-full inline-block"></div> Generating...</p>';
+    '<p class="text-center"><span class="loading loading-spinner loading-md"></span> Generating...</p>';
 
   try {
     const suggestions = await callGeminiApi(
@@ -638,7 +635,7 @@ async function generateRegexSuggestions() {
                     <input type="radio" name="regexSuggestion" id="regex-${index}" value="${encodeURIComponent(
           regex
         )}" class="mr-2">
-                    <label for="regex-${index}" class="text-sm font-mono bg-light-bg-primary dark:bg-dark-bg-primary p-1 rounded cursor-pointer flex-1 break-all">${regex}</label>
+                    <label for="regex-${index}" class="text-sm font-mono bg-base-100 p-1 rounded cursor-pointer flex-1 break-all">${regex}</label>
                 `;
         regexSuggestionsContainer.appendChild(div);
       });

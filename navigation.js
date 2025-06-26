@@ -1,10 +1,3 @@
-// Import Inter font styles for specific subsets and weights
-// If your content is primarily English, you likely only need 'latin' and 'latin-ext'.
-import "@fontsource/inter/latin-400.css";
-import "@fontsource/inter/latin-500.css";
-import "@fontsource/inter/latin-600.css";
-import "@fontsource/inter/latin-700.css";
-
 // Import pdfjs-dist
 import * as pdfjsLib from "pdfjs-dist";
 
@@ -15,22 +8,104 @@ import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 // Configure PDF.js worker source globally
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
+// Function to set the theme
+function setTheme(themeName) {
+  document.documentElement.setAttribute("data-theme", themeName);
+  localStorage.setItem("theme", themeName);
+
+  // --- IMPORTANT FIX: Update checked state for ALL theme controllers ---
+  const themeControllers = document.querySelectorAll(".theme-controller");
+  themeControllers.forEach((controller) => {
+    controller.checked = controller.value === themeName;
+  });
+  // --- END IMPORTANT FIX ---
+}
+
 // Prevents FOUC by applying the theme early using data-theme attribute.
 (() => {
-  const theme = localStorage.getItem("theme");
+  const storedTheme = localStorage.getItem("theme");
+  // Default to 'light' if no theme is stored or if system preference is light
+  // Otherwise, if system prefers dark and no theme is stored, use 'dark'
+  // If a theme is stored, use that theme.
   if (
-    theme === "dark" ||
-    (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches)
+    !storedTheme &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
   ) {
-    document.documentElement.setAttribute("data-theme", "dracula"); // Set dark theme
-    document.documentElement.classList.add("dark"); // Keep 'dark' class for specific tailwind overrides if any
+    setTheme("dark"); // Changed default dark theme
+  } else if (!storedTheme) {
+    setTheme("light"); // Changed default light theme
   } else {
-    document.documentElement.setAttribute("data-theme", "emerald"); // Set light theme
-    document.documentElement.classList.remove("dark"); // Remove 'dark' class
+    setTheme(storedTheme);
   }
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
+  // List of all DaisyUI themes
+  const daisyThemes = [
+    "light",
+    "dark",
+    "cupcake",
+    "bumblebee",
+    "emerald",
+    "corporate",
+    "synthwave",
+    "retro",
+    "cyberpunk",
+    "valentine",
+    "halloween",
+    "garden",
+    "forest",
+    "aqua",
+    "lofi",
+    "pastel",
+    "fantasy",
+    "wireframe",
+    "black",
+    "luxury",
+    "dracula",
+    "cmyk",
+    "autumn",
+    "business",
+    "acid",
+    "lemonade",
+    "night",
+    "coffee",
+    "winter",
+    "dim",
+    "nord",
+    "sunset",
+  ];
+
+  // Helper to generate theme list items HTML
+  const generateThemeListItems = (namePrefix) => {
+    // Separate "light" and "dark" to put them at the top as requested.
+    // Filter out "light" and "dark" from the main list temporarily.
+    const filteredThemes = daisyThemes.filter(
+      (theme) => theme !== "light" && theme !== "dark"
+    );
+
+    let itemsHtml = `
+      <li>
+        <input type="radio" name="${namePrefix}" class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Light" value="light"/>
+      </li>
+      <li>
+        <input type="radio" name="${namePrefix}" class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Dark" value="dark"/>
+      </li>
+    `;
+
+    // Add remaining themes
+    filteredThemes.forEach((theme) => {
+      // Capitalize first letter for aria-label
+      const label = theme.charAt(0).toUpperCase() + theme.slice(1);
+      itemsHtml += `
+        <li>
+          <input type="radio" name="${namePrefix}" class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="${label}" value="${theme}"/>
+        </li>
+      `;
+    });
+    return itemsHtml;
+  };
+
   // Navigation HTML structure using DaisyUI classes
   const navHtml = `
     <header class="navbar bg-base-100 shadow-sm">
@@ -44,6 +119,42 @@ document.addEventListener("DOMContentLoaded", () => {
         </ul>
       </div>
       <div class="navbar-end">
+        <!-- Theme selector for larger screens -->
+        <div class="dropdown dropdown-end hidden md:flex">
+          <div tabindex="0" role="button" class="btn m-1">
+            Theme
+            <svg
+              width="12px"
+              height="12px"
+              class="inline-block h-2 w-2 fill-current opacity-60"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 2048 2048">
+              <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z"></path>
+            </svg>
+          </div>
+          <ul class="dropdown-content bg-base-300 rounded-box z-[999] w-52 p-2 shadow-2xl theme-list max-h-72 overflow-y-auto">
+            ${generateThemeListItems("theme-dropdown-desktop")}
+          </ul>
+        </div>
+
+        <!-- Theme selector for smaller screens - moved outside the mobile menu -->
+        <div class="dropdown dropdown-end md:hidden">
+            <div tabindex="0" role="button" class="btn m-1">
+                Theme
+                <svg
+                  width="12px"
+                  height="12px"
+                  class="inline-block h-2 w-2 fill-current opacity-60"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 2048 2048">
+                  <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z"></path>
+                </svg>
+            </div>
+            <ul class="dropdown-content bg-base-300 rounded-box z-[999] w-52 p-2 shadow-2xl theme-list max-h-72 overflow-y-auto">
+              ${generateThemeListItems("theme-dropdown-mobile")}
+            </ul>
+        </div>
+
         <button id="mobile-menu-button" class="btn btn-ghost md:hidden" aria-label="Open mobile menu">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
@@ -55,6 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <ul class="menu menu-vertical px-4">
         <li><a href="index.html" class="block py-2 nav-link">Statement</a></li>
         <li><a href="invoice.html" class="block py-2 nav-link">Invoice</a></li>
+        <!-- Theme selector for smaller screens - REMOVED from here -->
       </ul>
     </nav>
   `;
@@ -70,7 +182,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (mobileMenuButton && mobileMenu) {
     mobileMenuButton.addEventListener("click", () => {
       mobileMenu.classList.toggle("hidden");
-      // SVG paths remain the same as they are embedded directly
       const icon = mobileMenuButton.querySelector("svg");
       if (mobileMenu.classList.contains("hidden")) {
         icon.innerHTML =
@@ -82,21 +193,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Active link highlighting based on current page (adapt for DaisyUI's 'active' class on tabs/links)
+  // Active link highlighting based on current page
   const currentPath = window.location.pathname.split("/").pop();
   const navLinks = document.querySelectorAll(".nav-link");
 
   navLinks.forEach((link) => {
     if (link.getAttribute("href") === currentPath) {
-      link.classList.add("active"); // DaisyUI uses 'active' class for active state
+      link.classList.add("active");
     } else {
       link.classList.remove("active");
     }
   });
 
-  // NOTE: Shared Modal Logic for API Key and Confirmation is now entirely handled
-  // by `utils.js` and DaisyUI's `modal` component.
-  // The showApiKeyModal and showConfirmationModal functions in `utils.js`
-  // will now use `modal.showModal()` and `modal.close()` instead of
-  // toggling 'hidden' classes.
+  // Theme selection logic
+  // The initial checked state setting should also use setTheme to ensure consistency
+  const initialTheme = localStorage.getItem("theme") || "light";
+  setTheme(initialTheme); // Apply theme and set radio button checked state on load
+
+  const themeControllers = document.querySelectorAll(".theme-controller");
+  themeControllers.forEach((controller) => {
+    controller.addEventListener("change", (event) => {
+      setTheme(event.target.value);
+    });
+  });
 });

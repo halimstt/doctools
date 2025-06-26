@@ -1,8 +1,5 @@
 // index.js
 
-// --- IMPORTANT: Import your main CSS file here to be processed by Vite ---
-import "./style.css";
-
 // --- Import utility functions ---
 import {
   getGeminiApiKey,
@@ -11,7 +8,6 @@ import {
   hideMessage,
   parseDateForSorting,
   downloadCSV,
-  // showConfirmationModal, // Commented out as it's not directly used here yet, but available if needed
 } from "./utils.js";
 
 // --- 1. Global Variables and DOM Elements ---
@@ -30,7 +26,7 @@ const spinner = document.getElementById("spinner");
 const resultsContainer = document.getElementById("results-container");
 const tableBody = document.getElementById("results-table-body");
 
-// Message container elements (still specific to index.html structure)
+// Message container elements
 const messageContainer = document.getElementById("message-container");
 const messagePrefix = document.getElementById("message-prefix");
 const messageText = document.getElementById("message-text");
@@ -39,7 +35,6 @@ const closeMessageBtn = document.getElementById("close-message-btn");
 // Application state variables
 let selectedFiles = [];
 let allTransactions = [];
-// Gemini API key is now managed via getGeminiApiKey/setGeminiApiKey from utils.js
 
 // --- 2. Utility Functions (Removed local ones, using imported) ---
 
@@ -76,8 +71,8 @@ function updateFileDisplay() {
     // Create and append a pill for each selected file
     selectedFiles.forEach((file, index) => {
       const pill = document.createElement("span");
-      // Use DaisyUI badge class instead of custom file-pill-base
-      pill.className = "badge badge-md badge-info mr-2 mb-2"; // DaisyUI badge class
+      // Use DaisyUI badge class
+      pill.className = "badge badge-md badge-info mr-2 mb-2";
       pill.innerHTML = `
         ${file.name}
         <button type="button" class="ml-2" data-index="${index}">
@@ -121,9 +116,6 @@ function displayTransactions(data) {
   try {
     data.forEach((row) => {
       const tr = document.createElement("tr");
-      // DaisyUI table rows don't need a specific class like table-row-base
-      // unless you're applying specific effects.
-      // tr.className = "table-row-base"; // Removed
 
       // Date column
       const tdDate = document.createElement("td");
@@ -142,7 +134,6 @@ function displayTransactions(data) {
       if (typeof value === "string" && value.trim() !== "") {
         const amount = parseFloat(value);
         tdAmount.classList.add("text-right", "font-mono"); // Right-align and monospace font
-        // DaisyUI uses color names like 'success' for green, 'error' for red
         tdAmount.classList.toggle("text-success", amount > 0); // Green for positive
         tdAmount.classList.toggle("text-error", amount < 0); // Red for negative
       }
@@ -859,15 +850,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // Drag and drop event listeners for the upload area
   uploadArea.addEventListener("dragover", (event) => {
     event.preventDefault(); // Prevent default to allow drop
-    uploadArea.classList.add("upload-area-highlight"); // Use custom class
+    uploadArea.classList.add("upload-area-highlight"); // Keep custom class for now, if not fully replaced by DaisyUI
   });
   uploadArea.addEventListener("dragleave", () => {
     // Remove highlight on drag leave
-    uploadArea.classList.remove("upload-area-highlight"); // Use custom class
+    uploadArea.classList.remove("upload-area-highlight"); // Keep custom class for now
   });
   uploadArea.addEventListener("drop", (event) => {
     event.preventDefault(); // Prevent default browser behavior (opening file)
-    uploadArea.classList.remove("upload-area-highlight"); // Use custom class
+    uploadArea.classList.remove("upload-area-highlight"); // Keep custom class for now
     handleFiles(event.dataTransfer.files); // Handle dropped files
   });
 

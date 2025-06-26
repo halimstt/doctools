@@ -17,8 +17,4 @@ export default defineConfig({
     // Clear the output directory before building
     emptyOutDir: true,
   },
-  // Add optimizeDeps configuration to exclude pdfjs-dist
-  optimizeDeps: {
-    exclude: ["pdfjs-dist"], // Exclude pdfjs-dist from Vite's pre-bundling
-  },
 });
