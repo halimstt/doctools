@@ -86,10 +86,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let itemsHtml = `
       <li>
-        <input type="radio" name="${namePrefix}" class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Light" value="light"/>
+        <input type="radio" name="${namePrefix}" class="theme-controller btn btn-md btn-block btn-ghost justify-start" aria-label="Light" value="light"/>
       </li>
       <li>
-        <input type="radio" name="${namePrefix}" class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Dark" value="dark"/>
+        <input type="radio" name="${namePrefix}" class="theme-controller btn btn-md btn-block btn-ghost justify-start" aria-label="Dark" value="dark"/>
       </li>
     `;
 
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const label = theme.charAt(0).toUpperCase() + theme.slice(1);
       itemsHtml += `
         <li>
-          <input type="radio" name="${namePrefix}" class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="${label}" value="${theme}"/>
+          <input type="radio" name="${namePrefix}" class="theme-controller btn btn-md btn-block btn-ghost justify-start" aria-label="${label}" value="${theme}"/>
         </li>
       `;
     });
@@ -164,8 +164,8 @@ document.addEventListener("DOMContentLoaded", () => {
     </header>
     <nav id="mobile-menu" class="hidden md:hidden fixed top-16 left-0 right-0 bg-base-100 shadow-md py-2 z-50">
       <ul class="menu menu-vertical px-4">
-        <li><a href="index.html" class="block py-2 nav-link">Statement</a></li>
-        <li><a href="invoice.html" class="block py-2 nav-link">Invoice</a></li>
+        <li><a href="index.html" class="block py-4 nav-link">Statement</a></li>
+        <li><a href="invoice.html" class="block py-4 nav-link">Invoice</a></li>
         <!-- Theme selector for smaller screens - REMOVED from here -->
       </ul>
     </nav>

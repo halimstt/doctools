@@ -55,19 +55,19 @@
         </span>
       </div>
 
-      <div role="tablist" class="tabs tabs-lifted">
+      <div role="tablist" class="tabs tabs-bordered">
         <a id="tabButtonProcess" role="tab" class="tab tab-active">Extract</a>
         <a id="tabButtonTemplate" role="tab" class="tab">Template</a>
       </div>
 
-      <main class="bg-base-100 rounded-b-box p-8">
+      <main class="rounded-b-box py-8">
         <div
           id="tabContentProcess"
           class="tab-content w-full flex flex-col gap-8"
         >
           <div
             id="dropArea"
-            class="border-2 border-dashed border-base-content border-opacity-20 rounded-xl p-8 text-center bg-base-100 transition-colors duration-300 ease-in-out min-h-[180px] flex flex-col justify-center items-center mb-4"
+            class="border-2 border-dashed border-base-mute border-opacity-20 rounded-xl p-8 text-center bg-base-100 transition-colors duration-300 ease-in-out min-h-[180px] flex flex-col justify-center items-center"
           >
             <input
               type="file"
@@ -116,7 +116,7 @@
             </div>
           </div>
 
-          <div class="flex justify-center space-x-2 my-6">
+          <div class="flex justify-center space-x-2">
             <button id="processPdfButton" class="btn btn-primary" disabled>
               Process
             </button>
@@ -125,12 +125,7 @@
             </button>
           </div>
 
-          <p
-            id="processingStatus"
-            class="mt-2 text-sm text-center opacity-80"
-          ></p>
-
-          <div id="results-container" class="mt-12">
+          <div id="results-container">
             <h2 class="text-2xl font-bold mb-4">Processed Results</h2>
 
             <div
@@ -165,7 +160,7 @@
           id="tabContentTemplate"
           class="tab-content w-full flex flex-col md:flex-row gap-8"
         >
-          <div class="flex-1 mt-8 md:mt-0 space-y-6">
+          <div class="flex-1 md:mt-0 space-y-6">
             <h2 class="text-2xl font-bold mb-4">Extracted Information</h2>
             <div class="card card-border bg-base-100">
               <div class="card-body">
@@ -200,7 +195,7 @@
             </div>
           </div>
 
-          <div class="flex-1 mt-8 md:mt-0 space-y-6">
+          <div class="flex-1 md:mt-0 space-y-6">
             <h2 class="text-2xl font-bold mb-4">Template Editor</h2>
 
             <div class="space-y-4">

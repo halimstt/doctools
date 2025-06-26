@@ -17,4 +17,9 @@ export default defineConfig({
     // Clear the output directory before building
     emptyOutDir: true,
   },
+  server: {
+    host: true, // This will expose the server to all network interfaces
+    // Or you can specify an IP address like '0.0.0.0'
+    // host: '0.0.0.0',
+  },
 });

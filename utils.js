@@ -177,8 +177,9 @@ export function showConfirmationModal(
       "Message:",
       message
     );
-    // Log error, but do not use alert() or confirm() as they are not supported in the environment.
-    onConfirm(); // Act as if confirmed if modal elements aren't there to prevent blocking
+    // Fallback: use a simple alert if modal elements are missing
+    alert(`${title}\n${message}`);
+    onConfirm(); // Act as if confirmed if modal elements aren't there
     return;
   }
 

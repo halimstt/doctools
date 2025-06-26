@@ -35,7 +35,6 @@ const DEBUG_MODE = true; // Set to false for production to disable logDebug call
 const pdfUpload = document.getElementById("pdfUpload");
 const pdfRawTextPreview = document.getElementById("pdfRawTextPreview");
 const processPdfButton = document.getElementById("processPdfButton");
-const processingStatus = document.getElementById("processingStatus");
 const supplierNameSpan = document.getElementById("supplierName");
 const documentDateSpan = document.getElementById("documentDate");
 const documentNumberSpan = document.getElementById("documentNumber");
@@ -313,17 +312,14 @@ async function callGeminiApi(
 
   // Logic for document classification (heuristic)
   if (classifyOnly && localConfigurations.length > 0) {
-    processingStatus.textContent = "Identifying best template heuristically...";
     normalizedResult = classifyDocumentHeuristically(
       pdfText,
       localConfigurations
     );
-    processingStatus.textContent = "Heuristic classification complete!";
     return normalizedResult;
   }
   // Logic for generating regex suggestions
   else if (generateRegexForField) {
-    processingStatus.textContent = "Generating regex suggestions...";
     regexSuggestStatus.textContent = "Generating suggestions...";
     let regexPrompt = `From the following document text, suggest 3-5 JavaScript-compatible regular expressions (regex) to extract the "${generateRegexForField}" field. Provide only the regex patterns, in a JSON array format like {"regexSuggestions": ["regex1", "regex2", "regex3"]}. The regex should include a capturing group for the value if applicable, and be suitable for use with JavaScript's String.prototype.match() method.`;
     if (userContextForRegex) {
@@ -338,18 +334,11 @@ async function callGeminiApi(
   }
   // Logic for direct regex extraction (no LLM)
   else if (!useLlmsForOperation) {
-    processingStatus.textContent = isRefine
-      ? "Previewing with current regex..."
-      : "Processing with selected template (using regex)...";
     normalizedResult = extractDataWithRegex(pdfText, config);
-    processingStatus.textContent = isRefine
-      ? "Preview complete!"
-      : "Processing complete!";
     return normalizedResult;
   }
   // Logic for general AI-powered extraction (using LLM)
   else {
-    processingStatus.textContent = "Sending to AI for initial analysis...";
     prompt = `Extract the following information from the invoice/receipt text:\n`;
     prompt += `- Supplier Name\n- Document Date\n- Document Number\n- Total Amount\n\n`;
     prompt += `Return the results in a JSON object with keys: "supplierName", "documentDate", "documentNumber", "totalAmount".\n`;
@@ -413,12 +402,10 @@ async function callGeminiApi(
     if (generateRegexForField) {
       // For regex generation, expect an object with regexSuggestions array
       if (rawResult && Array.isArray(rawResult.regexSuggestions)) {
-        processingStatus.textContent = "Regex suggestions generated.";
         regexSuggestStatus.textContent =
           "Suggestions generated. Select one to use.";
         return rawResult.regexSuggestions;
       }
-      processingStatus.textContent = "No regex suggestions could be generated.";
       regexSuggestStatus.textContent =
         "No regex suggestions could be generated.";
       return []; // Return empty array if no suggestions
@@ -429,11 +416,6 @@ async function callGeminiApi(
       } else if (typeof rawResult === "object" && rawResult !== null) {
         normalizedResult = rawResult;
       }
-      processingStatus.textContent = classifyOnly
-        ? "Classification complete!"
-        : isRefine
-        ? "Preview complete!"
-        : "AI analysis complete!";
       return normalizedResult;
     }
   } catch (error) {
@@ -1103,7 +1085,6 @@ function updateInvoiceFileDisplay() {
   if (uploadedFiles.length === 0) {
     fileInfoInvoice.classList.add("hidden"); // Hide file info section
     uploadLabelInvoice.classList.remove("hidden"); // Show upload label
-    processingStatus.textContent = ""; // Clear the text when no files are selected
     hideMessage(); // Hide any message box when no files are selected
   } else {
     fileInfoInvoice.classList.remove("hidden"); // Show file info
@@ -1131,7 +1112,6 @@ function updateInvoiceFileDisplay() {
 
       uploadedFilesList.appendChild(filePill); // Add the created pill to the container
     });
-    processingStatus.textContent = `${uploadedFiles.length} file(s) selected. Click Process PDF(s).`;
     hideMessage(); // Hide any message box when files are selected
   }
   updateProcessTabButtonsState();
@@ -1337,7 +1317,6 @@ function resetUI() {
   currentPdfTextForAnalysis = "";
   resetExtractedFieldsForAnalysisTab(); // Reset analysis tab fields
   resetConfigInputFields(); // Reset template editor fields
-  processingStatus.textContent = ""; // Clear processing status
   populateConfigSelect(); // Reload config dropdown from local storage
   hideConfirmationModal(); // Hide the confirmation modal (API key modal hidden by utils.js)
   clearAllResults(); // Clear extracted results table
@@ -1463,7 +1442,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Display processing message in table
     extractedResultsTableBody.innerHTML =
       '<tr><td colspan="7" class="text-center">Processing...</td></tr>';
-    processingStatus.textContent = `Processing 0/${uploadedFiles.length} PDFs...`;
     updateProcessTabButtonsState();
 
     let processedCount = 0;
@@ -1472,10 +1450,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (file.type !== "application/pdf") {
         continue; // Skip non-PDF files
       }
-
-      processingStatus.textContent = `Processing "${file.name}" (${
-        processedCount + 1
-      }/${uploadedFiles.length})...`;
 
       const reader = new FileReader();
       const fileReadPromise = new Promise((resolve, reject) => {
@@ -1511,7 +1485,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Attempt to classify document if local templates are available
         if (localConfigurations.length > 0) {
-          processingStatus.textContent = `Identifying best template for "${file.name}"...`;
           const classificationResult = classifyDocumentHeuristically(
             fileText,
             localConfigurations
@@ -1535,7 +1508,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
 
-        processingStatus.textContent = `Extracting data from "${file.name}"...`;
         logDebug(
           `Calling regex-based extraction for "${file.name}" with template: ${
             selectedConfigForExtraction
@@ -1607,7 +1579,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     refreshExtractedResultsTable(); // Redraw the table with sorted data
 
-    processingStatus.textContent = ``; // Clear processing status text
     if (allExtractedData.length > 0) {
       showMessage(
         "success",
