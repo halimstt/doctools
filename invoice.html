@@ -5,13 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Invoices Converter</title>
     <script>
-      // Basic setTheme function (only the part needed for initial FOUC prevention)
       function setTheme(themeName) {
         document.documentElement.setAttribute("data-theme", themeName);
-        // localStorage.setItem("theme", themeName); // You can keep this here or move to the main navigation.js
       }
 
-      // Immediately apply the theme from localStorage or system preference
       (() => {
         const storedTheme = localStorage.getItem("theme");
         if (
@@ -325,7 +322,6 @@
       </main>
     </div>
 
-    <!-- Shared API Key Modal -->
     <dialog id="shared-api-key-modal" class="modal">
       <div class="modal-box">
         <h3 class="font-bold text-lg">Enter Gemini API Key</h3>
@@ -437,18 +433,10 @@
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-          // Ensure the path is correct relative to the root of your deployment
           navigator.serviceWorker
             .register("./sw.js")
-            .then((registration) => {
-              console.log(
-                "ServiceWorker registration successful with scope: ",
-                registration.scope
-              );
-            })
-            .catch((error) => {
-              console.log("ServiceWorker registration failed: ", error);
-            });
+            .then((registration) => {})
+            .catch((error) => {});
         });
       }
     </script>

@@ -1,57 +1,41 @@
-// Import pdfjs-dist
 import * as pdfjsLib from "pdfjs-dist";
-
-// Correctly import the PDF.js worker using Vite's '?url' suffix.
-// This tells Vite to treat it as a URL asset and include it in the build output.
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
-// Configure PDF.js worker source globally
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-// Function to set the theme
 function setTheme(themeName) {
   document.documentElement.setAttribute("data-theme", themeName);
   localStorage.setItem("theme", themeName);
 
-  // --- IMPORTANT FIX: Update checked state and button classes for ALL theme controllers ---
   const themeControllers = document.querySelectorAll(".theme-controller");
   themeControllers.forEach((controller) => {
     if (controller.value === themeName) {
       controller.checked = true;
-      // Remove btn-ghost and add a more prominent class for the active theme
       controller.classList.remove("btn-ghost");
-      // Choose a class that gives a clear visual active state, e.g., 'btn-primary' or 'btn-active' if you have specific styles for it
-      controller.classList.add("btn-primary"); // Or 'btn-active', 'bg-primary', etc. depending on desired look
+      controller.classList.add("btn-primary");
     } else {
       controller.checked = false;
-      // Ensure non-active themes revert to btn-ghost
-      controller.classList.remove("btn-primary"); // Remove other active classes
+      controller.classList.remove("btn-primary");
       controller.classList.add("btn-ghost");
     }
   });
-  // --- END IMPORTANT FIX ---
 }
 
-// Prevents FOUC by applying the theme early using data-theme attribute.
 (() => {
   const storedTheme = localStorage.getItem("theme");
-  // Default to 'light' if no theme is stored or if system preference is light
-  // Otherwise, if system prefers dark and no theme is stored, use 'dark'
-  // If a theme is stored, use that theme.
   if (
     !storedTheme &&
     window.matchMedia("(prefers-color-scheme: dark)").matches
   ) {
-    setTheme("dark"); // Changed default dark theme
+    setTheme("dark");
   } else if (!storedTheme) {
-    setTheme("light"); // Changed default light theme
+    setTheme("light");
   } else {
     setTheme(storedTheme);
   }
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
-  // List of all DaisyUI themes
   const daisyThemes = [
     "light",
     "dark",
@@ -90,10 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "silk",
   ];
 
-  // Helper to generate theme list items HTML
   const generateThemeListItems = (namePrefix) => {
-    // Separate "light" and "dark" to put them at the top as requested.
-    // Filter out "light" and "dark" from the main list temporarily.
     const filteredThemes = daisyThemes.filter(
       (theme) => theme !== "light" && theme !== "dark"
     );
@@ -107,9 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </li>
     `;
 
-    // Add remaining themes
     filteredThemes.forEach((theme) => {
-      // Capitalize first letter for aria-label
       const label = theme.charAt(0).toUpperCase() + theme.slice(1);
       itemsHtml += `
         <li>
@@ -120,7 +99,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return itemsHtml;
   };
 
-  // Navigation HTML structure using DaisyUI classes
   const navHtml = `
     <header class="navbar bg-base-100 shadow-sm">
       <div class="navbar-start">
@@ -133,7 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
         </ul>
       </div>
       <div class="navbar-end">
-        <!-- Theme selector for larger screens -->
         <div class="dropdown dropdown-end hidden md:flex">
           <div tabindex="0" role="button" class="btn m-1">
             Theme
@@ -151,7 +128,6 @@ document.addEventListener("DOMContentLoaded", () => {
           </ul>
         </div>
 
-        <!-- Theme selector for smaller screens - moved outside the mobile menu -->
         <div class="dropdown dropdown-end md:hidden">
             <div tabindex="0" role="button" class="btn m-1">
                 Theme
@@ -180,7 +156,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <ul class="menu menu-vertical w-full px-4">
         <li><a href="index.html" class="block py-3 nav-link">Statement</a></li>
         <li><a href="invoice.html" class="block py-3 nav-link">Invoice</a></li>
-        <!-- Theme selector for smaller screens - REMOVED from here -->
       </ul>
     </nav>
   `;
@@ -207,7 +182,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Active link highlighting based on current page
   const currentPath = window.location.pathname.split("/").pop();
   const navLinks = document.querySelectorAll(".nav-link");
 
@@ -218,11 +192,6 @@ document.addEventListener("DOMContentLoaded", () => {
       link.classList.remove("menu-active");
     }
   });
-
-  // Theme selection logic
-  // The initial checked state setting should also use setTheme to ensure consistency
-  //const initialTheme = localStorage.getItem("theme") || "light";
-  //setTheme(initialTheme); // Apply theme and set radio button checked state on load
 
   const themeControllers = document.querySelectorAll(".theme-controller");
   themeControllers.forEach((controller) => {
