@@ -3,7 +3,7 @@ import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  //base: "/doctools/", // Enable if hosting on github-pages
+  // base: "/doctools/", // Enable if hosting on github-pages free domain
   plugins: [tailwindcss()],
   build: {
     rollupOptions: {
