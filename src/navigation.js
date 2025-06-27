@@ -21,20 +21,6 @@ function setTheme(themeName) {
   });
 }
 
-(() => {
-  const storedTheme = localStorage.getItem("theme");
-  if (
-    !storedTheme &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches
-  ) {
-    setTheme("dark");
-  } else if (!storedTheme) {
-    setTheme("light");
-  } else {
-    setTheme(storedTheme);
-  }
-})();
-
 document.addEventListener("DOMContentLoaded", () => {
   const daisyThemes = [
     "light",
@@ -192,6 +178,19 @@ document.addEventListener("DOMContentLoaded", () => {
       link.classList.remove("menu-active");
     }
   });
+
+  (() => {
+    const storedTheme = localStorage.getItem("theme");
+    let initialTheme = "light";
+
+    if (storedTheme) {
+      initialTheme = storedTheme;
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      initialTheme = "dark";
+    }
+
+    setTheme(initialTheme);
+  })();
 
   const themeControllers = document.querySelectorAll(".theme-controller");
   themeControllers.forEach((controller) => {
