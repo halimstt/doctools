@@ -4,36 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Invoices Converter</title>
-    <script>
-      // Basic setTheme function (only the part needed for initial FOUC prevention)
-      function setTheme(themeName) {
-        document.documentElement.setAttribute("data-theme", themeName);
-        // localStorage.setItem("theme", themeName); // You can keep this here or move to the main navigation.js
-      }
-
-      // Immediately apply the theme from localStorage or system preference
-      (() => {
-        const storedTheme = localStorage.getItem("theme");
-        if (
-          !storedTheme &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches
-        ) {
-          setTheme("dark");
-        } else if (!storedTheme) {
-          setTheme("light");
-        } else {
-          setTheme(storedTheme);
-        }
-      })();
-    </script>
-
-    <script
-      type="module"
-      crossorigin
-      src="./assets/invoice-Bww4LF3H.js"
-    ></script>
-    <link rel="modulepreload" crossorigin href="./assets/utils-DWbufHBs.js" />
-    <link rel="stylesheet" crossorigin href="./assets/utils-CpIhoX3z.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="/doctools/assets/invoice-Dntj5cMQ.js"></script>
+    <link rel="modulepreload" crossorigin href="/doctools/assets/utils-BUq2pX0S.js">
+    <link rel="stylesheet" crossorigin href="/doctools/assets/utils-BSrMgF1j.css">
   </head>
   <body class="min-h-screen flex flex-col bg-base-200 text-base-content">
     <div id="nav-placeholder">
@@ -47,33 +24,6 @@
       <header class="text-center mb-8 relative">
         <h1 class="text-3xl sm:text-4xl font-bold mb-2">Invoices Converter</h1>
       </header>
-
-      <div
-        id="message-container"
-        class="alert hidden mb-4 relative"
-        role="alert"
-      >
-        <span id="message-prefix" class="font-bold"></span>
-        <span id="message-text" class="block"></span>
-        <span class="relative top-0 px-4 py-3">
-          <svg
-            class="h-3 w-3"
-            role="button"
-            xmlns="http://www.w3.org/2000/svg"
-            stroke="currentColor"
-            fill="none"
-            viewBox="0 0 8 8"
-            id="close-message-btn"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M1 1l6 6m0-6L1 7"
-            ></path>
-          </svg>
-        </span>
-      </div>
 
       <div role="tablist" class="tabs tabs-border">
         <a id="tabButtonProcess" role="tab" class="tab tab-active">Extract</a>
@@ -140,7 +90,7 @@
             <button id="processPdfButton" class="btn btn-primary" disabled>
               Process
             </button>
-            <button id="downloadCsvButton" class="btn btn-primary" disabled>
+            <button id="downloadCsvButton" class="btn btn-secondary" disabled>
               Download
             </button>
           </div>
@@ -349,7 +299,7 @@
                 </div>
               </div>
               <div class="flex space-x-2">
-                <button id="previewButton" class="btn btn-info flex-1">
+                <button id="previewButton" class="btn btn-primary flex-1">
                   Preview
                 </button>
               </div>
@@ -359,7 +309,6 @@
       </main>
     </div>
 
-    <!-- Shared API Key Modal -->
     <dialog id="shared-api-key-modal" class="modal">
       <div class="modal-box">
         <h3 class="font-bold text-lg">Enter Gemini API Key</h3>
@@ -466,23 +415,17 @@
       </div>
     </dialog>
 
+    <div id="toast-container" class="toast d z-[9999]"></div>
+
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-          // Ensure the path is correct relative to the root of your deployment
           navigator.serviceWorker
             .register("./sw.js")
-            .then((registration) => {
-              console.log(
-                "ServiceWorker registration successful with scope: ",
-                registration.scope
-              );
-            })
-            .catch((error) => {
-              console.log("ServiceWorker registration failed: ", error);
-            });
+            .then((registration) => {})
+            .catch((error) => {});
         });
       }
-    </script>
+    </script>
   </body>
 </html>
