@@ -15,7 +15,6 @@
     business, acid, lemonade, night, coffee, winter, dim, nord, sunset,
     caramellatte, abyss, silk;
 }
-
 @plugin "daisyui/theme" {
   name: "tenang";
   default: false;
@@ -163,4 +162,8 @@
   --border: 1px; /* Standard border width */
   --depth: 1; /* 3D design to emphasize glowing */
   --noise: 0;
+}
+
+body {
+  font-family: "Inter", sans-serif;
 }
