@@ -46,18 +46,22 @@ document.addEventListener("DOMContentLoaded", () => {
     "dracula",
     "cmyk",
     "autumn",
+    "winter",
+    "summer",
+    "spring",
     "business",
     "acid",
     "lemonade",
     "night",
     "coffee",
-    "winter",
     "dim",
     "nord",
     "sunset",
     "caramellatte",
     "abyss",
     "silk",
+    "tenang",
+    "tron",
   ];
 
   const generateThemeListItems = (namePrefix) => {
