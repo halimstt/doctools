@@ -43,33 +43,6 @@
         </h1>
       </header>
 
-      <div
-        id="message-container"
-        class="alert hidden mb-4 relative"
-        role="alert"
-      >
-        <span id="message-prefix" class="font-bold"></span>
-        <span id="message-text" class="block"></span>
-        <span class="relative top-0 px-4 py-3">
-          <svg
-            class="h-3 w-3"
-            role="button"
-            xmlns="http://www.w3.org/2000/svg"
-            stroke="currentColor"
-            fill="none"
-            viewBox="0 0 8 8"
-            id="close-message-btn"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M1 1l6 6m0-6L1 7"
-            ></path>
-          </svg>
-        </span>
-      </div>
-
       <main class="bg-base-200 rounded-box py-8">
         <div class="mb-6 flex justify-center">
           <label class="form-control w-full max-w-xs">
@@ -137,7 +110,7 @@
             <span id="process-btn-text">Process</span>
             <span id="spinner" class="spinner"></span>
           </button>
-          <button id="download-btn" class="btn btn-primary" disabled>
+          <button id="download-btn" class="btn btn-secondary" disabled>
             Download
           </button>
         </div>
@@ -221,6 +194,8 @@
         </div>
       </div>
     </dialog>
+
+    <div id="toast-container" class="toast z-[9999]"></div>
 
     <script>
       if ("serviceWorker" in navigator) {

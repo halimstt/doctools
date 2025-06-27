@@ -26,12 +26,6 @@ const spinner = document.getElementById("spinner");
 const resultsContainer = document.getElementById("results-container");
 const tableBody = document.getElementById("results-table-body");
 
-// Message container elements
-const messageContainer = document.getElementById("message-container");
-const messagePrefix = document.getElementById("message-prefix");
-const messageText = document.getElementById("message-text");
-const closeMessageBtn = document.getElementById("close-message-btn");
-
 // Application state variables
 let selectedFiles = [];
 let allTransactions = [];
@@ -846,7 +840,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   removeAllFilesBtn.addEventListener("click", resetUI); // Clear all files
 
-  closeMessageBtn.addEventListener("click", hideMessage);
   // Drag and drop event listeners for the upload area
   uploadArea.addEventListener("dragover", (event) => {
     event.preventDefault(); // Prevent default to allow drop

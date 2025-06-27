@@ -76,70 +76,76 @@ export function showApiKeyModal() {
 }
 
 /**
- * Displays a message in a designated container.
- * It expects the following DOM elements to be present:
- * - #message-container
- * - #message-prefix
- * - #message-text
- * - #close-message-btn
+ * Displays a message as a DaisyUI toast notification.
  * @param {'error'|'success'|'warning'|'info'} type - The type of message (determines styling).
  * @param {string} message - The message content.
+ * @param {number} [duration=null] - Optional. Duration in milliseconds before the toast auto-hides.
+ * If null, duration is calculated based on message length.
  */
-export function showMessage(type, message) {
-  const messageContainer = document.getElementById("message-container");
-  const messagePrefix = document.getElementById("message-prefix");
-  const messageText = document.getElementById("message-text");
-  const closeMessageBtn = document.getElementById("close-message-btn");
+export function showMessage(type, message, duration = null) {
+  const toastContainer = document.getElementById("toast-container");
 
-  if (!messageContainer || !messagePrefix || !messageText || !closeMessageBtn) {
+  if (!toastContainer) {
     console.error(
-      "Missing required DOM elements for Message Container. Message:",
+      "Missing required DOM element for Toast Container. Message:",
       message
     );
     return;
   }
 
-  // Remove all previous alert type classes
-  messageContainer.classList.remove(
-    "alert-error",
-    "alert-success",
-    "alert-warning",
-    "alert-info"
-  );
-
-  // Add DaisyUI alert type class
-  if (type === "error") {
-    messageContainer.classList.add("alert-error");
-    messagePrefix.textContent = "Error!";
-  } else if (type === "success") {
-    messageContainer.classList.add("alert-success");
-    messagePrefix.textContent = "Success!";
-  } else if (type === "warning") {
-    messageContainer.classList.add("alert-warning");
-    messagePrefix.textContent = "Warning!";
-  } else if (type === "info") {
-    messageContainer.classList.add("alert-info");
-    messagePrefix.textContent = "Info!";
+  // Calculate duration based on message length if not explicitly provided
+  let calculatedDuration = duration;
+  if (calculatedDuration === null) {
+    const minDuration = 5000; // Minimum display time for any toast (5 seconds)
+    const wordsPerSecond = 2; // Average reading speed for short messages
+    const words = message.split(/\s+/).filter((word) => word.length > 0).length; // Count words
+    calculatedDuration = Math.max(minDuration, (words / wordsPerSecond) * 1000);
   }
-  messageText.textContent = message;
 
-  messageContainer.classList.remove("hidden"); // Show the alert
+  // Create toast structure
+  const toastWrapper = document.createElement("div");
+  toastWrapper.className = "alert cursor-pointer"; // Added cursor-pointer class for visual feedback
 
-  closeMessageBtn.onclick = hideMessage; // Set listener to hide on click
+  // Add specific alert type class
+  if (type === "error") {
+    toastWrapper.classList.add("alert-error");
+  } else if (type === "success") {
+    toastWrapper.classList.add("alert-success");
+  } else if (type === "warning") {
+    toastWrapper.classList.add("alert-warning");
+  } else if (type === "info") {
+    toastWrapper.classList.add("alert-info");
+  }
+
+  // Create message span
+  const messageSpan = document.createElement("span");
+  messageSpan.textContent = message;
+  toastWrapper.appendChild(messageSpan);
+
+  // Append to the toast container
+  toastContainer.appendChild(toastWrapper);
+
+  let dismissTimeout = setTimeout(() => {
+    toastWrapper.remove();
+  }, calculatedDuration); // Use calculated duration
+
+  // Add event listener to remove toast on click/tap
+  toastWrapper.addEventListener("click", () => {
+    clearTimeout(dismissTimeout); // Clear the auto-dismiss timeout
+    toastWrapper.remove(); // Remove the toast immediately
+  });
 }
 
 /**
- * Hides the message container.
+ * Hides all active toast messages.
  */
 export function hideMessage() {
-  const messageContainer = document.getElementById("message-container");
-  if (messageContainer) {
-    messageContainer.classList.add("hidden");
-    // Optionally clear text content
-    const messagePrefix = document.getElementById("message-prefix");
-    const messageText = document.getElementById("message-text");
-    if (messagePrefix) messagePrefix.textContent = "";
-    if (messageText) messageText.textContent = "";
+  const toastContainer = document.getElementById("toast-container");
+  if (toastContainer) {
+    // Remove all child elements (toasts) from the container
+    while (toastContainer.firstChild) {
+      toastContainer.removeChild(toastContainer.firstChild);
+    }
   }
 }
 
@@ -178,7 +184,7 @@ export function showConfirmationModal(
       message
     );
     // Fallback: use a simple alert if modal elements are missing
-    alert(`${title}\n${message}`);
+    showMessage("error", `${title}\n${message}`); // Replaced alert with showMessage
     onConfirm(); // Act as if confirmed if modal elements aren't there
     return;
   }
@@ -305,7 +311,7 @@ export function parseDateForSorting(dateString) {
     const [day, month, year] = dateString.split("/");
     return new Date(`${year}-${month}-${day}`).getTime();
   }
-  // Handle YYYY-MM-DD
+  // Handle ISO-MM-DD
   if (dateString && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
     return new Date(dateString).getTime();
   }
@@ -362,7 +368,7 @@ export function formatDateForDisplay(dateString) {
       const parts = dateString.split("/");
       date = new Date(parts[2], parts[1] - 1, parts[0]);
     }
-    // Attempt to parse YYYY-MM-DD
+    // Attempt to parse ISO-MM-DD
     else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
       date = new Date(dateString);
     }

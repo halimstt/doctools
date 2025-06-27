@@ -41,33 +41,6 @@
         <h1 class="text-3xl sm:text-4xl font-bold mb-2">Invoices Converter</h1>
       </header>
 
-      <div
-        id="message-container"
-        class="alert hidden mb-4 relative"
-        role="alert"
-      >
-        <span id="message-prefix" class="font-bold"></span>
-        <span id="message-text" class="block"></span>
-        <span class="relative top-0 px-4 py-3">
-          <svg
-            class="h-3 w-3"
-            role="button"
-            xmlns="http://www.w3.org/2000/svg"
-            stroke="currentColor"
-            fill="none"
-            viewBox="0 0 8 8"
-            id="close-message-btn"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="1.5"
-              d="M1 1l6 6m0-6L1 7"
-            ></path>
-          </svg>
-        </span>
-      </div>
-
       <div role="tablist" class="tabs tabs-border">
         <a id="tabButtonProcess" role="tab" class="tab tab-active">Extract</a>
         <a id="tabButtonTemplate" role="tab" class="tab">Template</a>
@@ -133,7 +106,7 @@
             <button id="processPdfButton" class="btn btn-primary" disabled>
               Process
             </button>
-            <button id="downloadCsvButton" class="btn btn-primary" disabled>
+            <button id="downloadCsvButton" class="btn btn-secondary" disabled>
               Download
             </button>
           </div>
@@ -342,7 +315,7 @@
                 </div>
               </div>
               <div class="flex space-x-2">
-                <button id="previewButton" class="btn btn-info flex-1">
+                <button id="previewButton" class="btn btn-primary flex-1">
                   Preview
                 </button>
               </div>
@@ -458,6 +431,8 @@
         </div>
       </div>
     </dialog>
+
+    <div id="toast-container" class="toast d z-[9999]"></div>
 
     <script>
       if ("serviceWorker" in navigator) {

@@ -709,13 +709,10 @@ function saveTemplateToLocalStorage() {
           JSON.stringify(localConfigurations)
         );
         populateConfigSelect();
-        showConfirmationModal(
-          // Use utility function
-          "Success",
-          "Template updated successfully.",
-          "OK",
-          () => {},
-          () => {}
+        showMessage(
+          // Changed to showMessage
+          "success",
+          "Template updated successfully."
         );
       },
       () => {}
@@ -727,13 +724,10 @@ function saveTemplateToLocalStorage() {
       JSON.stringify(localConfigurations)
     );
     populateConfigSelect();
-    showConfirmationModal(
-      // Use utility function
-      "Success",
-      "Template saved successfully.",
-      "OK",
-      () => {},
-      () => {}
+    showMessage(
+      // Changed to showMessage
+      "success",
+      "Template saved successfully."
     );
   }
   updateTemplateTabButtonsState();
@@ -771,13 +765,10 @@ function deleteTemplateFromLocalStorage() {
       );
       resetConfigInputFields(); // Clear fields
       populateConfigSelect(); // Update dropdown
-      showConfirmationModal(
-        // Use utility function
-        "Success",
-        "Template deleted successfully.",
-        "OK",
-        () => {},
-        () => {}
+      showMessage(
+        // Changed to showMessage
+        "success",
+        "Template deleted successfully."
       );
     },
     () => {}
@@ -831,13 +822,10 @@ function exportAllConfigsToJson() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showConfirmationModal(
-    // Use utility function
-    "Export Complete",
-    "All templates exported successfully.",
-    "OK",
-    () => {},
-    () => {}
+  showMessage(
+    // Changed to showMessage
+    "success",
+    "All templates exported successfully."
   );
 }
 
@@ -894,22 +882,16 @@ function importConfigsFromJson() {
           JSON.stringify(localConfigurations)
         );
         populateConfigSelect();
-        showConfirmationModal(
-          // Use utility function
-          "Import Complete",
-          `Successfully imported ${importedCount} new templates and updated ${overwrittenCount} existing templates.`,
-          "OK",
-          () => {},
-          () => {}
+        showMessage(
+          // Changed to showMessage
+          "success",
+          `Successfully imported ${importedCount} new templates and updated ${overwrittenCount} existing templates.`
         );
       } catch (error) {
-        showConfirmationModal(
-          // Use utility function
-          "Import Error",
-          "Failed to import configurations: " + error.message,
-          "OK",
-          () => {},
-          () => {}
+        showMessage(
+          // Changed to showMessage
+          "error",
+          "Failed to import configurations: " + error.message
         );
         console.error("Error importing configurations:", error);
       }
