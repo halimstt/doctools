@@ -1,13 +1,4 @@
-/* src/style.css */
-
 @import "tailwindcss";
-
-/*
-  DaisyUI v5 themes declaration using the @plugin directive.
-  List ALL the themes you want to include here.
-  - `--default` sets the default theme for the entire application.
-  - `--prefersdark` sets the theme for users with dark mode preference.
-*/
 @plugin "daisyui" {
   themes: light --default, dark --prefersdark, cupcake, bumblebee, emerald,
     corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest,
@@ -54,27 +45,25 @@
   default: false;
   prefersdark: false;
   color-scheme: light;
-  --color-base-100: oklch(98% 0 0); /* Bright, clean base */
-  --color-base-200: oklch(90% 0.01 220); /* Lightest hint of blue-white */
-  --color-base-300: oklch(85% 0.02 230); /* Light blue-grey */
+  --color-base-100: oklch(98% 0 0);
+  --color-base-200: oklch(90% 0.01 220);
+  --color-base-300: oklch(85% 0.02 230);
   --color-base-content: oklch(20% 0 0);
-  --color-primary: oklch(50% 0.15 260); /* Deep ocean blue */
+  --color-primary: oklch(50% 0.15 260);
   --color-primary-content: oklch(95% 0.03 260);
-  --color-secondary: oklch(
-    70% 0.18 200
-  ); /* Vibrant turquoise/teal of clear water */
+  --color-secondary: oklch(70% 0.18 200);
   --color-secondary-content: oklch(20% 0.035 200);
-  --color-accent: oklch(80% 0.05 60); /* Warm, sandy beige */
+  --color-accent: oklch(80% 0.05 60);
   --color-accent-content: oklch(25% 0.01 60);
-  --color-neutral: oklch(60% 0.03 250); /* Muted sea-grey */
+  --color-neutral: oklch(60% 0.03 250);
   --color-neutral-content: oklch(90% 0.006 250);
-  --color-info: oklch(75% 0.1 230); /* Sky blue for information */
+  --color-info: oklch(75% 0.1 230);
   --color-info-content: oklch(20% 0.02 230);
-  --color-success: oklch(65% 0.12 150); /* Bright green for lush islands */
+  --color-success: oklch(65% 0.12 150);
   --color-success-content: oklch(15% 0.02 150);
-  --color-warning: oklch(70% 0.15 40); /* Sunset orange/gold for warnings */
+  --color-warning: oklch(70% 0.15 40);
   --color-warning-content: oklch(20% 0.03 40);
-  --color-error: oklch(55% 0.22 10); /* Coral red for errors */
+  --color-error: oklch(55% 0.22 10);
   --color-error-content: oklch(90% 0.04 10);
   --radius-selector: 1rem;
   --radius-field: 0.5rem;
@@ -82,7 +71,7 @@
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
-  --depth: 0; /* Flatter, open feel for summer */
+  --depth: 0;
   --noise: 0;
 }
 @plugin "daisyui/theme" {
@@ -90,27 +79,25 @@
   default: false;
   prefersdark: false;
   color-scheme: light;
-  --color-base-100: oklch(
-    99% 0 0
-  ); /* Pure white, like fresh snow before blossoms */
-  --color-base-200: oklch(96% 0.01 320); /* Very light, hint of pink */
-  --color-base-300: oklch(93% 0.02 325); /* Light, soft pink-white */
-  --color-base-content: oklch(25% 0 0); /* Darker text for contrast */
-  --color-primary: oklch(75% 0.08 10); /* Soft, delicate sakura pink */
+  --color-base-100: oklch(99% 0 0);
+  --color-base-200: oklch(96% 0.01 320);
+  --color-base-300: oklch(93% 0.02 325);
+  --color-base-content: oklch(25% 0 0);
+  --color-primary: oklch(75% 0.08 10);
   --color-primary-content: oklch(20% 0.015 10);
-  --color-secondary: oklch(88% 0.05 350); /* Slightly deeper sakura pink */
+  --color-secondary: oklch(88% 0.05 350);
   --color-secondary-content: oklch(25% 0.01 350);
-  --color-accent: oklch(65% 0.09 130); /* Fresh, tender green of new leaves */
+  --color-accent: oklch(65% 0.09 130);
   --color-accent-content: oklch(15% 0.02 130);
-  --color-neutral: oklch(85% 0.01 0); /* Very light, clean neutral */
+  --color-neutral: oklch(85% 0.01 0);
   --color-neutral-content: oklch(35% 0.005 0);
-  --color-info: oklch(70% 0.08 200); /* Gentle sky blue */
+  --color-info: oklch(70% 0.08 200);
   --color-info-content: oklch(20% 0.015 200);
-  --color-success: oklch(60% 0.12 150); /* Slightly deeper green for success */
+  --color-success: oklch(60% 0.12 150);
   --color-success-content: oklch(10% 0.02 150);
-  --color-warning: oklch(80% 0.1 70); /* Soft peach/apricot for warning */
+  --color-warning: oklch(80% 0.1 70);
   --color-warning-content: oklch(20% 0.02 70);
-  --color-error: oklch(60% 0.2 20); /* Muted red for error */
+  --color-error: oklch(60% 0.2 20);
   --color-error-content: oklch(10% 0.04 20);
   --radius-selector: 1rem;
   --radius-field: 0.5rem;
@@ -126,41 +113,33 @@
   default: false;
   prefersdark: false;
   color-scheme: dark;
-  --color-base-100: oklch(10% 0 0); /* Very dark background */
-  --color-base-200: oklch(
-    15% 0 0
-  ); /* Slightly lighter dark for subtle variations */
-  --color-base-300: oklch(20% 0 0); /* A bit more visible dark base */
-  --color-base-content: oklch(
-    90% 0.08 240
-  ); /* Bright white content on dark base, now with a blue tint */
-  --color-primary: oklch(65% 0.15 220); /* Tron-like glowing blue */
-  --color-primary-content: oklch(
-    10% 0 0
-  ); /* Dark content for primary elements */
-  --color-secondary: oklch(70% 0.2 180); /* Vibrant glowing cyan/green */
-  --color-secondary-content: oklch(
-    10% 0 0
-  ); /* Dark content for secondary elements */
-  --color-accent: oklch(75% 0.15 40); /* Glowing yellow-orange accent */
-  --color-accent-content: oklch(10% 0 0); /* Dark content for accent elements */
-  --color-neutral: oklch(25% 0 0); /* Dark grey for neutral backgrounds */
-  --color-neutral-content: oklch(80% 0 0); /* Light content on neutral */
-  --color-info: oklch(60% 0.1 200); /* Brighter blue for info */
+  --color-base-100: oklch(10% 0 0);
+  --color-base-200: oklch(15% 0 0);
+  --color-base-300: oklch(20% 0 0);
+  --color-base-content: oklch(90% 0.08 240);
+  --color-primary: oklch(65% 0.15 220);
+  --color-primary-content: oklch(10% 0 0);
+  --color-secondary: oklch(70% 0.2 180);
+  --color-secondary-content: oklch(10% 0 0);
+  --color-accent: oklch(75% 0.15 40);
+  --color-accent-content: oklch(10% 0 0);
+  --color-neutral: oklch(25% 0 0);
+  --color-neutral-content: oklch(80% 0 0);
+  --color-info: oklch(60% 0.1 200);
   --color-info-content: oklch(10% 0 0);
-  --color-success: oklch(65% 0.12 150); /* Bright green for success */
+  --color-success: oklch(65% 0.12 150);
   --color-success-content: oklch(10% 0 0);
-  --color-warning: oklch(80% 0.18 90); /* Bright yellow for warning */
+  --color-warning: oklch(80% 0.18 90);
   --color-warning-content: oklch(10% 0 0);
-  --color-error: oklch(70% 0.2 44); /* Strong orange for error */
+  --color-error: oklch(70% 0.2 44);
   --color-error-content: oklch(10% 0 0);
-  --radius-selector: 0.5rem; /* Slightly sharper corners for a techy feel */
+  --radius-selector: 0.5rem;
   --radius-field: 0.25rem;
   --radius-box: 0.75rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
-  --border: 1px; /* Standard border width */
-  --depth: 1; /* 3D design to emphasize glowing */
+  --border: 1px;
+  --depth: 1;
   --noise: 0;
 }
 
