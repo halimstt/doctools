@@ -1,7 +1,22 @@
-import * as pdfjsLib from "pdfjs-dist";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+let pdfjsLibInstance = null;
+let pdfWorkerUrlInstance = null;
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+export async function getPDFLib() {
+  if (pdfjsLibInstance && pdfWorkerUrlInstance) {
+    return pdfjsLibInstance;
+  }
+
+  const [pdfjs, pdfWorker] = await Promise.all([
+    import("pdfjs-dist"),
+    import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
+  ]);
+
+  pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker.default;
+  pdfjsLibInstance = pdfjs;
+  pdfWorkerUrlInstance = pdfWorker.default;
+
+  return pdfjsLibInstance;
+}
 
 export function getGeminiApiKey() {
   return localStorage.getItem("geminiApiKey") || "";

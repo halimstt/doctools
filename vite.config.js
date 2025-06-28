@@ -1,10 +1,18 @@
 import { resolve } from "path";
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
+import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
   // base: "/doctools/", // Enable if hosting on github-pages free domain
-  plugins: [tailwindcss()],
+  plugins: [
+    tailwindcss(),
+    visualizer({
+      filename: "./dist/bundle-report.html",
+      open: false,
+      gzipSize: true,
+    }),
+  ],
   build: {
     rollupOptions: {
       input: {

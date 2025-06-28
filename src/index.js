@@ -5,6 +5,7 @@ import {
   hideMessage,
   parseDateForSorting,
   downloadCSV,
+  getPDFLib,
 } from "./utils.js";
 
 const parserSelect = document.getElementById("parser-select");
@@ -214,6 +215,8 @@ async function processStatements() {
   }
 
   try {
+    const pdfjsLib = await getPDFLib();
+
     for (let i = 0; i < selectedFiles.length; i++) {
       const file = selectedFiles[i];
       statusText.textContent = `Processing ${file.name} (${i + 1}/${
@@ -649,15 +652,15 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
 
         const formattedTransactions = parsedTransactions.map((t) => {
           let [day, month, year] = t.Date.split("/");
-          if (!year || year.length !== 4) {
-            const currentYear = new Date().getFullYear();
-            const currentYY = String(currentYear).slice(-2);
-            year =
-              parsedYY <= parseInt(currentYY, 10)
-                ? `20${String(parsedYY).padStart(2, "0")}`
-                : `19${String(parsedYY).padStart(2, "0")}`;
-          }
-          const formattedYear = String(year);
+          const currentYearFull = new Date().getFullYear();
+          const currentYY = String(currentYearFull).slice(-2);
+          const parsedYY = parseInt(year, 10);
+          const century = parsedYY <= parseInt(currentYY, 10) ? "20" : "19";
+
+          const formattedYear =
+            year.length === 4
+              ? year
+              : `${century}${String(parsedYY).padStart(2, "0")}`;
 
           const cleanedDescription = String(t.Description)
             .replace(/\s+/g, " ")

@@ -9,6 +9,7 @@ import {
   FileListShim,
   showMessage,
   hideMessage,
+  getPDFLib,
 } from "./utils.js";
 
 let uploadedFiles = [];
@@ -748,6 +749,7 @@ async function displayPdfTextForAnalysis(file) {
   reader.onload = async (e) => {
     const pdfData = new Uint8Array(e.target.result);
     try {
+      const pdfjsLib = await getPDFLib();
       const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
       let fullText = "";
       for (let i = 1; i <= pdf.numPages; i++) {
@@ -1109,6 +1111,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         reader.onload = async (e) => {
           const pdfData = new Uint8Array(e.target.result);
           try {
+            const pdfjsLib = await getPDFLib();
             const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
             let fullText = "";
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
