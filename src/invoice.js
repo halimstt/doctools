@@ -21,11 +21,11 @@ let currentRegexTargetField = null;
 const GEMINI_API_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 
-const pdfUpload = document.getElementById("pdfUpload");
+const fileInput = document.getElementById("file-input");
 const pdfRawTextPreview = document.getElementById("pdfRawTextPreview");
-const processPdfButton = document.getElementById("processPdfButton");
+const processBtn = document.getElementById("process-btn");
 const supplierNameSpan = document.getElementById("supplierName");
 const documentDateSpan = document.getElementById("documentDate");
 const documentNumberSpan = document.getElementById("documentNumber");
@@ -40,16 +40,12 @@ const documentNumberRegexInput = document.getElementById("documentNumberRegex");
 const totalAmountRegexInput = document.getElementById("totalAmountRegex");
 const configSelect = document.getElementById("configSelect");
 const previewButton = document.getElementById("previewButton");
-const dropArea = document.getElementById("dropArea");
-const uploadedFilesList = document.getElementById("uploadedFilesList");
-const allExtractedResultsContainer = document.getElementById(
-  "allExtractedResultsContainer"
-);
-const extractedResultsTableBody = document.getElementById(
-  "extractedResultsTableBody"
-);
-const downloadCsvButton = document.getElementById("downloadCsvButton");
-const clearUploadFormButton = document.getElementById("clearUploadFormButton");
+const uploadArea = document.getElementById("upload-area");
+const filePillsContainer = document.getElementById("file-pills-container");
+const resultsContainer = document.getElementById("results-container");
+const resultsTableBody = document.getElementById("results-table-body");
+const downloadBtn = document.getElementById("download-btn");
+const removeAllFilesBtn = document.getElementById("remove-all-files-btn");
 const currentAnalysisFileName = document.getElementById(
   "currentAnalysisFileName"
 );
@@ -97,8 +93,8 @@ const exportAllConfigsButton = document.getElementById(
   "exportAllConfigsButton"
 );
 
-const uploadLabelInvoice = document.getElementById("upload-label-invoice");
-const fileInfoInvoice = document.getElementById("file-info-invoice");
+const uploadLabel = document.getElementById("upload-label");
+const fileInfo = document.getElementById("file-info");
 
 function logDebug(message) {
   if (DEBUG_MODE) {
@@ -106,12 +102,9 @@ function logDebug(message) {
 }
 
 function showNoDocumentSelectedModal() {
-  showConfirmationModal(
-    "No Document Selected",
-    "Please select a document from the 'Extract' tab first to proceed.",
-    "OK",
-    () => {},
-    () => {}
+  showMessage(
+    "info",
+    "Please select a document from the 'Extract' tab first to proceed."
   );
 }
 
@@ -188,13 +181,7 @@ function useSelectedRegex() {
     hideRegexSuggestModal();
     previewButton.click();
   } else {
-    showConfirmationModal(
-      "Selection Required",
-      "Please select a regex suggestion first.",
-      "OK",
-      () => {},
-      () => {}
-    );
+    showMessage("info", "Please select a regex suggestion first.");
   }
 }
 
@@ -213,29 +200,20 @@ async function callGeminiApi(
     try {
       const key = await showApiKeyModal();
       if (!key) {
-        showConfirmationModal(
-          "API Key Required",
-          "Gemini API key is required for AI-powered features. Operation canceled.",
-          "OK",
-          () => {},
-          () => {}
+        showMessage(
+          "error",
+          "Gemini API key is required for AI-powered features. Operation canceled."
         );
         return null;
       }
       currentGeminiApiKey = key;
     } catch (error) {
-      showConfirmationModal(
-        "API Key Error",
-        "Could not get Gemini API key. Operation canceled.",
-        "OK",
-        () => {},
-        () => {}
-      );
+      showMessage("error", "Could not get Gemini API key. Operation canceled.");
       return null;
     }
   }
 
-  processPdfButton.disabled = true;
+  processBtn.disabled = true;
   previewButton.disabled = true;
   saveTemplateButton.disabled = true;
   deleteTemplateButton.disabled = true;
@@ -351,8 +329,8 @@ async function callGeminiApi(
     regexSuggestStatus.textContent = `Error: ${error.message}`;
     throw error;
   } finally {
-    updateTemplateTabButtonsState();
-    updateProcessTabButtonsState();
+    updateTemplateButtonsState();
+    updateProcessButtonsState();
   }
 }
 
@@ -452,12 +430,9 @@ function classifyDocumentHeuristically(pdfText, configurations) {
 
 async function generateRegexSuggestions() {
   if (!currentPdfTextForAnalysis) {
-    showConfirmationModal(
-      "Missing PDF",
-      "A PDF must be loaded for analysis to generate regex suggestions.",
-      "OK",
-      () => {},
-      () => {}
+    showMessage(
+      "info",
+      "A PDF must be loaded for analysis to generate regex suggestions."
     );
     return;
   }
@@ -465,15 +440,12 @@ async function generateRegexSuggestions() {
   if (!getGeminiApiKey()) {
     await showApiKeyModal();
     if (!getGeminiApiKey()) {
-      showConfirmationModal(
-        "API Key Required",
-        "Gemini API key is required for AI-powered features. Operation canceled.",
-        "OK",
-        () => {},
-        () => {}
+      showMessage(
+        "error",
+        "Gemini API key is required for AI-powered features. Operation canceled."
       );
       generateRegexButton.disabled = false;
-      updateTemplateTabButtonsState();
+      updateTemplateButtonsState();
       return;
     }
   }
@@ -548,12 +520,9 @@ function loadLocalConfigurations() {
 function saveTemplateToLocalStorage() {
   const templateName = configNameInput.value.trim();
   if (!templateName) {
-    showConfirmationModal(
-      "Missing Template Name",
-      "Please enter a template name to save the configuration.",
-      "OK",
-      () => {},
-      () => {}
+    showMessage(
+      "error",
+      "Please enter a template name to save the configuration."
     );
     return;
   }
@@ -597,19 +566,13 @@ function saveTemplateToLocalStorage() {
     populateConfigSelect();
     showMessage("success", "Template saved successfully.");
   }
-  updateTemplateTabButtonsState();
+  updateTemplateButtonsState();
 }
 
 function deleteTemplateFromLocalStorage() {
   const selectedConfigName = configSelect.value;
   if (!selectedConfigName) {
-    showConfirmationModal(
-      "No Template Selected",
-      "Please select a template to delete.",
-      "OK",
-      () => {},
-      () => {}
-    );
+    showMessage("info", "Please select a template to delete.");
     return;
   }
 
@@ -631,7 +594,7 @@ function deleteTemplateFromLocalStorage() {
     },
     () => {}
   );
-  updateTemplateTabButtonsState();
+  updateTemplateButtonsState();
 }
 
 function populateConfigSelect() {
@@ -651,13 +614,7 @@ function populateConfigSelect() {
 
 function exportAllConfigsToJson() {
   if (localConfigurations.length === 0) {
-    showConfirmationModal(
-      "No Data to Export",
-      "There are no saved templates to export.",
-      "OK",
-      () => {},
-      () => {}
-    );
+    showMessage("info", "There are no saved templates to export.");
     return;
   }
 
@@ -744,7 +701,7 @@ function handleFiles(files) {
     if (uploadedFiles.length === 0) {
       showMessage("error", "Please select valid PDF file(s).");
     }
-    updateProcessTabButtonsState();
+    updateProcessButtonsState();
     return;
   }
 
@@ -760,18 +717,18 @@ function handleFiles(files) {
     }
   });
 
-  updateInvoiceFileDisplay();
+  updateInvoicesFileDisplay();
   hideMessage();
 }
 
-function removeUploadedFile(indexToRemove) {
+function removeIndividualFile(indexToRemove) {
   uploadedFiles.splice(indexToRemove, 1);
 
   const dataTransfer = new DataTransfer();
   uploadedFiles.forEach((file) => dataTransfer.items.add(file));
-  pdfUpload.files = dataTransfer.files;
+  fileInput.files = dataTransfer.files;
 
-  updateInvoiceFileDisplay();
+  updateInvoicesFileDisplay();
   if (uploadedFiles.length === 0) {
     hideMessage();
     resetExtractedFieldsForAnalysisTab();
@@ -802,16 +759,10 @@ async function displayPdfTextForAnalysis(file) {
       pdfRawTextPreview.value = fullText;
     } catch (error) {
       pdfRawTextPreview.value = "";
-      showConfirmationModal(
-        "PDF Text Extraction Error",
-        "Error extracting text from PDF: " + error.message,
-        "OK",
-        () => {},
-        () => {}
-      );
+      showMessage("error", "Error extracting text from PDF: " + error.message);
       currentPdfTextForAnalysis = "";
     } finally {
-      updateTemplateTabButtonsState();
+      updateTemplateButtonsState();
     }
   };
   reader.readAsArrayBuffer(file);
@@ -838,17 +789,11 @@ function autoLoadSelectedConfiguration() {
     documentNumberRegexInput.value = activeConfig.documentNumberPattern || "";
     totalAmountRegexInput.value = activeConfig.totalAmountPattern || "";
   } else {
-    showConfirmationModal(
-      "Template Not Found",
-      "Selected template not found in local storage.",
-      "OK",
-      () => {},
-      () => {}
-    );
+    showMessage("error", "Selected template not found in local storage.");
     activeConfig = null;
   }
-  updateTemplateTabButtonsState();
-  updateProcessTabButtonsState();
+  updateTemplateButtonsState();
+  updateProcessButtonsState();
 }
 
 function handleRegexSelectionChange(event) {
@@ -859,16 +804,16 @@ function handleRegexSelectionChange(event) {
   }
 }
 
-function updateInvoiceFileDisplay() {
-  uploadedFilesList.innerHTML = "";
+function updateInvoicesFileDisplay() {
+  filePillsContainer.innerHTML = "";
 
   if (uploadedFiles.length === 0) {
-    fileInfoInvoice.classList.add("hidden");
-    uploadLabelInvoice.classList.remove("hidden");
+    fileInfo.classList.add("hidden");
+    uploadLabel.classList.remove("hidden");
     hideMessage();
   } else {
-    fileInfoInvoice.classList.remove("hidden");
-    uploadLabelInvoice.classList.add("hidden");
+    fileInfo.classList.remove("hidden");
+    uploadLabel.classList.add("hidden");
 
     uploadedFiles.forEach((file, index) => {
       const filePill = document.createElement("span");
@@ -885,18 +830,18 @@ function updateInvoiceFileDisplay() {
 
       filePill.querySelector("button").addEventListener("click", (event) => {
         const fileIndexToRemove = parseInt(event.currentTarget.dataset.index);
-        removeUploadedFile(fileIndexToRemove);
+        removeIndividualFile(fileIndexToRemove);
       });
 
-      uploadedFilesList.appendChild(filePill);
+      filePillsContainer.appendChild(filePill);
     });
     hideMessage();
   }
-  updateProcessTabButtonsState();
+  updateProcessButtonsState();
 }
 
 function appendExtractedResultToTable(data, index) {
-  const tableBody = extractedResultsTableBody;
+  const tableBody = resultsTableBody;
 
   const noDocsRow = tableBody.querySelector('tr td[colspan="7"]');
   if (noDocsRow) {
@@ -967,14 +912,14 @@ function appendExtractedResultToTable(data, index) {
         resetConfigInputFields();
       }
 
-      updateTemplateTabButtonsState();
+      updateTemplateButtonsState();
     });
 }
 
 function refreshExtractedResultsTable() {
-  extractedResultsTableBody.innerHTML = "";
+  resultsTableBody.innerHTML = "";
   if (allExtractedData.length === 0) {
-    extractedResultsTableBody.innerHTML =
+    resultsTableBody.innerHTML =
       '<tr><td colspan="7" class="text-center">No documents processed yet.</td></tr>';
   } else {
     allExtractedData.forEach((data, index) => {
@@ -1020,7 +965,7 @@ function resetConfigInputFields() {
   totalAmountRegexInput.value = "";
   activeConfig = null;
   configSelect.value = "";
-  updateTemplateTabButtonsState();
+  updateTemplateButtonsState();
 }
 
 function resetExtractedFieldsForAnalysisTab() {
@@ -1031,20 +976,20 @@ function resetExtractedFieldsForAnalysisTab() {
   currentAnalysisFileName.textContent = "-";
   currentPdfTextForAnalysis = "";
   pdfRawTextPreview.value = "";
-  updateTemplateTabButtonsState();
+  updateTemplateButtonsState();
 }
 
 function clearAllResults() {
   allExtractedData = [];
-  extractedResultsTableBody.innerHTML =
+  resultsTableBody.innerHTML =
     '<tr><td colspan="7" class="text-center">No documents processed yet.</td></tr>';
-  updateProcessTabButtonsState();
+  updateProcessButtonsState();
 }
 
 function resetUI() {
   uploadedFiles = [];
-  pdfUpload.value = "";
-  updateInvoiceFileDisplay();
+  fileInput.value = "";
+  updateInvoicesFileDisplay();
   currentPdfTextForAnalysis = "";
   resetExtractedFieldsForAnalysisTab();
   resetConfigInputFields();
@@ -1052,19 +997,19 @@ function resetUI() {
   hideConfirmationModal();
   clearAllResults();
   switchTab("Process");
-  updateTemplateTabButtonsState();
-  updateProcessTabButtonsState();
+  updateTemplateButtonsState();
+  updateProcessButtonsState();
 }
 
-function updateProcessTabButtonsState() {
+function updateProcessButtonsState() {
   const hasUploadedFiles = uploadedFiles.length > 0;
   const hasExtractedData = allExtractedData.length > 0;
 
-  processPdfButton.disabled = !hasUploadedFiles;
-  downloadCsvButton.disabled = !hasExtractedData;
+  processBtn.disabled = !hasUploadedFiles;
+  downloadBtn.disabled = !hasExtractedData;
 }
 
-function updateTemplateTabButtonsState() {
+function updateTemplateButtonsState() {
   const isPdfLoadedForAnalysis = currentPdfTextForAnalysis.length > 0;
   const hasConfigName = configNameInput.value.trim().length > 0;
   const isConfigSelected = configSelect.value !== "";
@@ -1088,7 +1033,7 @@ function switchTab(tabName) {
     tabButtonTemplate.classList.remove("tab-active");
     tabContentProcess.classList.remove("hidden");
     tabContentTemplate.classList.add("hidden");
-    updateProcessTabButtonsState();
+    updateProcessButtonsState();
   } else if (tabName === "Template") {
     tabButtonTemplate.classList.add("tab-active");
     tabButtonTemplate.classList.remove("tab-button-inactive");
@@ -1096,7 +1041,7 @@ function switchTab(tabName) {
     tabButtonProcess.classList.remove("tab-active");
     tabContentTemplate.classList.remove("hidden");
     tabContentProcess.classList.add("hidden");
-    updateTemplateTabButtonsState();
+    updateTemplateButtonsState();
     resetExtractedFieldsForAnalysisTab();
     if (!currentPdfTextForAnalysis && uploadedFiles.length > 0) {
       displayPdfTextForAnalysis(uploadedFiles[0]);
@@ -1106,43 +1051,51 @@ function switchTab(tabName) {
 
 document.addEventListener("DOMContentLoaded", async () => {
   switchTab("Process");
-  updateInvoiceFileDisplay();
-  updateTemplateTabButtonsState();
-  updateProcessTabButtonsState();
+  updateInvoicesFileDisplay();
+  updateTemplateButtonsState();
+  updateProcessButtonsState();
 
   loadLocalConfigurations();
 
   tabButtonProcess.addEventListener("click", () => switchTab("Process"));
   tabButtonTemplate.addEventListener("click", () => switchTab("Template"));
 
-  pdfUpload.addEventListener("change", (event) =>
+  fileInput.addEventListener("change", (event) =>
     handleFiles(event.target.files)
   );
-  clearUploadFormButton.addEventListener("click", resetUI);
+  removeAllFilesBtn.addEventListener("click", resetUI);
 
-  dropArea.addEventListener("dragover", (e) => {
+  uploadArea.addEventListener("dragover", (e) => {
     e.preventDefault();
-    dropArea.classList.add("border-primary", "bg-primary", "bg-opacity-10");
+    uploadArea.classList.add("border-primary", "bg-primary", "bg-opacity-10");
   });
-  dropArea.addEventListener("dragleave", () => {
-    dropArea.classList.remove("border-primary", "bg-primary", "bg-opacity-10");
+  uploadArea.addEventListener("dragleave", () => {
+    uploadArea.classList.remove(
+      "border-primary",
+      "bg-primary",
+      "bg-opacity-10"
+    );
   });
-  dropArea.addEventListener("drop", (e) => {
+  uploadArea.addEventListener("drop", (e) => {
     e.preventDefault();
-    dropArea.classList.remove("border-primary", "bg-primary", "bg-opacity-10");
+    uploadArea.classList.remove(
+      "border-primary",
+      "bg-primary",
+      "bg-opacity-10"
+    );
     handleFiles(e.dataTransfer.files);
   });
 
-  processPdfButton.addEventListener("click", async () => {
+  processBtn.addEventListener("click", async () => {
     if (uploadedFiles.length === 0) {
       showNoDocumentSelectedModal();
       return;
     }
 
     clearAllResults();
-    extractedResultsTableBody.innerHTML =
+    resultsTableBody.innerHTML =
       '<tr><td colspan="7" class="text-center">Processing...</td></tr>';
-    updateProcessTabButtonsState();
+    updateProcessButtonsState();
 
     let processedCount = 0;
     for (let i = 0; i < uploadedFiles.length; i++) {
@@ -1207,13 +1160,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
 
-        logDebug(
-          `Calling regex-based extraction for "${file.name}" with template: ${
-            selectedConfigForExtraction
-              ? selectedConfigForExtraction.name
-              : "None"
-          }`
-        );
         extractedData = await callGeminiApi(
           fileText,
           selectedConfigForExtraction,
@@ -1280,7 +1226,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         `Finished processing ${processedCount} PDF(s), but no data was extracted.`
       );
     }
-    updateProcessTabButtonsState();
+    updateProcessButtonsState();
   });
 
   previewButton.addEventListener("click", async () => {
@@ -1324,8 +1270,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         `Error during preview: ${error.message}. Check console for details.`
       );
     } finally {
-      updateTemplateTabButtonsState();
-      updateProcessTabButtonsState();
+      updateTemplateButtonsState();
+      updateProcessButtonsState();
     }
   });
 
@@ -1365,31 +1311,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   configSelect.addEventListener("change", autoLoadSelectedConfiguration);
 
-  downloadCsvButton.addEventListener("click", downloadCSVHandler);
+  downloadBtn.addEventListener("click", downloadCSVHandler);
 
   configSelect.addEventListener("change", () => {
-    updateTemplateTabButtonsState();
+    updateTemplateButtonsState();
   });
 
-  configNameInput.addEventListener("input", updateTemplateTabButtonsState);
+  configNameInput.addEventListener("input", updateTemplateButtonsState);
   officialSupplierNameForExportInput.addEventListener(
     "input",
-    updateTemplateTabButtonsState
+    updateTemplateButtonsState
   );
-  supplierNameRegexInput.addEventListener(
-    "input",
-    updateTemplateTabButtonsState
-  );
-  documentDateRegexInput.addEventListener(
-    "input",
-    updateTemplateTabButtonsState
-  );
+  supplierNameRegexInput.addEventListener("input", updateTemplateButtonsState);
+  documentDateRegexInput.addEventListener("input", updateTemplateButtonsState);
   documentNumberRegexInput.addEventListener(
     "input",
-    updateTemplateTabButtonsState
+    updateTemplateButtonsState
   );
-  totalAmountRegexInput.addEventListener(
-    "input",
-    updateTemplateTabButtonsState
-  );
+  totalAmountRegexInput.addEventListener("input", updateTemplateButtonsState);
 });

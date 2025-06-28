@@ -20,7 +20,7 @@ const statusText = document.getElementById("status-text");
 const processBtnText = document.getElementById("process-btn-text");
 const spinner = document.getElementById("spinner");
 const resultsContainer = document.getElementById("results-container");
-const tableBody = document.getElementById("results-table-body");
+const resultsTableBody = document.getElementById("results-table-body");
 
 let selectedFiles = [];
 let allTransactions = [];
@@ -34,14 +34,14 @@ function resetUI() {
   processBtn.disabled = true;
   statusText.textContent = "";
   hideMessage();
-  updateFileDisplay();
+  updateStatementsFileDisplay();
   processBtnText.textContent = "Process";
   spinner.classList.add("hidden");
   displayTransactions([]);
-  updateDownloadButtonState();
+  updateStatementsButtonsState();
 }
 
-function updateFileDisplay() {
+function updateStatementsFileDisplay() {
   filePillsContainer.innerHTML = "";
   if (selectedFiles.length === 0) {
     fileInfo.classList.add("hidden");
@@ -71,7 +71,7 @@ function updateFileDisplay() {
 }
 
 function displayTransactions(data) {
-  tableBody.innerHTML = "";
+  resultsTableBody.innerHTML = "";
 
   if (!data || data.length === 0) {
     const noResultsRow = document.createElement("tr");
@@ -80,7 +80,7 @@ function displayTransactions(data) {
         No documents processed yet.
       </td>
     `;
-    tableBody.appendChild(noResultsRow);
+    resultsTableBody.appendChild(noResultsRow);
     return;
   }
 
@@ -106,7 +106,7 @@ function displayTransactions(data) {
         tdAmount.classList.toggle("text-error", amount < 0);
       }
       tr.appendChild(tdAmount);
-      tableBody.appendChild(tr);
+      resultsTableBody.appendChild(tr);
     });
   } catch (e) {
     showMessage(
@@ -116,10 +116,11 @@ function displayTransactions(data) {
   }
 }
 
-function updateDownloadButtonState() {
+function updateStatementsButtonsState() {
   const hasResults =
-    tableBody.children.length > 0 &&
-    tableBody.children[0].textContent.trim() !== "No documents processed yet.";
+    resultsTableBody.children.length > 0 &&
+    resultsTableBody.children[0].textContent.trim() !==
+      "No documents processed yet.";
 
   downloadBtn.disabled = !hasResults;
 }
@@ -141,7 +142,7 @@ function handleFiles(files) {
   if (currentParser === "maybank-pdf") {
     if (pdfFiles.length > 1) {
       showMessage(
-        "error",
+        "warning",
         "Maybank PDF Statement parser supports only one PDF file at a time. Only the first file will be used."
       );
     }
@@ -160,14 +161,14 @@ function handleFiles(files) {
     });
   }
 
-  updateFileDisplay();
+  updateStatementsFileDisplay();
   processBtn.disabled = selectedFiles.length === 0;
   hideMessage();
 }
 
 function removeIndividualFile(indexToRemove) {
   selectedFiles.splice(indexToRemove, 1);
-  updateFileDisplay();
+  updateStatementsFileDisplay();
   if (selectedFiles.length === 0) {
     hideMessage();
   }
@@ -273,7 +274,7 @@ async function processStatements() {
 
     statusText.textContent = "";
     displayTransactions(allTransactions);
-    updateDownloadButtonState();
+    updateStatementsButtonsState();
 
     if (allTransactions.length > 0) {
       showMessage(
@@ -558,7 +559,7 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
   }
 
   for (let i = 1; i <= totalPages; i++) {
-    statusText.textContent = `Sending page ${i}/${totalPages} to AI for processing...`;
+    statusText.textContent = `Processing ${i}/${totalPages}...`;
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
     const pageText = textContent.items.map((item) => item.str).join(" ");
@@ -651,7 +652,6 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
           if (!year || year.length !== 4) {
             const currentYear = new Date().getFullYear();
             const currentYY = String(currentYear).slice(-2);
-            const parsedYY = parseInt(year, 10);
             year =
               parsedYY <= parseInt(currentYY, 10)
                 ? `20${String(parsedYY).padStart(2, "0")}`
@@ -700,7 +700,7 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
 
 document.addEventListener("DOMContentLoaded", () => {
   resetUI();
-  updateDownloadButtonState();
+  updateStatementsButtonsState();
 
   parserSelect.addEventListener("change", resetUI);
   fileInput.addEventListener("change", (event) => {

@@ -8,15 +8,13 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
-    <!-- Critical inline style to prevent FOUC -->
     <style>
       body {
         visibility: hidden;
         opacity: 0;
-        transition: visibility 0s linear 300ms, opacity 300ms; /* Added for a smooth transition if visibility becomes visible */
+        transition: visibility 0s linear 300ms, opacity 300ms;
       }
     </style>
-    <!-- Preload CSS for faster loading -->
     <link
       rel="preload"
       href="./src/style.css"
@@ -51,20 +49,20 @@
           class="tab-content w-full flex flex-col gap-8"
         >
           <div
-            id="dropArea"
+            id="upload-area"
             class="border-2 border-dashed border-base-mute border-opacity-20 rounded-xl p-8 text-center bg-base-100 transition-colors duration-300 ease-in-out min-h-[180px] flex flex-col items-center"
           >
             <input
               type="file"
-              id="pdfUpload"
+              id="file-input"
               accept=".pdf"
               multiple
               class="hidden"
             />
 
             <label
-              for="pdfUpload"
-              id="upload-label-invoice"
+              for="file-input"
+              id="upload-label"
               class="cursor-pointer flex flex-grow w-full flex-col items-center"
             >
               <svg
@@ -86,14 +84,14 @@
               </p>
             </label>
 
-            <div id="file-info-invoice" class="text-left mt-4 hidden">
+            <div id="file-info" class="text-left mt-4 hidden">
               <p class="font-semibold">Selected Files:</p>
               <div
-                id="uploadedFilesList"
+                id="file-pills-container"
                 class="flex flex-wrap gap-2 mt-2"
               ></div>
               <button
-                id="clearUploadFormButton"
+                id="remove-all-files-btn"
                 class="btn btn-error btn-xs mt-2"
               >
                 Remove All
@@ -102,10 +100,10 @@
           </div>
 
           <div class="flex justify-center space-x-2">
-            <button id="processPdfButton" class="btn btn-primary" disabled>
+            <button id="process-btn" class="btn btn-primary" disabled>
               Process
             </button>
-            <button id="downloadCsvButton" class="btn btn-secondary" disabled>
+            <button id="download-btn" class="btn btn-secondary" disabled>
               Download
             </button>
           </div>
@@ -115,7 +113,7 @@
 
             <div
               class="overflow-x-auto bg-base-100 rounded-lg shadow"
-              id="allExtractedResultsContainer"
+              id="results-container"
             >
               <table class="table w-full">
                 <thead>
@@ -129,7 +127,7 @@
                     <th>Action</th>
                   </tr>
                 </thead>
-                <tbody id="extractedResultsTableBody">
+                <tbody id="results-table-body">
                   <tr>
                     <td colspan="7" class="text-center">
                       No documents processed yet.
@@ -433,7 +431,6 @@
     <div id="toast-container" class="toast d z-[9999]"></div>
 
     <script>
-      // Make the body visible after all content is loaded
       document.addEventListener("DOMContentLoaded", () => {
         document.body.style.visibility = "visible";
         document.body.style.opacity = "1";

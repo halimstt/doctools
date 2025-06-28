@@ -8,15 +8,13 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
-    <!-- Critical inline style to prevent FOUC -->
     <style>
       body {
         visibility: hidden;
         opacity: 0;
-        transition: visibility 0s linear 300ms, opacity 300ms; /* Added for a smooth transition if visibility becomes visible */
+        transition: visibility 0s linear 300ms, opacity 300ms;
       }
     </style>
-    <!-- Preload CSS for faster loading -->
     <link
       rel="preload"
       href="./src/style.css"
@@ -195,7 +193,6 @@
     <div id="toast-container" class="toast z-[9999]"></div>
 
     <script>
-      // Make the body visible after all content is loaded
       document.addEventListener("DOMContentLoaded", () => {
         document.body.style.visibility = "visible";
         document.body.style.opacity = "1";

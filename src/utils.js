@@ -129,36 +129,39 @@ export function showConfirmationModal(
     return;
   }
 
-  modalTitle.textContent = title;
-  modalText.textContent = message;
-  confirmBtn.textContent = confirmText;
-
-  const oldConfirmListener = confirmBtn.onclick;
-  const oldCancelListener = cancelBtn.onclick;
-  if (oldConfirmListener)
-    confirmBtn.removeEventListener("click", oldConfirmListener);
-  if (oldCancelListener)
-    cancelBtn.removeEventListener("click", oldCancelListener);
+  confirmBtn.onclick = null;
+  cancelBtn.onclick = null;
 
   const newConfirmListener = () => {
     modal.close();
+    confirmBtn.removeEventListener("click", newConfirmListener);
+    cancelBtn.removeEventListener("click", newCancelListener);
+    modal.removeEventListener("click", modalOutsideClickListener);
     onConfirm();
   };
   const newCancelListener = () => {
     modal.close();
+    confirmBtn.removeEventListener("click", newConfirmListener);
+    cancelBtn.removeEventListener("click", newCancelListener);
+    modal.removeEventListener("click", modalOutsideClickListener);
     onCancel();
   };
 
-  confirmBtn.addEventListener("click", newConfirmListener);
-  cancelBtn.addEventListener("click", newCancelListener);
-
-  modal.showModal();
-
-  modal.addEventListener("click", (event) => {
+  const modalOutsideClickListener = (event) => {
     if (event.target === modal) {
       newCancelListener();
     }
-  });
+  };
+
+  modalTitle.textContent = title;
+  modalText.textContent = message;
+  confirmBtn.textContent = confirmText;
+
+  confirmBtn.addEventListener("click", newConfirmListener);
+  cancelBtn.addEventListener("click", newCancelListener);
+  modal.addEventListener("click", modalOutsideClickListener);
+
+  modal.showModal();
 }
 
 export function hideConfirmationModal() {
