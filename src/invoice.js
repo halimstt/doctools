@@ -244,7 +244,6 @@ async function callGeminiApi(
   document.querySelectorAll(".ai-suggest-button").forEach((btn) => {
     btn.disabled = true;
   });
-  generateRegexButton.disabled = true;
   useSelectedRegexButton.disabled = true;
 
   let prompt;
@@ -354,7 +353,6 @@ async function callGeminiApi(
   } finally {
     updateTemplateButtonsState();
     updateProcessButtonsState();
-    generateRegexButton.disabled = false;
   }
 }
 
@@ -453,11 +451,23 @@ function classifyDocumentHeuristically(pdfText, configurations) {
 }
 
 async function generateRegexSuggestions() {
+  if (generateRegexButton.disabled) {
+    console.log(
+      "generateRegexSuggestions: Button is already disabled, skipping this call."
+    );
+    return;
+  }
+
+  generateRegexButton.disabled = true;
+  useSelectedRegexButton.disabled = true;
+
   if (!currentPdfTextForAnalysis) {
     showMessage(
       "info",
       "A PDF must be loaded for analysis to generate regex suggestions."
     );
+    generateRegexButton.disabled = false;
+    updateTemplateButtonsState();
     return;
   }
 
@@ -476,8 +486,6 @@ async function generateRegexSuggestions() {
 
   const userPrompt = regexUserPrompt.value.trim();
   regexSuggestStatus.textContent = "Generating suggestions...";
-  generateRegexButton.disabled = true;
-  useSelectedRegexButton.disabled = true;
   regexSuggestionsContainer.innerHTML =
     '<p class="text-center">Generating <span class="loading loading-spinner loading-md"></span></p>';
 
@@ -525,6 +533,7 @@ async function generateRegexSuggestions() {
     regexSuggestStatus.textContent = "Error generating suggestions.";
   } finally {
     generateRegexButton.disabled = false;
+    updateTemplateButtonsState();
   }
 }
 
