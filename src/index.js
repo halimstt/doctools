@@ -176,7 +176,18 @@ function removeIndividualFile(indexToRemove) {
 }
 
 async function processStatements() {
-  if (selectedFiles.length === 0) {
+  let filesToProcess = [];
+  const currentParser = parserSelect.value;
+
+  if (currentParser === "maybank-pdf") {
+    if (selectedFiles.length > 0) {
+      filesToProcess = [selectedFiles[0]];
+    }
+  } else {
+    filesToProcess = [...selectedFiles];
+  }
+
+  if (filesToProcess.length === 0) {
     showMessage("error", "Please select at least one PDF file first.");
     return;
   }
@@ -188,7 +199,6 @@ async function processStatements() {
   hideMessage();
 
   allTransactions = [];
-  const currentParser = parserSelect.value;
 
   let currentGeminiApiKey = getGeminiApiKey();
 
@@ -200,7 +210,9 @@ async function processStatements() {
           "error",
           "Gemini API key is required for this parser. Processing canceled."
         );
-        resetUI();
+        processBtn.disabled = false;
+        spinner.classList.add("hidden");
+        processBtnText.textContent = "Process";
         return;
       }
       currentGeminiApiKey = key;
@@ -209,7 +221,9 @@ async function processStatements() {
         "error",
         "Could not get Gemini API key. Processing canceled."
       );
-      resetUI();
+      processBtn.disabled = false;
+      spinner.classList.add("hidden");
+      processBtnText.textContent = "Process";
       return;
     }
   }
@@ -217,10 +231,10 @@ async function processStatements() {
   try {
     const pdfjsLib = await getPDFLib();
 
-    for (let i = 0; i < selectedFiles.length; i++) {
-      const file = selectedFiles[i];
+    for (let i = 0; i < filesToProcess.length; i++) {
+      const file = filesToProcess[i];
       statusText.textContent = `Processing ${file.name} (${i + 1}/${
-        selectedFiles.length
+        filesToProcess.length
       })...`;
 
       const fileReader = new FileReader();
@@ -237,9 +251,6 @@ async function processStatements() {
 
       switch (currentParser) {
         case "maybank-pdf":
-          if (selectedFiles.length > 1 && i > 0) {
-            continue;
-          }
           statusText.textContent = `Analyzing content in ${file.name} (Maybank PDF mode)...`;
           const allLinesFromPdf = await extractTextLinesFromPdfMaybankPdf(pdf);
           fileTransactions = parseTransactionsMaybankPdf(allLinesFromPdf);
@@ -282,7 +293,7 @@ async function processStatements() {
     if (allTransactions.length > 0) {
       showMessage(
         "success",
-        `${selectedFiles.length} PDF(s) processed and converted file ready for download!`
+        `${filesToProcess.length} PDF(s) processed and converted file ready for download!`
       );
     } else {
       showMessage(
@@ -647,6 +658,10 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
         try {
           parsedTransactions = JSON.parse(jsonString);
         } catch (parseError) {
+          showMessage(
+            "error",
+            `AI response for page ${i} could not be parsed. Skipping this page.`
+          );
           continue;
         }
 
@@ -655,7 +670,8 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
           const currentYearFull = new Date().getFullYear();
           const currentYY = String(currentYearFull).slice(-2);
           const parsedYY = parseInt(year, 10);
-          const century = parsedYY <= parseInt(currentYY, 10) ? "20" : "19";
+          const century =
+            parsedYY <= parseInt(currentYY, 10) + 50 ? "20" : "19";
 
           const formattedYear =
             year.length === 4
@@ -705,7 +721,21 @@ document.addEventListener("DOMContentLoaded", () => {
   resetUI();
   updateStatementsButtonsState();
 
-  parserSelect.addEventListener("change", resetUI);
+  parserSelect.addEventListener("change", () => {
+    displayTransactions([]);
+    updateStatementsButtonsState();
+    hideMessage();
+    statusText.textContent = "";
+    processBtn.disabled = selectedFiles.length === 0;
+    if (parserSelect.value === "maybank-pdf" && selectedFiles.length > 1) {
+      showMessage(
+        "warning",
+        "Maybank PDF Statement parser supports only one PDF file at a time. Only the first file will be used for processing.",
+        10000
+      );
+    }
+  });
+
   fileInput.addEventListener("change", (event) => {
     handleFiles(event.target.files);
   });
