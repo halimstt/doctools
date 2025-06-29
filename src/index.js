@@ -6,6 +6,7 @@ import {
   parseDateForSorting,
   downloadCSV,
   getPDFLib,
+  removeElementAtIndex,
 } from "./utils.js";
 
 const parserSelect = document.getElementById("parser-select");
@@ -157,7 +158,7 @@ function handleFiles(files) {
 }
 
 function removeIndividualFile(indexToRemove) {
-  selectedFiles.splice(indexToRemove, 1);
+  selectedFiles = removeElementAtIndex(selectedFiles, indexToRemove);
   updateStatementsFileDisplay();
   if (selectedFiles.length === 0) {
     hideMessage();

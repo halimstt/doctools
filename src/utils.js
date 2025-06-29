@@ -305,3 +305,10 @@ export function FileListShim(files) {
   files.forEach((file) => dt.items.add(file));
   return dt.files;
 }
+
+export function removeElementAtIndex(array, index) {
+  if (index > -1 && index < array.length) {
+    array.splice(index, 1);
+  }
+  return array;
+}

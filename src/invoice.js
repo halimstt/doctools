@@ -10,6 +10,7 @@ import {
   showMessage,
   hideMessage,
   getPDFLib,
+  removeElementAtIndex,
 } from "./utils.js";
 
 let uploadedFiles = [];
@@ -755,7 +756,7 @@ function handleFiles(files) {
 }
 
 function removeIndividualFile(indexToRemove) {
-  uploadedFiles.splice(indexToRemove, 1);
+  uploadedFiles = removeElementAtIndex(uploadedFiles, indexToRemove);
 
   const dataTransfer = new DataTransfer();
   uploadedFiles.forEach((file) => dataTransfer.items.add(file));
