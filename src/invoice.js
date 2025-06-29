@@ -200,18 +200,14 @@ function useSelectedRegex() {
   }
 }
 
-async function callGeminiApi(
+async function generateRegexWithAI(
   pdfText,
-  config = null,
-  isRefine = false,
-  classifyOnly = false,
-  useLlmsForOperation = true,
-  generateRegexForField = null,
-  userContextForRegex = null
+  generateRegexForField,
+  userContextForRegex
 ) {
   let currentGeminiApiKey = getGeminiApiKey();
 
-  if (useLlmsForOperation && !currentGeminiApiKey) {
+  if (!currentGeminiApiKey) {
     try {
       const key = await showApiKeyModal();
       if (!key) {
@@ -219,71 +215,29 @@ async function callGeminiApi(
           "error",
           "Gemini API key is required for AI-powered features. Operation canceled."
         );
-        return null;
+        return [];
       }
       currentGeminiApiKey = key;
     } catch (error) {
       showMessage("error", "Could not get Gemini API key. Operation canceled.");
-      return null;
+      return [];
     }
   }
 
-  processBtn.disabled = true;
-  previewButton.disabled = true;
-  saveTemplateButton.disabled = true;
-  deleteTemplateButton.disabled = true;
-  importConfigButton.disabled = true;
-  exportAllConfigsButton.disabled = true;
-
-  document.querySelectorAll(".ai-suggest-button").forEach((btn) => {
-    btn.disabled = true;
-  });
+  generateRegexButton.disabled = true;
   useSelectedRegexButton.disabled = true;
+  regexSuggestStatus.textContent = "Generating suggestions...";
+  regexSuggestionsContainer.innerHTML =
+    '<p class="text-center">Generating <span class="loading loading-spinner loading-md"></span></p>';
 
-  let prompt;
-  let responseMimeType = "application/json";
-  let normalizedResult = {};
-
-  if (classifyOnly && localConfigurations.length > 0) {
-    normalizedResult = classifyDocumentHeuristically(
-      pdfText,
-      localConfigurations
-    );
-    return normalizedResult;
-  } else if (generateRegexForField) {
-    regexSuggestStatus.textContent = "Generating suggestions...";
-    let regexPrompt = `From the following document text, suggest 3-5 JavaScript-compatible regular expressions (regex) to extract the "${generateRegexForField}" field. Provide only the regex patterns, in a JSON array format like {"regexSuggestions": ["regex1", "regex2", "regex3"]}. The regex should include a capturing group for the value if applicable, and be suitable for use with JavaScript's String.prototype.match() method.`;
-    if (userContextForRegex) {
-      regexPrompt += `\n\nAdditional context from user: "${userContextForRegex}"`;
-    }
-    prompt = `${regexPrompt}\nDocument Text: "${pdfText.substring(
-      0,
-      Math.min(pdfText.length, 1500)
-    )}"`;
-    responseMimeType = "application/json";
-  } else if (!useLlmsForOperation) {
-    normalizedResult = extractDataWithRegex(pdfText, config);
-    return normalizedResult;
-  } else {
-    prompt = `Extract the following information from the invoice/receipt text:\n`;
-    prompt += `- Supplier Name\n- Document Date\n- Document Number\n- Total Amount\n\n`;
-    prompt += `Return the results in a JSON object with keys: "supplierName", "documentDate", "documentNumber", "totalAmount".\n`;
-    prompt += `If a value is not found, return null for that key. Ensure Total Amount is a number (e.g., 123.45). Date should be in DD/MM/YYYY format.\n\n`;
-
-    if (config) {
-      prompt += `Here are some extraction guidelines. For each field, **strictly attempt to extract using the provided pattern first.** If the pattern does not yield a result, or if no pattern is provided, then use general knowledge to find the best match:\n`;
-      if (config.supplierNamePattern)
-        prompt += `- Supplier Name Regex: "${config.supplierNamePattern}"\n`;
-      if (config.documentDatePattern)
-        prompt += `- Document Date Regex: "${config.documentDatePattern}"\n`;
-      if (config.documentNumberPattern)
-        prompt += `- Document Number Regex: "${config.documentNumberPattern}"\n`;
-      if (config.totalAmountPattern)
-        prompt += `- Total Amount Regex: "${config.totalAmountPattern}"\n`;
-      prompt += "\n";
-    }
-    prompt += `Invoice/Receipt Text:\n\n${pdfText}\n\nJSON Output:`;
+  let regexPrompt = `From the following document text, suggest 3-5 JavaScript-compatible regular expressions (regex) to extract the "${generateRegexForField}" field. Provide only the regex patterns, in a JSON array format like {"regexSuggestions": ["regex1", "regex2", "regex3"]}. The regex should include a capturing group for the value if applicable, and be suitable for use with JavaScript's String.prototype.match() method.`;
+  if (userContextForRegex) {
+    regexPrompt += `\n\nAdditional context from user: "${userContextForRegex}"`;
   }
+  const prompt = `${regexPrompt}\nDocument Text: "${pdfText.substring(
+    0,
+    Math.min(pdfText.length, 1500)
+  )}"`;
 
   try {
     const response = await fetch(
@@ -296,7 +250,7 @@ async function callGeminiApi(
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            responseMimeType: responseMimeType,
+            responseMimeType: "application/json",
           },
         }),
       }
@@ -323,30 +277,20 @@ async function callGeminiApi(
 
     const rawResult = JSON.parse(data.candidates[0].content.parts[0].text);
 
-    if (generateRegexForField) {
-      if (rawResult && Array.isArray(rawResult.regexSuggestions)) {
-        regexSuggestStatus.textContent =
-          "Suggestions generated. Select one to use.";
-        return rawResult.regexSuggestions;
-      }
+    if (rawResult && Array.isArray(rawResult.regexSuggestions)) {
       regexSuggestStatus.textContent =
-        "No regex suggestions could be generated.";
-      return [];
-    } else {
-      if (Array.isArray(rawResult) && rawResult.length > 0) {
-        normalizedResult = rawResult[0];
-      } else if (typeof rawResult === "object" && rawResult !== null) {
-        normalizedResult = rawResult;
-      }
-      return normalizedResult;
+        "Suggestions generated. Select one to use.";
+      return rawResult.regexSuggestions;
     }
+    regexSuggestStatus.textContent = "No regex suggestions could be generated.";
+    return [];
   } catch (error) {
     showMessage("error", `AI operation failed: ${error.message}`);
     regexSuggestStatus.textContent = `Error: ${error.message}`;
-    throw error;
+    return [];
   } finally {
+    generateRegexButton.disabled = false;
     updateTemplateButtonsState();
-    updateProcessButtonsState();
   }
 }
 
@@ -390,12 +334,8 @@ async function generateRegexSuggestions() {
     '<p class="text-center">Generating <span class="loading loading-spinner loading-md"></span></p>';
 
   try {
-    const suggestions = await callGeminiApi(
+    const suggestions = await generateRegexWithAI(
       currentPdfTextForAnalysis,
-      null,
-      false,
-      false,
-      true,
       currentRegexTargetField,
       userPrompt
     );
@@ -444,6 +384,7 @@ function loadLocalConfigurations() {
   try {
     localConfigurations = storedConfigs ? JSON.parse(storedConfigs) : [];
   } catch (e) {
+    console.error("Error parsing local configurations:", e);
     localConfigurations = [];
   }
   populateConfigSelect();
@@ -1099,12 +1040,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
 
-        extractedData = await callGeminiApi(
+        extractedData = extractDataWithRegex(
           fileText,
-          selectedConfigForExtraction,
-          false,
-          false,
-          false
+          selectedConfigForExtraction
         );
 
         const formattedExtractedData = {
@@ -1188,12 +1126,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         totalAmountPattern: totalAmountRegexInput.value,
       };
 
-      const refinedData = await callGeminiApi(
+      const refinedData = extractDataWithRegex(
         currentPdfTextForAnalysis,
-        currentRegexs,
-        true,
-        false,
-        false
+        currentRegexs
       );
 
       if (refinedData) {
