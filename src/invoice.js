@@ -739,11 +739,10 @@ function removeIndividualFile(indexToRemove) {
 async function displayPdfTextForAnalysis(file) {
   if (!file || file.type !== "application/pdf") {
     pdfRawTextPreview.value = "";
-    currentAnalysisFileName.textContent = "-";
     currentPdfTextForAnalysis = "";
     return;
   }
-  currentAnalysisFileName.textContent = file.name;
+  currentAnalysisFileName.textContent = "( " + file.name + " )";
 
   const reader = new FileReader();
   reader.onload = async (e) => {
@@ -975,7 +974,6 @@ function resetExtractedFieldsForAnalysisTab() {
   documentDateSpan.textContent = "-";
   documentNumberSpan.textContent = "-";
   totalAmountSpan.textContent = "-";
-  currentAnalysisFileName.textContent = "-";
   currentPdfTextForAnalysis = "";
   pdfRawTextPreview.value = "";
   updateTemplateButtonsState();

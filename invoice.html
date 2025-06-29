@@ -163,7 +163,19 @@
           class="tab-content w-full flex flex-col md:flex-row gap-8 hidden"
         >
           <div class="flex-1 md:mt-0 space-y-6">
-            <h2 class="text-2xl font-bold mb-4">Extracted Information</h2>
+            <h2 class="text-2xl font-bold mb-4">
+              Raw Text <span id="currentAnalysisFileName"></span>
+            </h2>
+            <div class="mb-4">
+              <textarea
+                id="pdfRawTextPreview"
+                class="textarea w-full h-96"
+                readonly
+                placeholder="Go to Extract tab, upload a PDF and switch to this tab to see its raw text here."
+              ></textarea>
+            </div>
+
+            <h2 class="text-2xl font-bold mb-4">Extraction Preview</h2>
             <div class="card bg-base-100 shadow-sm">
               <div class="card-body">
                 <p>
@@ -182,18 +194,6 @@
                   <strong>Total Amount:</strong> <span id="totalAmount">-</span>
                 </p>
               </div>
-            </div>
-
-            <h2 class="text-2xl font-bold mb-4">
-              Raw Text Preview (<span id="currentAnalysisFileName">-</span>)
-            </h2>
-            <div class="mb-4">
-              <textarea
-                id="pdfRawTextPreview"
-                class="textarea w-full h-96"
-                readonly
-                placeholder="Upload a PDF and switch to the Template tab to see its raw text content here."
-              ></textarea>
             </div>
           </div>
 
