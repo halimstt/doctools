@@ -415,7 +415,7 @@ export function classifyDocumentHeuristically(pdfText, configurations) {
   scores.sort((a, b) => b.score - a.score);
   const bestMatch = scores[0];
 
-  if (bestMatch.score >= 3) {
+  if (bestMatch.score >= 10) {
     return { matchedConfigName: bestMatch.configName };
   } else {
     return { matchedConfigName: "None" };

@@ -977,6 +977,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     processBtn.disabled = true;
 
     let processedCount = 0;
+    let successCount = 0;
+    let failedCount = 0;
+
     for (let i = 0; i < uploadedFiles.length; i++) {
       const file = uploadedFiles[i];
       if (file.type !== "application/pdf") {
@@ -1025,7 +1028,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (
             classificationResult &&
             classificationResult.matchedConfigName &&
-            classificationResult.matchedConfigName !== "-"
+            classificationResult.matchedConfigName !== "None"
           ) {
             const matchedName = classificationResult.matchedConfigName;
             const foundConfig = localConfigurations.find(
@@ -1058,6 +1061,12 @@ document.addEventListener("DOMContentLoaded", async () => {
           totalAmount: extractedData.totalAmount || null,
         };
         allExtractedData.push(formattedExtractedData);
+
+        if (configUsedName !== "None" && configUsedName !== "-") {
+          successCount++;
+        } else {
+          failedCount++;
+        }
       } catch (error) {
         const errorData = {
           originalFile: file,
@@ -1075,6 +1084,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           "error",
           `Error processing file "${file.name}": ${error.message}`
         );
+        failedCount++;
       }
       processedCount++;
     }
@@ -1092,16 +1102,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     refreshExtractedResultsTable();
 
-    if (allExtractedData.length > 0) {
-      showMessage(
-        "success",
-        `Finished processing ${processedCount} PDF(s). Data ready for download.`
-      );
+    if (processedCount > 0) {
+      if (successCount > 0) {
+        showMessage(
+          "success",
+          `${successCount} PDF(s) extracted successfully. Data ready for download.`
+        );
+      }
+      if (failedCount > 0) {
+        showMessage("warning", `${failedCount} PDF(s) failed to extract.`);
+      }
     } else {
-      showMessage(
-        "warning",
-        `Finished processing ${processedCount} PDF(s), but no data was extracted.`
-      );
+      showMessage("warning", `No PDFs were processed.`);
     }
     processBtnText.textContent = "Process";
     spinnerProcess.classList.add("hidden");
