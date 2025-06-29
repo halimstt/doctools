@@ -312,3 +312,7 @@ export function removeElementAtIndex(array, index) {
   }
   return array;
 }
+
+export function filterPdfFiles(files) {
+  return Array.from(files).filter((file) => file.type === "application/pdf");
+}

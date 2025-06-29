@@ -11,6 +11,7 @@ import {
   hideMessage,
   getPDFLib,
   removeElementAtIndex,
+  filterPdfFiles,
 } from "./utils.js";
 
 let uploadedFiles = [];
@@ -727,9 +728,7 @@ function importConfigsFromJson() {
 }
 
 function handleFiles(files) {
-  const pdfFiles = Array.from(files).filter(
-    (file) => file.type === "application/pdf"
-  );
+  const pdfFiles = filterPdfFiles(files);
 
   if (pdfFiles.length === 0) {
     if (uploadedFiles.length === 0) {

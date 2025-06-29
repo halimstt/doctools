@@ -7,6 +7,7 @@ import {
   downloadCSV,
   getPDFLib,
   removeElementAtIndex,
+  filterPdfFiles,
 } from "./utils.js";
 
 const parserSelect = document.getElementById("parser-select");
@@ -128,9 +129,7 @@ function updateStatementsButtonsState() {
 }
 
 function handleFiles(files) {
-  const pdfFiles = Array.from(files).filter(
-    (file) => file.type === "application/pdf"
-  );
+  const pdfFiles = filterPdfFiles(files);
 
   if (pdfFiles.length === 0) {
     showMessage("error", "Please select valid PDF file(s).");
