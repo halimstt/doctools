@@ -127,7 +127,6 @@ function updateStatementsButtonsState() {
 }
 
 function handleFiles(files) {
-  const currentParser = parserSelect.value;
   const pdfFiles = Array.from(files).filter(
     (file) => file.type === "application/pdf"
   );
@@ -140,27 +139,17 @@ function handleFiles(files) {
     return;
   }
 
-  if (currentParser === "maybank-pdf") {
-    if (pdfFiles.length > 1) {
-      showMessage(
-        "warning",
-        "Maybank PDF Statement parser supports only one PDF file at a time. Only the first file will be used."
-      );
+  pdfFiles.forEach((newFile) => {
+    if (
+      !selectedFiles.some(
+        (existingFile) =>
+          existingFile.name === newFile.name &&
+          existingFile.size === newFile.size
+      )
+    ) {
+      selectedFiles.push(newFile);
     }
-    selectedFiles = [pdfFiles[0]];
-  } else {
-    pdfFiles.forEach((newFile) => {
-      if (
-        !selectedFiles.some(
-          (existingFile) =>
-            existingFile.name === newFile.name &&
-            existingFile.size === newFile.size
-        )
-      ) {
-        selectedFiles.push(newFile);
-      }
-    });
-  }
+  });
 
   updateStatementsFileDisplay();
   processBtn.disabled = selectedFiles.length === 0;
@@ -176,16 +165,7 @@ function removeIndividualFile(indexToRemove) {
 }
 
 async function processStatements() {
-  let filesToProcess = [];
-  const currentParser = parserSelect.value;
-
-  if (currentParser === "maybank-pdf") {
-    if (selectedFiles.length > 0) {
-      filesToProcess = [selectedFiles[0]];
-    }
-  } else {
-    filesToProcess = [...selectedFiles];
-  }
+  let filesToProcess = [...selectedFiles];
 
   if (filesToProcess.length === 0) {
     showMessage("error", "Please select at least one PDF file first.");
@@ -202,7 +182,7 @@ async function processStatements() {
 
   let currentGeminiApiKey = getGeminiApiKey();
 
-  if (currentParser === "gemini-parser" && !currentGeminiApiKey) {
+  if (parserSelect.value === "gemini-parser" && !currentGeminiApiKey) {
     try {
       const key = await showApiKeyModal();
       if (!key) {
@@ -249,7 +229,7 @@ async function processStatements() {
 
       let fileTransactions = [];
 
-      switch (currentParser) {
+      switch (parserSelect.value) {
         case "maybank-pdf":
           statusText.textContent = `Analyzing content in ${file.name} (Maybank PDF mode)...`;
           const allLinesFromPdf = await extractTextLinesFromPdfMaybankPdf(pdf);
@@ -573,7 +553,7 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
   }
 
   for (let i = 1; i <= totalPages; i++) {
-    statusText.textContent = `Processing ${i}/${totalPages}...`;
+    statusText.textContent = `Processing page ${i}/${totalPages} using AI...`;
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
     const pageText = textContent.items.map((item) => item.str).join(" ");
@@ -727,13 +707,6 @@ document.addEventListener("DOMContentLoaded", () => {
     hideMessage();
     statusText.textContent = "";
     processBtn.disabled = selectedFiles.length === 0;
-    if (parserSelect.value === "maybank-pdf" && selectedFiles.length > 1) {
-      showMessage(
-        "warning",
-        "Maybank PDF Statement parser supports only one PDF file at a time. Only the first file will be used for processing.",
-        10000
-      );
-    }
   });
 
   fileInput.addEventListener("change", (event) => {
