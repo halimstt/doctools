@@ -1,4 +1,4 @@
-const CACHE_NAME = "doctools-cache-v1";
+const CACHE_NAME = "doctools-cache-v3";
 const urlsToPrecache = [
   "./", // Caches index.html implicitly from the root
   "./index.html",

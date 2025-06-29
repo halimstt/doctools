@@ -1,10 +1,18 @@
 import { resolve } from "path";
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
+import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
-  base: "./",
-  plugins: [tailwindcss()],
+  // base: "/doctools/", // Enable if hosting on github-pages free domain
+  plugins: [
+    tailwindcss(),
+    visualizer({
+      filename: "./dist/bundle-report.html",
+      open: false,
+      gzipSize: true,
+    }),
+  ],
   build: {
     rollupOptions: {
       input: {
@@ -15,13 +23,12 @@ export default defineConfig({
       },
     },
     // Specify the output directory for the build (default is 'dist')
-    outDir: "docs",
+    outDir: "dist",
     // Clear the output directory before building
     emptyOutDir: true,
   },
   server: {
     host: true, // This will expose the server to all network interfaces
-    // Or you can specify an IP address like '0.0.0.0'
-    // host: '0.0.0.0',
+    // Or you can specify an IP address like host: '0.0.0.0',
   },
 });

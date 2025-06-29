@@ -1,6 +1,3 @@
-// src/invoice.js
-
-// --- Import utility functions ---
 import {
   getGeminiApiKey,
   showApiKeyModal,
@@ -12,29 +9,32 @@ import {
   FileListShim,
   showMessage,
   hideMessage,
+  getPDFLib,
+  removeElementAtIndex,
+  filterPdfFiles,
+  logDebug,
+  showNoDocumentSelectedModal,
+  extractDataWithRegex,
+  classifyDocumentHeuristically,
 } from "./utils.js";
 
-// --- 1. Global Variables and DOM Element References ---
-
-// Main application state
 let uploadedFiles = [];
-let currentPdfTextForAnalysis = ""; // Stores text of the PDF currently displayed in Template tab
-let activeConfig = null; // The currently loaded template configuration
-let localConfigurations = []; // Array of configurations loaded from localStorage
-let allExtractedData = []; // All extracted invoice data from processed PDFs
-let currentRegexTargetField = null; // Field for which AI regex suggestions are being generated (e.g., 'documentDate')
+let currentPdfTextForAnalysis = "";
+let activeConfig = null;
+let localConfigurations = [];
+let allExtractedData = [];
+let currentRegexTargetField = null;
 
-// API related constants
 const GEMINI_API_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
-// Debugging flag
-const DEBUG_MODE = true; // Set to false for production to disable logDebug calls
+const DEBUG_MODE = false;
 
-// DOM Element References (cached for performance)
-const pdfUpload = document.getElementById("pdfUpload");
+const fileInput = document.getElementById("file-input");
 const pdfRawTextPreview = document.getElementById("pdfRawTextPreview");
-const processPdfButton = document.getElementById("processPdfButton");
+const processBtn = document.getElementById("process-btn");
+const processBtnText = document.getElementById("process-btn-text");
+const spinnerProcess = document.getElementById("spinner-process");
 const supplierNameSpan = document.getElementById("supplierName");
 const documentDateSpan = document.getElementById("documentDate");
 const documentNumberSpan = document.getElementById("documentNumber");
@@ -49,16 +49,14 @@ const documentNumberRegexInput = document.getElementById("documentNumberRegex");
 const totalAmountRegexInput = document.getElementById("totalAmountRegex");
 const configSelect = document.getElementById("configSelect");
 const previewButton = document.getElementById("previewButton");
-const dropArea = document.getElementById("dropArea");
-const uploadedFilesList = document.getElementById("uploadedFilesList"); // This is the container for the file pills
-const allExtractedResultsContainer = document.getElementById(
-  "allExtractedResultsContainer"
-);
-const extractedResultsTableBody = document.getElementById(
-  "extractedResultsTableBody"
-);
-const downloadCsvButton = document.getElementById("downloadCsvButton");
-const clearUploadFormButton = document.getElementById("clearUploadFormButton");
+const previewBtnText = document.getElementById("preview-btn-text");
+const spinnerPreview = document.getElementById("spinner-preview");
+const uploadArea = document.getElementById("upload-area");
+const filePillsContainer = document.getElementById("file-pills-container");
+const resultsContainer = document.getElementById("results-container");
+const resultsTableBody = document.getElementById("results-table-body");
+const downloadBtn = document.getElementById("download-btn");
+const removeAllFilesBtn = document.getElementById("remove-all-files-btn");
 const currentAnalysisFileName = document.getElementById(
   "currentAnalysisFileName"
 );
@@ -106,48 +104,32 @@ const exportAllConfigsButton = document.getElementById(
   "exportAllConfigsButton"
 );
 
-// Get references for upload label and file info container for visibility toggling
-const uploadLabelInvoice = document.getElementById("upload-label-invoice");
-const fileInfoInvoice = document.getElementById("file-info-invoice");
+const uploadLabel = document.getElementById("upload-label");
+const fileInfo = document.getElementById("file-info");
 
-// --- 2. Utility Functions (Removed local ones, using imported) ---
-
-/**
- * Logs a message to the console if DEBUG_MODE is enabled.
- * @param {string} message - The message to log.
- */
-function logDebug(message) {
-  if (DEBUG_MODE) {
-    console.log("[DEBUG]", message);
+async function showRegexSuggestModal(fieldName) {
+  if (!currentPdfTextForAnalysis) {
+    showNoDocumentSelectedModal();
+    return;
   }
-}
 
-/**
- * Shows a confirmation modal indicating that no document is selected.
- */
-function showNoDocumentSelectedModal() {
-  showConfirmationModal(
-    "No Document Selected",
-    "Please select a document from the 'Extract' tab first to proceed.",
-    "OK",
-    () => {},
-    () => {}
-  );
-}
+  if (!getGeminiApiKey()) {
+    const key = await showApiKeyModal();
+    if (!key) {
+      showMessage(
+        "error",
+        "Gemini API key is required for AI-powered features. Operation canceled."
+      );
+      return;
+    }
+  }
 
-/**
- * Shows the regex suggestion modal for a specific field.
- * @param {string} fieldName - The name of the field for which regex is suggested (e.g., "documentDate").
- */
-function showRegexSuggestModal(fieldName) {
   currentRegexTargetField = fieldName;
-  // Update modal title dynamically
   regexSuggestModalTitle.textContent = `AI Regex Suggestions for ${fieldName
     .replace(/([A-Z])/g, " $1")
     .toLowerCase()
-    .replace("document ", "")}`; // Format for display
+    .replace("document ", "")}`;
 
-  // Reset modal content
   regexUserPrompt.value = "";
   regexSuggestionsContainer.innerHTML =
     '<p id="noSuggestionsText" class="text-sm p-secondary">Click "Generate Suggestions" to get AI help.</p>';
@@ -155,23 +137,14 @@ function showRegexSuggestModal(fieldName) {
   regexSuggestStatus.textContent = "";
   regexTestResult.textContent = "Test Result: No regex tested yet.";
 
-  // Use showModal() to display the dialog
   regexSuggestModal.showModal();
 }
 
-/**
- * Hides the regex suggestion modal.
- */
 function hideRegexSuggestModal() {
-  // Use close() to hide the dialog
   regexSuggestModal.close();
-  currentRegexTargetField = null; // Clear target field
+  currentRegexTargetField = null;
 }
 
-/**
- * Tests a given regex pattern against the current PDF text in the modal and displays the result.
- * @param {string} regexPattern - The regex pattern to test.
- */
 function testRegexInModal(regexPattern) {
   if (!currentPdfTextForAnalysis) {
     regexTestResult.textContent =
@@ -180,12 +153,11 @@ function testRegexInModal(regexPattern) {
     return;
   }
 
-  // Clear previous test result styling
   regexTestResult.classList.remove("text-red-500", "text-green-500");
 
   try {
-    const regex = new RegExp(regexPattern, "i"); // Case-insensitive regex
-    const match = currentPdfTextForAnalysis.match(regex); // Perform the match
+    const regex = new RegExp(regexPattern, "i");
+    const match = currentPdfTextForAnalysis.match(regex);
 
     if (match) {
       const result = match[1] ? match[1].trim() : match[0].trim();
@@ -208,16 +180,12 @@ function testRegexInModal(regexPattern) {
   }
 }
 
-/**
- * Applies the selected regex suggestion to the corresponding input field and triggers a preview.
- */
 function useSelectedRegex() {
   const selectedRadio = regexSuggestionsContainer.querySelector(
     'input[name="regexSuggestion"]:checked'
   );
   if (selectedRadio) {
-    const selectedRegex = decodeURIComponent(selectedRadio.value); // Decode URL-encoded regex
-    // Assign selected regex to the correct input field
+    const selectedRegex = decodeURIComponent(selectedRadio.value);
     if (currentRegexTargetField === "documentDate") {
       documentDateRegexInput.value = selectedRegex;
     } else if (currentRegexTargetField === "documentNumber") {
@@ -225,36 +193,13 @@ function useSelectedRegex() {
     } else if (currentRegexTargetField === "totalAmount") {
       totalAmountRegexInput.value = selectedRegex;
     }
-    hideRegexSuggestModal(); // Close modal
-    previewButton.click(); // Trigger a preview to see the effect of the new regex
+    hideRegexSuggestModal();
+    previewButton.click();
   } else {
-    // Use a custom modal for alerts instead of browser alert()
-    showConfirmationModal(
-      "Selection Required",
-      "Please select a regex suggestion first.",
-      "OK",
-      () => {}, // No action on OK
-      () => {} // No action on Cancel
-    );
+    showMessage("info", "Please select a regex suggestion first.");
   }
 }
 
-// --- 3. Data Extraction and AI Interaction Functions ---
-
-/**
- * Extracts data from PDF text using provided regex patterns or a heuristic approach.
- * This function can also generate regex suggestions or classify documents.
- * It integrates with the Gemini API for AI-powered features.
- * @param {string} pdfText - The text content of the PDF.
- * @param {Object} [config=null] - An optional configuration object with regex patterns.
- * @param {boolean} [isRefine=false] - True if this is a refinement (preview) operation.
- * @param {boolean} [classifyOnly=false] - True if only document classification is needed.
- * @param {boolean} [useLlmsForOperation=true] - True to use LLMs, false to use regex directly.
- * @param {string} [generateRegexForField=null] - If provided, AI will generate regex for this field.
- * @param {string} [userContextForRegex=null] - Optional user prompt for regex generation.
- * @returns {Promise<Object|Array<string>|null>} Extracted data, regex suggestions, or classification result.
- * @throws {Error} If API call fails or invalid response is received.
- */
 async function callGeminiApi(
   pdfText,
   config = null,
@@ -264,38 +209,26 @@ async function callGeminiApi(
   generateRegexForField = null,
   userContextForRegex = null
 ) {
-  let currentGeminiApiKey = getGeminiApiKey(); // Get current API key
+  let currentGeminiApiKey = getGeminiApiKey();
 
   if (useLlmsForOperation && !currentGeminiApiKey) {
     try {
-      const key = await showApiKeyModal(); // Use utility function to show modal
+      const key = await showApiKeyModal();
       if (!key) {
-        // If user cancels or doesn't provide a key
-        showConfirmationModal(
-          "API Key Required",
-          "Gemini API key is required for AI-powered features. Operation canceled.",
-          "OK",
-          () => {},
-          () => {}
+        showMessage(
+          "error",
+          "Gemini API key is required for AI-powered features. Operation canceled."
         );
         return null;
       }
-      currentGeminiApiKey = key; // Update key if saved
+      currentGeminiApiKey = key;
     } catch (error) {
-      console.error("Error getting Gemini API key:", error);
-      showConfirmationModal(
-        "API Key Error",
-        "Could not get Gemini API key. Operation canceled.",
-        "OK",
-        () => {},
-        () => {}
-      );
+      showMessage("error", "Could not get Gemini API key. Operation canceled.");
       return null;
     }
   }
 
-  // Disable buttons during API call
-  processPdfButton.disabled = true;
+  processBtn.disabled = true;
   previewButton.disabled = true;
   saveTemplateButton.disabled = true;
   deleteTemplateButton.disabled = true;
@@ -305,46 +238,38 @@ async function callGeminiApi(
   document.querySelectorAll(".ai-suggest-button").forEach((btn) => {
     btn.disabled = true;
   });
+  useSelectedRegexButton.disabled = true;
 
   let prompt;
   let responseMimeType = "application/json";
-  let normalizedResult = {}; // To store the parsed result
+  let normalizedResult = {};
 
-  // Logic for document classification (heuristic)
   if (classifyOnly && localConfigurations.length > 0) {
     normalizedResult = classifyDocumentHeuristically(
       pdfText,
       localConfigurations
     );
     return normalizedResult;
-  }
-  // Logic for generating regex suggestions
-  else if (generateRegexForField) {
+  } else if (generateRegexForField) {
     regexSuggestStatus.textContent = "Generating suggestions...";
     let regexPrompt = `From the following document text, suggest 3-5 JavaScript-compatible regular expressions (regex) to extract the "${generateRegexForField}" field. Provide only the regex patterns, in a JSON array format like {"regexSuggestions": ["regex1", "regex2", "regex3"]}. The regex should include a capturing group for the value if applicable, and be suitable for use with JavaScript's String.prototype.match() method.`;
     if (userContextForRegex) {
       regexPrompt += `\n\nAdditional context from user: "${userContextForRegex}"`;
     }
-    // Truncate PDF text to avoid exceeding token limits for prompt
     prompt = `${regexPrompt}\nDocument Text: "${pdfText.substring(
       0,
       Math.min(pdfText.length, 1500)
     )}"`;
-    responseMimeType = "application/json"; // Expecting JSON array of regexes
-  }
-  // Logic for direct regex extraction (no LLM)
-  else if (!useLlmsForOperation) {
+    responseMimeType = "application/json";
+  } else if (!useLlmsForOperation) {
     normalizedResult = extractDataWithRegex(pdfText, config);
     return normalizedResult;
-  }
-  // Logic for general AI-powered extraction (using LLM)
-  else {
+  } else {
     prompt = `Extract the following information from the invoice/receipt text:\n`;
     prompt += `- Supplier Name\n- Document Date\n- Document Number\n- Total Amount\n\n`;
     prompt += `Return the results in a JSON object with keys: "supplierName", "documentDate", "documentNumber", "totalAmount".\n`;
     prompt += `If a value is not found, return null for that key. Ensure Total Amount is a number (e.g., 123.45). Date should be in DD/MM/YYYY format.\n\n`;
 
-    // Add extraction guidelines from config if available
     if (config) {
       prompt += `Here are some extraction guidelines. For each field, **strictly attempt to extract using the provided pattern first.** If the pattern does not yield a result, or if no pattern is provided, then use general knowledge to find the best match:\n`;
       if (config.supplierNamePattern)
@@ -362,7 +287,7 @@ async function callGeminiApi(
 
   try {
     const response = await fetch(
-      `${GEMINI_API_ENDPOINT}?key=${currentGeminiApiKey}`, // Use current key
+      `${GEMINI_API_ENDPOINT}?key=${currentGeminiApiKey}`,
       {
         method: "POST",
         headers: {
@@ -385,7 +310,6 @@ async function callGeminiApi(
     }
 
     const data = await response.json();
-    // Validate API response structure
     if (
       !data.candidates ||
       !data.candidates.length ||
@@ -400,7 +324,6 @@ async function callGeminiApi(
     const rawResult = JSON.parse(data.candidates[0].content.parts[0].text);
 
     if (generateRegexForField) {
-      // For regex generation, expect an object with regexSuggestions array
       if (rawResult && Array.isArray(rawResult.regexSuggestions)) {
         regexSuggestStatus.textContent =
           "Suggestions generated. Select one to use.";
@@ -408,9 +331,8 @@ async function callGeminiApi(
       }
       regexSuggestStatus.textContent =
         "No regex suggestions could be generated.";
-      return []; // Return empty array if no suggestions
+      return [];
     } else {
-      // For extraction, normalize result (can be an array with one object or direct object)
       if (Array.isArray(rawResult) && rawResult.length > 0) {
         normalizedResult = rawResult[0];
       } else if (typeof rawResult === "object" && rawResult !== null) {
@@ -419,181 +341,53 @@ async function callGeminiApi(
       return normalizedResult;
     }
   } catch (error) {
-    // Show error message using the utility function
     showMessage("error", `AI operation failed: ${error.message}`);
-    // No need to update processingStatus.textContent as showMessage handles it
-    regexSuggestStatus.textContent = `Error: ${error.message}`; // Update status in regex modal
-    throw error; // Re-throw to propagate error
+    regexSuggestStatus.textContent = `Error: ${error.message}`;
+    throw error;
   } finally {
-    // Ensure buttons are re-enabled after API call
-    updateTemplateTabButtonsState();
-    updateProcessTabButtonsState();
+    updateTemplateButtonsState();
+    updateProcessButtonsState();
   }
 }
 
-/**
- * Extracts data from a PDF text using regular expressions defined in a configuration.
- * @param {string} pdfText - The text content of the PDF.
- * @param {Object} config - The configuration object containing regex patterns.
- * @returns {Object} An object with extracted supplierName, documentDate, documentNumber, and totalAmount.
- */
-function extractDataWithRegex(pdfText, config) {
-  const extracted = {
-    supplierName: null,
-    documentDate: null,
-    documentNumber: null,
-    totalAmount: null,
-  };
-
-  /**
-   * Helper function to extract a value using a regex pattern.
-   * @param {string} text - The text to search within.
-   * @param {string} pattern - The regex pattern string.
-   * @returns {string|null} The extracted value or null if not found or invalid pattern.
-   */
-  const extractValue = (text, pattern) => {
-    if (!pattern) return null;
-    try {
-      const regex = new RegExp(pattern, "i"); // Case-insensitive
-      const match = text.match(regex);
-      if (match) {
-        // Return captured group 1 if it exists, otherwise the full match
-        return match[1] ? match[1].trim() : match[0].trim();
-      }
-      return null;
-    } catch (e) {
-      console.error("Invalid regex pattern:", pattern, e);
-      return null;
-    }
-  };
-
-  if (config) {
-    extracted.supplierName = extractValue(pdfText, config.supplierNamePattern);
-    let docDate = extractValue(pdfText, config.documentDatePattern);
-    extracted.documentDate = docDate; // Date will be formatted for display later
-
-    let docNumber = extractValue(pdfText, config.documentNumberPattern);
-    if (docNumber) {
-      // Clean document number: remove extra spaces or dashes
-      docNumber = docNumber
-        .replace(/\s*-\s*/g, "-")
-        .replace(/\s+/g, "")
-        .trim();
-    }
-    extracted.documentNumber = docNumber;
-
-    const totalAmountStr = extractValue(pdfText, config.totalAmountPattern);
-    if (totalAmountStr) {
-      // Clean amount: remove non-numeric characters except dot
-      const cleanedAmount = totalAmountStr.replace(/[^0-9.]/g, "");
-      const parsedAmount = parseFloat(cleanedAmount);
-      if (!isNaN(parsedAmount)) {
-        extracted.totalAmount = parsedAmount;
-      }
-    }
-  }
-  return extracted;
-}
-
-/**
- * Classifies a document to a known template heuristically based on regex pattern matches.
- * @param {string} pdfText - The text content of the PDF.
- * @param {Array<Object>} configurations - Array of template configurations.
- * @returns {Object} An object indicating the matched configuration name and score.
- */
-function classifyDocumentHeuristically(pdfText, configurations) {
-  let scores = [];
-
-  /**
-   * Helper to test if a pattern exists in text.
-   * @param {string} text - The text to search.
-   * @param {string} pattern - The regex pattern string.
-   * @returns {boolean} True if pattern matches, false otherwise or if pattern is invalid.
-   */
-  const testPattern = (text, pattern) => {
-    if (!pattern) return false;
-    try {
-      return new RegExp(pattern, "i").test(text);
-    } catch (e) {
-      console.error("Invalid regex pattern for testing:", pattern, e);
-      return false; // Invalid regex pattern
-    }
-  };
-
-  for (const config of configurations) {
-    let currentScore = 0;
-    // Assign higher scores for more unique identifiers
-    if (testPattern(pdfText, config.supplierNamePattern)) {
-      currentScore += 4;
-    }
-    if (testPattern(pdfText, config.documentNumberPattern)) {
-      currentScore += 3;
-    }
-    if (testPattern(pdfText, config.totalAmountPattern)) {
-      currentScore += 2;
-    }
-    if (testPattern(pdfText, config.documentDatePattern)) {
-      currentScore += 1;
-    }
-
-    if (currentScore > 0) {
-      scores.push({ configName: config.name, score: currentScore });
-    }
-  }
-
-  if (scores.length === 0) {
-    return { matchedConfigName: "None" }; // No templates matched
-  }
-
-  scores.sort((a, b) => b.score - a.score); // Sort by score descending
-  const bestMatch = scores[0];
-
-  // A threshold score to consider it a "good" match
-  if (bestMatch.score >= 3) {
-    return { matchedConfigName: bestMatch.configName };
-  } else {
-    return { matchedConfigName: "None" }; // Match is too weak, consider it "None"
-  }
-}
-
-/**
- * Generates regex suggestions for a specific field using the Gemini API.
- */
 async function generateRegexSuggestions() {
-  if (!currentPdfTextForAnalysis) {
-    showConfirmationModal(
-      "Missing PDF",
-      "A PDF must be loaded for analysis to generate regex suggestions.",
-      "OK",
-      () => {},
-      () => {}
+  if (generateRegexButton.disabled) {
+    logDebug(
+      "generateRegexSuggestions: Button is already disabled, skipping this call."
     );
     return;
   }
 
+  generateRegexButton.disabled = true;
+  useSelectedRegexButton.disabled = true;
+
+  if (!currentPdfTextForAnalysis) {
+    showMessage(
+      "info",
+      "A PDF must be loaded for analysis to generate regex suggestions."
+    );
+    generateRegexButton.disabled = false;
+    updateTemplateButtonsState();
+    return;
+  }
+
   if (!getGeminiApiKey()) {
-    await showApiKeyModal(); // Use utility function to prompt for key
+    await showApiKeyModal();
     if (!getGeminiApiKey()) {
-      // Check again after modal closes
-      showConfirmationModal(
-        "API Key Required",
-        "Gemini API key is required for AI-powered features. Operation canceled.",
-        "OK",
-        () => {},
-        () => {}
+      showMessage(
+        "error",
+        "Gemini API key is required for AI-powered features. Operation canceled."
       );
-      generateRegexButton.disabled = false; // Re-enable button if no key
-      updateTemplateTabButtonsState();
+      generateRegexButton.disabled = false;
+      updateTemplateButtonsState();
       return;
     }
   }
 
   const userPrompt = regexUserPrompt.value.trim();
   regexSuggestStatus.textContent = "Generating suggestions...";
-  generateRegexButton.disabled = true; // Disable button during generation
-  useSelectedRegexButton.disabled = true; // Disable "Use Selected" button
   regexSuggestionsContainer.innerHTML =
-    '<p class="text-center"><span class="loading loading-spinner loading-md"></span> Generating...</p>';
+    '<p class="text-center">Generating <span class="loading loading-spinner loading-md"></span></p>';
 
   try {
     const suggestions = await callGeminiApi(
@@ -601,15 +395,14 @@ async function generateRegexSuggestions() {
       null,
       false,
       false,
-      true, // Use LLM for this operation
+      true,
       currentRegexTargetField,
       userPrompt
     );
 
-    regexSuggestionsContainer.innerHTML = ""; // Clear loading message
+    regexSuggestionsContainer.innerHTML = "";
 
     if (suggestions && suggestions.length > 0) {
-      // Display each suggestion as a radio button
       suggestions.forEach((regex, index) => {
         const div = document.createElement("div");
         div.className = "flex items-center mb-2";
@@ -621,11 +414,10 @@ async function generateRegexSuggestions() {
                 `;
         regexSuggestionsContainer.appendChild(div);
       });
-      useSelectedRegexButton.disabled = false; // Enable "Use Selected"
+      useSelectedRegexButton.disabled = false;
       regexSuggestStatus.textContent =
         "Suggestions generated. Select one to use.";
 
-      // Add event listener for radio button changes to test regex
       regexSuggestionsContainer.addEventListener(
         "change",
         handleRegexSelectionChange
@@ -636,48 +428,34 @@ async function generateRegexSuggestions() {
       regexSuggestStatus.textContent = "No suggestions.";
     }
   } catch (error) {
-    console.error("Error generating regex suggestions:", error);
     regexSuggestionsContainer.innerHTML =
       '<p class="text-sm text-error">Failed to get suggestions. Check console for details.</p>';
     regexSuggestStatus.textContent = "Error generating suggestions.";
   } finally {
-    generateRegexButton.disabled = false; // Re-enable generate button
+    generateRegexButton.disabled = false;
+    updateTemplateButtonsState();
   }
 }
 
-// --- 4. Local Storage Template Management Functions ---
-
 const LOCAL_STORAGE_KEY = "invoiceTemplates";
 
-/**
- * Loads configurations from local storage.
- * @returns {Array<Object>} An array of template configuration objects.
- */
 function loadLocalConfigurations() {
   const storedConfigs = localStorage.getItem(LOCAL_STORAGE_KEY);
   try {
     localConfigurations = storedConfigs ? JSON.parse(storedConfigs) : [];
   } catch (e) {
-    console.error("Error parsing local storage configurations:", e);
     localConfigurations = [];
   }
-  populateConfigSelect(); // Update the dropdown after loading
+  populateConfigSelect();
   return localConfigurations;
 }
 
-/**
- * Saves the current template configuration to local storage.
- */
 function saveTemplateToLocalStorage() {
   const templateName = configNameInput.value.trim();
   if (!templateName) {
-    showConfirmationModal(
-      // Use utility function
-      "Missing Template Name",
-      "Please enter a template name to save the configuration.",
-      "OK",
-      () => {},
-      () => {}
+    showMessage(
+      "error",
+      "Please enter a template name to save the configuration."
     );
     return;
   }
@@ -698,7 +476,6 @@ function saveTemplateToLocalStorage() {
 
   if (existingIndex !== -1) {
     showConfirmationModal(
-      // Use utility function
       "Overwrite Template?",
       `A template named "${templateName}" already exists. Do you want to overwrite it?`,
       "Overwrite",
@@ -709,14 +486,7 @@ function saveTemplateToLocalStorage() {
           JSON.stringify(localConfigurations)
         );
         populateConfigSelect();
-        showConfirmationModal(
-          // Use utility function
-          "Success",
-          "Template updated successfully.",
-          "OK",
-          () => {},
-          () => {}
-        );
+        showMessage("success", "Template updated successfully.");
       },
       () => {}
     );
@@ -727,37 +497,19 @@ function saveTemplateToLocalStorage() {
       JSON.stringify(localConfigurations)
     );
     populateConfigSelect();
-    showConfirmationModal(
-      // Use utility function
-      "Success",
-      "Template saved successfully.",
-      "OK",
-      () => {},
-      () => {}
-    );
+    showMessage("success", "Template saved successfully.");
   }
-  updateTemplateTabButtonsState();
+  updateTemplateButtonsState();
 }
 
-/**
- * Deletes the currently selected template from local storage.
- */
 function deleteTemplateFromLocalStorage() {
   const selectedConfigName = configSelect.value;
   if (!selectedConfigName) {
-    showConfirmationModal(
-      // Use utility function
-      "No Template Selected",
-      "Please select a template to delete.",
-      "OK",
-      () => {},
-      () => {}
-    );
+    showMessage("info", "Please select a template to delete.");
     return;
   }
 
   showConfirmationModal(
-    // Use utility function
     "Confirm Deletion",
     `Are you sure you want to delete the template "${selectedConfigName}"? This action cannot be undone.`,
     "Delete",
@@ -769,25 +521,15 @@ function deleteTemplateFromLocalStorage() {
         LOCAL_STORAGE_KEY,
         JSON.stringify(localConfigurations)
       );
-      resetConfigInputFields(); // Clear fields
-      populateConfigSelect(); // Update dropdown
-      showConfirmationModal(
-        // Use utility function
-        "Success",
-        "Template deleted successfully.",
-        "OK",
-        () => {},
-        () => {}
-      );
+      resetConfigInputFields();
+      populateConfigSelect();
+      showMessage("success", "Template deleted successfully.");
     },
     () => {}
   );
-  updateTemplateTabButtonsState();
+  updateTemplateButtonsState();
 }
 
-/**
- * Populates the template selection dropdown with configurations from local storage.
- */
 function populateConfigSelect() {
   configSelect.innerHTML = '<option value="">-- Select a template --</option>';
   if (localConfigurations.length === 0) {
@@ -797,25 +539,15 @@ function populateConfigSelect() {
   }
   localConfigurations.forEach((config) => {
     const option = document.createElement("option");
-    option.value = config.name; // Use name as value
+    option.value = config.name;
     option.textContent = config.name;
     configSelect.appendChild(option);
   });
 }
 
-/**
- * Exports all saved configurations to a JSON file.
- */
 function exportAllConfigsToJson() {
   if (localConfigurations.length === 0) {
-    showConfirmationModal(
-      // Use utility function
-      "No Data to Export",
-      "There are no saved templates to export.",
-      "OK",
-      () => {},
-      () => {}
-    );
+    showMessage("info", "There are no saved templates to export.");
     return;
   }
 
@@ -831,20 +563,9 @@ function exportAllConfigsToJson() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showConfirmationModal(
-    // Use utility function
-    "Export Complete",
-    "All templates exported successfully.",
-    "OK",
-    () => {},
-    () => {}
-  );
+  showMessage("success", "All templates exported successfully.");
 }
 
-/**
- * Imports configurations from a JSON file, merging with existing local storage data.
- * Overwrites templates with matching names.
- */
 function importConfigsFromJson() {
   const input = document.createElement("input");
   input.type = "file";
@@ -868,10 +589,6 @@ function importConfigsFromJson() {
 
         importedData.forEach((importedConfig) => {
           if (!importedConfig.name) {
-            console.warn(
-              "Skipping imported template due to missing name:",
-              importedConfig
-            );
             return;
           }
           const existingIndex = localConfigurations.findIndex(
@@ -879,11 +596,9 @@ function importConfigsFromJson() {
           );
 
           if (existingIndex !== -1) {
-            // Overwrite existing
             localConfigurations[existingIndex] = importedConfig;
             overwrittenCount++;
           } else {
-            // Add new
             localConfigurations.push(importedConfig);
             importedCount++;
           }
@@ -894,24 +609,15 @@ function importConfigsFromJson() {
           JSON.stringify(localConfigurations)
         );
         populateConfigSelect();
-        showConfirmationModal(
-          // Use utility function
-          "Import Complete",
-          `Successfully imported ${importedCount} new templates and updated ${overwrittenCount} existing templates.`,
-          "OK",
-          () => {},
-          () => {}
+        showMessage(
+          "success",
+          `Successfully imported ${importedCount} new templates and updated ${overwrittenCount} existing templates.`
         );
       } catch (error) {
-        showConfirmationModal(
-          // Use utility function
-          "Import Error",
-          "Failed to import configurations: " + error.message,
-          "OK",
-          () => {},
-          () => {}
+        showMessage(
+          "error",
+          "Failed to import configurations: " + error.message
         );
-        console.error("Error importing configurations:", error);
       }
     };
     reader.readAsText(file);
@@ -919,29 +625,18 @@ function importConfigsFromJson() {
   input.click();
 }
 
-// --- 5. UI Event Handlers (Specific to Invoice App) ---
-
-/**
- * Handles file selection from input or drag-and-drop.
- * Filters for PDF files and adds them to the uploadedFiles array.
- * @param {FileList} files - The FileList object from the event.
- */
 function handleFiles(files) {
-  const pdfFiles = Array.from(files).filter(
-    (file) => file.type === "application/pdf"
-  );
+  const pdfFiles = filterPdfFiles(files);
 
   if (pdfFiles.length === 0) {
     if (uploadedFiles.length === 0) {
-      // Only show error if no files are currently selected
       showMessage("error", "Please select valid PDF file(s).");
     }
-    updateProcessTabButtonsState(); // Update button state
+    updateProcessButtonsState();
     return;
   }
 
   pdfFiles.forEach((newFile) => {
-    // Check for uniqueness based on name and size before adding
     if (
       !uploadedFiles.some(
         (existingFile) =>
@@ -953,48 +648,37 @@ function handleFiles(files) {
     }
   });
 
-  updateInvoiceFileDisplay(); // Refresh the file display in UI
-  hideMessage(); // Clear any previous messages
+  updateInvoicesFileDisplay();
+  hideMessage();
 }
 
-/**
- * Removes an individual file from the `uploadedFiles` array and updates the display.
- * @param {number} indexToRemove - The index of the file to remove.
- */
-function removeUploadedFile(indexToRemove) {
-  uploadedFiles.splice(indexToRemove, 1); // Remove file from array
+function removeIndividualFile(indexToRemove) {
+  uploadedFiles = removeElementAtIndex(uploadedFiles, indexToRemove);
 
-  // Update the file input's internal file list for consistency (important for re-uploading same file)
   const dataTransfer = new DataTransfer();
   uploadedFiles.forEach((file) => dataTransfer.items.add(file));
-  pdfUpload.files = dataTransfer.files;
+  fileInput.files = dataTransfer.files;
 
-  updateInvoiceFileDisplay(); // Update UI
+  updateInvoicesFileDisplay();
   if (uploadedFiles.length === 0) {
-    hideMessage(); // Hide message if no files are left
-    // Also reset the PDF preview in the template tab if the last file was removed
+    hideMessage();
     resetExtractedFieldsForAnalysisTab();
   }
 }
 
-/**
- * Extracts and displays the raw text content of a PDF file in the text area.
- * @param {File} file - The PDF File object to process.
- */
 async function displayPdfTextForAnalysis(file) {
-  // Clear text area and reset display if no valid file
   if (!file || file.type !== "application/pdf") {
     pdfRawTextPreview.value = "";
-    currentAnalysisFileName.textContent = "-";
     currentPdfTextForAnalysis = "";
     return;
   }
-  currentAnalysisFileName.textContent = file.name; // Display filename
+  currentAnalysisFileName.textContent = "( " + file.name + " )";
 
   const reader = new FileReader();
   reader.onload = async (e) => {
     const pdfData = new Uint8Array(e.target.result);
     try {
+      const pdfjsLib = await getPDFLib();
       const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
       let fullText = "";
       for (let i = 1; i <= pdf.numPages; i++) {
@@ -1002,45 +686,32 @@ async function displayPdfTextForAnalysis(file) {
         const textContent = await currentPage.getTextContent();
         fullText += textContent.items.map((item) => item.str).join(" ") + "\n";
       }
-      currentPdfTextForAnalysis = fullText; // Store extracted text for analysis
-      pdfRawTextPreview.value = fullText; // Display text in the textarea
+      currentPdfTextForAnalysis = fullText;
+      pdfRawTextPreview.value = fullText;
     } catch (error) {
-      pdfRawTextPreview.value = ""; // Clear text area on error
-      showConfirmationModal(
-        // Use utility function
-        "PDF Text Extraction Error",
-        "Error extracting text from PDF: " + error.message,
-        "OK",
-        () => {},
-        () => {}
-      );
-      console.error("PDF Text Extraction Error:", error);
-      currentPdfTextForAnalysis = ""; // Clear text on error
+      pdfRawTextPreview.value = "";
+      showMessage("error", "Error extracting text from PDF: " + error.message);
+      currentPdfTextForAnalysis = "";
     } finally {
-      updateTemplateTabButtonsState(); // Re-enable buttons
+      updateTemplateButtonsState();
     }
   };
-  reader.readAsArrayBuffer(file); // Start reading the file
+  reader.readAsArrayBuffer(file);
 }
 
-/**
- * Loads the currently selected configuration from the dropdown into the input fields automatically.
- */
 function autoLoadSelectedConfiguration() {
   const selectedConfigName = configSelect.value;
   if (selectedConfigName === "") {
-    resetConfigInputFields(); // Clear fields if "Select a template" is chosen
+    resetConfigInputFields();
     return;
   }
 
-  // Find the selected configuration by name
   const selectedConfig = localConfigurations.find(
     (cfg) => cfg.name === selectedConfigName
   );
 
   if (selectedConfig) {
-    activeConfig = selectedConfig; // Set active config
-    // Populate input fields with loaded data
+    activeConfig = selectedConfig;
     configNameInput.value = activeConfig.name || "";
     officialSupplierNameForExportInput.value =
       activeConfig.officialSupplierNameForExport || "";
@@ -1049,52 +720,36 @@ function autoLoadSelectedConfiguration() {
     documentNumberRegexInput.value = activeConfig.documentNumberPattern || "";
     totalAmountRegexInput.value = activeConfig.totalAmountPattern || "";
   } else {
-    // This case should ideally not happen if dropdown is populated correctly
-    showConfirmationModal(
-      // Use utility function
-      "Template Not Found",
-      "Selected template not found in local storage.",
-      "OK",
-      () => {},
-      () => {}
-    );
-    activeConfig = null; // Clear active config
+    showMessage("error", "Selected template not found in local storage.");
+    activeConfig = null;
   }
-  updateTemplateTabButtonsState(); // Re-enable buttons
-  updateProcessTabButtonsState();
+  updateTemplateButtonsState();
+  updateProcessButtonsState();
 }
 
-/**
- * Handles changes in the selected regex suggestion radio buttons to test the regex.
- * @param {Event} event - The change event from the radio button.
- */
 function handleRegexSelectionChange(event) {
   if (event.target.name === "regexSuggestion" && event.target.checked) {
     const selectedRegex = decodeURIComponent(event.target.value);
-    testRegexInModal(selectedRegex); // Test the selected regex
-    useSelectedRegexButton.disabled = false; // Enable "Use Selected" button
+    testRegexInModal(selectedRegex);
+    useSelectedRegexButton.disabled = false;
   }
 }
 
-/**
- * Updates the display of uploaded files in the "Extract" tab.
- */
-function updateInvoiceFileDisplay() {
-  uploadedFilesList.innerHTML = ""; // Clear existing pills
+function updateInvoicesFileDisplay() {
+  filePillsContainer.innerHTML = "";
 
   if (uploadedFiles.length === 0) {
-    fileInfoInvoice.classList.add("hidden"); // Hide file info section
-    uploadLabelInvoice.classList.remove("hidden"); // Show upload label
-    hideMessage(); // Hide any message box when no files are selected
+    fileInfo.classList.add("hidden");
+    uploadLabel.classList.remove("hidden");
+    hideMessage();
   } else {
-    fileInfoInvoice.classList.remove("hidden"); // Show file info
-    uploadLabelInvoice.classList.add("hidden"); // Hide upload prompt
+    fileInfo.classList.remove("hidden");
+    uploadLabel.classList.add("hidden");
 
     uploadedFiles.forEach((file, index) => {
-      const filePill = document.createElement("span"); // Use span as in index.js for pills
-      filePill.className = "badge badge-md badge-info mr-2 mb-2"; // Apply DaisyUI badge class and margin
+      const filePill = document.createElement("span");
+      filePill.className = "badge badge-md badge-info mr-2 mb-2";
 
-      // Construct the inner HTML for the pill, including the remove button
       filePill.innerHTML = `
         ${file.name}
         <button type="button" class="ml-2" data-index="${index}">
@@ -1104,39 +759,30 @@ function updateInvoiceFileDisplay() {
         </button>
       `;
 
-      // Attach the click event listener directly to the button within the pill
       filePill.querySelector("button").addEventListener("click", (event) => {
         const fileIndexToRemove = parseInt(event.currentTarget.dataset.index);
-        removeUploadedFile(fileIndexToRemove); // Call the new function to remove the file
+        removeIndividualFile(fileIndexToRemove);
       });
 
-      uploadedFilesList.appendChild(filePill); // Add the created pill to the container
+      filePillsContainer.appendChild(filePill);
     });
-    hideMessage(); // Hide any message box when files are selected
+    hideMessage();
   }
-  updateProcessTabButtonsState();
+  updateProcessButtonsState();
 }
 
-/**
- * Appends an extracted result row to the processed results table.
- * @param {Object} data - The extracted data object for a single file.
- * @param {number} index - The index of the data in the `allExtractedData` array.
- */
 function appendExtractedResultToTable(data, index) {
-  const tableBody = extractedResultsTableBody;
+  const tableBody = resultsTableBody;
 
-  // Remove the "No documents processed yet." row if it exists
   const noDocsRow = tableBody.querySelector('tr td[colspan="7"]');
   if (noDocsRow) {
     noDocsRow.parentElement.remove();
   }
 
-  // Insert new row at the end of the table
-  const newRow = tableBody.insertRow(); // Appends to the end
+  const newRow = tableBody.insertRow();
   newRow.setAttribute("data-index", index);
-  newRow.className = "table-row-base"; // Use new custom class
+  newRow.className = "table-row-base";
 
-  // Populate row cells with data
   newRow.innerHTML = `
       <td class="text-sm break-words max-w-[150px] overflow-hidden">${
         data.fileName
@@ -1145,15 +791,9 @@ function appendExtractedResultToTable(data, index) {
       <td class="text-sm">${
         data.officialSupplierNameForExport || data.extractedSupplierName || "-"
       }</td>
-      <td class="text-sm">${formatDateForDisplay(
-        // Use utility function
-        data.documentDate
-      )}</td>
+      <td class="text-sm">${formatDateForDisplay(data.documentDate)}</td>
       <td class="text-sm">${data.documentNumber || "-"}</td>
-      <td class="text-sm">${formatAmountForDisplay(
-        // Use utility function
-        data.totalAmount
-      )}</td>
+      <td class="text-sm">${formatAmountForDisplay(data.totalAmount)}</td>
       <td>
           <button data-index="${index}" class="analyze-row-button btn btn-info btn-sm flex items-center justify-center">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -1161,7 +801,6 @@ function appendExtractedResultToTable(data, index) {
       </td>
   `;
 
-  // Add event listener to "Template" button in the row
   newRow
     .querySelector(".analyze-row-button")
     .addEventListener("click", async (e) => {
@@ -1169,24 +808,20 @@ function appendExtractedResultToTable(data, index) {
       const dataToTemplate = allExtractedData[clickedIndex];
       const fileToTemplate = allExtractedData[clickedIndex].originalFile;
 
-      switchTab("Template"); // Switch to Template tab
+      switchTab("Template");
 
-      await displayPdfTextForAnalysis(fileToTemplate); // Display raw text for analysis
+      await displayPdfTextForAnalysis(fileToTemplate);
 
-      // Populate extracted information display
       supplierNameSpan.textContent =
         dataToTemplate.extractedSupplierName || "-";
       documentDateSpan.textContent = formatDateForDisplay(
-        // Use utility function
         dataToTemplate.documentDate
       );
       documentNumberSpan.textContent = dataToTemplate.documentNumber || "-";
       totalAmountSpan.textContent = formatAmountForDisplay(
-        // Use utility function
         dataToTemplate.totalAmount
       );
 
-      // If a configuration was used, try to load it into the template editor
       if (
         dataToTemplate.configUsedName &&
         dataToTemplate.configUsedName !== "-"
@@ -1195,8 +830,8 @@ function appendExtractedResultToTable(data, index) {
           (cfg) => cfg.name === dataToTemplate.configUsedName
         );
         if (foundConfig) {
-          configSelect.value = foundConfig.name; // Select in dropdown by name
-          autoLoadSelectedConfiguration(); // Load details into inputs
+          configSelect.value = foundConfig.name;
+          autoLoadSelectedConfiguration();
         } else {
           configSelect.value = "";
           activeConfig = null;
@@ -1208,38 +843,25 @@ function appendExtractedResultToTable(data, index) {
         resetConfigInputFields();
       }
 
-      updateTemplateTabButtonsState();
+      updateTemplateButtonsState();
     });
 }
 
-/**
- * Redraws the extracted results table based on the current `allExtractedData`.
- * This is useful after sorting.
- */
 function refreshExtractedResultsTable() {
-  extractedResultsTableBody.innerHTML = ""; // Clear existing rows
+  resultsTableBody.innerHTML = "";
   if (allExtractedData.length === 0) {
-    extractedResultsTableBody.innerHTML =
+    resultsTableBody.innerHTML =
       '<tr><td colspan="7" class="text-center">No documents processed yet.</td></tr>';
   } else {
     allExtractedData.forEach((data, index) => {
-      // Pass the current index to appendExtractedResultToTable
       appendExtractedResultToTable(data, index);
     });
   }
 }
 
-/**
- * Downloads all extracted data as a CSV file.
- */
 function downloadCSVHandler() {
-  // Renamed to avoid clash with imported downloadCSV
   if (allExtractedData.length === 0) {
-    showMessage(
-      // Use utility function for info message
-      "info",
-      "No data to export to CSV."
-    );
+    showMessage("info", "No data to export to CSV.");
     return;
   }
 
@@ -1251,8 +873,8 @@ function downloadCSVHandler() {
   ];
 
   const dataToExport = allExtractedData.map((data) => {
-    const formattedDate = formatDateForDisplay(data.documentDate); // Use utility function
-    const formattedAmount = formatAmountForDisplay(data.totalAmount) || ""; // Use utility function
+    const formattedDate = formatDateForDisplay(data.documentDate);
+    const formattedAmount = formatAmountForDisplay(data.totalAmount) || "";
     return {
       "Supplier Name":
         data.officialSupplierNameForExport || data.extractedSupplierName,
@@ -1262,14 +884,9 @@ function downloadCSVHandler() {
     };
   });
 
-  downloadCSV(dataToExport, headers, "invoices.csv"); // Use imported downloadCSV
+  downloadCSV(dataToExport, headers, "invoices.csv");
 }
 
-// --- 6. UI State Management and Reset Functions ---
-
-/**
- * Resets all input fields in the "Template" editor tab.
- */
 function resetConfigInputFields() {
   configNameInput.value = "";
   officialSupplierNameForExportInput.value = "";
@@ -1277,92 +894,71 @@ function resetConfigInputFields() {
   documentDateRegexInput.value = "";
   documentNumberRegexInput.value = "";
   totalAmountRegexInput.value = "";
-  activeConfig = null; // Clear active config
-  configSelect.value = ""; // Reset dropdown
-  updateTemplateTabButtonsState();
+  activeConfig = null;
+  configSelect.value = "";
+  updateTemplateButtonsState();
 }
 
-/**
- * Resets the displayed extracted fields and PDF raw text preview in the "Template" tab.
- */
 function resetExtractedFieldsForAnalysisTab() {
   supplierNameSpan.textContent = "-";
   documentDateSpan.textContent = "-";
   documentNumberSpan.textContent = "-";
   totalAmountSpan.textContent = "-";
-  currentAnalysisFileName.textContent = "-";
-  currentPdfTextForAnalysis = ""; // Clear PDF text for analysis
-  pdfRawTextPreview.value = ""; // Clear the text area
-  updateTemplateTabButtonsState();
+  currentPdfTextForAnalysis = "";
+  pdfRawTextPreview.value = "";
+  updateTemplateButtonsState();
 }
 
-/**
- * Clears all data from the extracted results table.
- */
 function clearAllResults() {
   allExtractedData = [];
-  extractedResultsTableBody.innerHTML =
+  resultsTableBody.innerHTML =
     '<tr><td colspan="7" class="text-center">No documents processed yet.</td></tr>';
-  updateProcessTabButtonsState(); // Update download button status
+  updateProcessButtonsState();
 }
 
-/**
- * Resets the entire UI of the Invoice Converter application.
- */
 function resetUI() {
   uploadedFiles = [];
-  // Reset the file input itself to allow re-uploading the same file
-  pdfUpload.value = "";
-  updateInvoiceFileDisplay(); // Clear uploaded files display
+  fileInput.value = "";
+  updateInvoicesFileDisplay();
   currentPdfTextForAnalysis = "";
-  resetExtractedFieldsForAnalysisTab(); // Reset analysis tab fields
-  resetConfigInputFields(); // Reset template editor fields
-  populateConfigSelect(); // Reload config dropdown from local storage
-  hideConfirmationModal(); // Hide the confirmation modal (API key modal hidden by utils.js)
-  clearAllResults(); // Clear extracted results table
-  switchTab("Process"); // Go back to Process tab
-  updateTemplateTabButtonsState();
-  updateProcessTabButtonsState();
+  resetExtractedFieldsForAnalysisTab();
+  resetConfigInputFields();
+  populateConfigSelect();
+  hideConfirmationModal();
+  clearAllResults();
+  switchTab("Process");
+  updateTemplateButtonsState();
+  updateProcessButtonsState();
+  processBtnText.textContent = "Process";
+  spinnerProcess.classList.add("hidden");
+  previewBtnText.textContent = "Preview";
+  spinnerPreview.classList.add("hidden");
 }
 
-/**
- * Updates the disabled state of buttons in the "Process" tab based on current data.
- */
-function updateProcessTabButtonsState() {
+function updateProcessButtonsState() {
   const hasUploadedFiles = uploadedFiles.length > 0;
   const hasExtractedData = allExtractedData.length > 0;
 
-  processPdfButton.disabled = !hasUploadedFiles; // Enable if files are uploaded
-  downloadCsvButton.disabled = !hasExtractedData; // Enable if data is extracted
+  processBtn.disabled = !hasUploadedFiles;
+  downloadBtn.disabled = !hasExtractedData;
 }
 
-/**
- * Updates the disabled state of buttons in the "Template" tab based on PDF loaded.
- */
-function updateTemplateTabButtonsState() {
+function updateTemplateButtonsState() {
   const isPdfLoadedForAnalysis = currentPdfTextForAnalysis.length > 0;
   const hasConfigName = configNameInput.value.trim().length > 0;
-  const isConfigSelected = configSelect.value !== ""; // Check if a template is selected in dropdown
+  const isConfigSelected = configSelect.value !== "";
 
-  // Preview button enabled if PDF loaded
   previewButton.disabled = !isPdfLoadedForAnalysis;
 
-  // Save Template button enabled if config name provided
   saveTemplateButton.disabled = !hasConfigName;
 
-  // Delete Template button enabled if a config is selected
   deleteTemplateButton.disabled = !isConfigSelected;
 
-  // AI suggest buttons enabled if PDF loaded
   document.querySelectorAll(".ai-suggest-button").forEach((btn) => {
     btn.disabled = !isPdfLoadedForAnalysis;
   });
 }
 
-/**
- * Switches between the "Process" and "Template" tabs.
- * @param {string} tabName - The name of the tab to switch to ("Process" or "Template").
- */
 function switchTab(tabName) {
   if (tabName === "Process") {
     tabButtonProcess.classList.add("tab-active");
@@ -1371,8 +967,7 @@ function switchTab(tabName) {
     tabButtonTemplate.classList.remove("tab-active");
     tabContentProcess.classList.remove("hidden");
     tabContentTemplate.classList.add("hidden");
-    // Ensure process tab buttons are updated when switching
-    updateProcessTabButtonsState();
+    updateProcessButtonsState();
   } else if (tabName === "Template") {
     tabButtonTemplate.classList.add("tab-active");
     tabButtonTemplate.classList.remove("tab-button-inactive");
@@ -1380,75 +975,71 @@ function switchTab(tabName) {
     tabButtonProcess.classList.remove("tab-active");
     tabContentTemplate.classList.remove("hidden");
     tabContentProcess.classList.add("hidden");
-    // Ensure template tab buttons are updated when switching
-    updateTemplateTabButtonsState();
-    // Reset extracted fields display and raw text when entering template tab
+    updateTemplateButtonsState();
     resetExtractedFieldsForAnalysisTab();
-    // If there are uploaded files, automatically load the first one for analysis
     if (!currentPdfTextForAnalysis && uploadedFiles.length > 0) {
       displayPdfTextForAnalysis(uploadedFiles[0]);
     }
   }
 }
 
-// --- 7. Main Initialization (DOMContentLoaded) ---
-
 document.addEventListener("DOMContentLoaded", async () => {
-  // Initial UI setup
-  switchTab("Process"); // Start on the Process tab
-  updateInvoiceFileDisplay();
-  updateTemplateTabButtonsState(); // Set initial button states
-  updateProcessTabButtonsState();
+  switchTab("Process");
+  updateInvoicesFileDisplay();
+  updateTemplateButtonsState();
+  updateProcessButtonsState();
 
-  // Load configurations from local storage on startup
   loadLocalConfigurations();
 
-  // --- Event Listeners for UI Interactions ---
-
-  // Tab switching
   tabButtonProcess.addEventListener("click", () => switchTab("Process"));
   tabButtonTemplate.addEventListener("click", () => switchTab("Template"));
 
-  // PDF Upload and Display
-  // Use handleFiles function directly
-  pdfUpload.addEventListener("change", (event) =>
+  fileInput.addEventListener("change", (event) =>
     handleFiles(event.target.files)
   );
-  // Clear all files logic moved to resetUI, which clearUploadFormButton will now call
-  clearUploadFormButton.addEventListener("click", resetUI);
+  removeAllFilesBtn.addEventListener("click", resetUI);
 
-  // Drag and drop events for PDF upload area
-  dropArea.addEventListener("dragover", (e) => {
+  uploadArea.addEventListener("dragover", (e) => {
     e.preventDefault();
-    dropArea.classList.add("border-primary", "bg-primary", "bg-opacity-10");
+    uploadArea.classList.add("border-primary", "bg-primary", "bg-opacity-10");
   });
-  dropArea.addEventListener("dragleave", () => {
-    dropArea.classList.remove("border-primary", "bg-primary", "bg-opacity-10");
+  uploadArea.addEventListener("dragleave", () => {
+    uploadArea.classList.remove(
+      "border-primary",
+      "bg-primary",
+      "bg-opacity-10"
+    );
   });
-  dropArea.addEventListener("drop", (e) => {
+  uploadArea.addEventListener("drop", (e) => {
     e.preventDefault();
-    dropArea.classList.remove("border-primary", "bg-primary", "bg-opacity-10");
-    handleFiles(e.dataTransfer.files); // Call the new handleFiles function
+    uploadArea.classList.remove(
+      "border-primary",
+      "bg-primary",
+      "bg-opacity-10"
+    );
+    handleFiles(e.dataTransfer.files);
   });
 
-  // Process PDF button click handler
-  processPdfButton.addEventListener("click", async () => {
+  processBtn.addEventListener("click", async () => {
     if (uploadedFiles.length === 0) {
       showNoDocumentSelectedModal();
       return;
     }
 
-    clearAllResults(); // Clear previous results
-    // Display processing message in table
-    extractedResultsTableBody.innerHTML =
-      '<tr><td colspan="7" class="text-center">Processing...</td></tr>';
-    updateProcessTabButtonsState();
+    clearAllResults();
+    resultsTableBody.innerHTML =
+      '<tr><td colspan="7" class="text-center">Processing</td></tr>';
+    updateProcessButtonsState();
+
+    processBtnText.textContent = "Processing";
+    spinnerProcess.classList.remove("hidden");
+    processBtn.disabled = true;
 
     let processedCount = 0;
     for (let i = 0; i < uploadedFiles.length; i++) {
       const file = uploadedFiles[i];
       if (file.type !== "application/pdf") {
-        continue; // Skip non-PDF files
+        continue;
       }
 
       const reader = new FileReader();
@@ -1456,6 +1047,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         reader.onload = async (e) => {
           const pdfData = new Uint8Array(e.target.result);
           try {
+            const pdfjsLib = await getPDFLib();
             const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
             let fullText = "";
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -1464,7 +1056,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               fullText +=
                 textContent.items.map((item) => item.str).join(" ") + "\n";
             }
-            resolve(fullText); // Resolve with extracted text
+            resolve(fullText);
           } catch (error) {
             reject(
               `Error extracting text from PDF "${file.name}": ${error.message}`
@@ -1483,7 +1075,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         let selectedConfigForExtraction = null;
         let officialSupplierNameForExport = null;
 
-        // Attempt to classify document if local templates are available
         if (localConfigurations.length > 0) {
           const classificationResult = classifyDocumentHeuristically(
             fileText,
@@ -1508,40 +1099,28 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
 
-        logDebug(
-          `Calling regex-based extraction for "${file.name}" with template: ${
-            selectedConfigForExtraction
-              ? selectedConfigForExtraction.name
-              : "None"
-          }`
-        );
-        // Use direct regex extraction for processing (no AI, faster and uses user templates)
         extractedData = await callGeminiApi(
           fileText,
           selectedConfigForExtraction,
           false,
           false,
-          false // Do not use LLM for the actual extraction logic here, use regex
+          false
         );
 
-        // Format and store extracted data
         const formattedExtractedData = {
           originalFile: file,
           fileName: file.name,
           configUsedName: configUsedName,
           extractedSupplierName: extractedData.supplierName || "-",
           officialSupplierNameForExport: officialSupplierNameForExport,
-          // Ensure documentDate is stored as DD/MM/YYYY
           documentDate: extractedData.documentDate
-            ? formatDateForDisplay(extractedData.documentDate) // Use utility function
+            ? formatDateForDisplay(extractedData.documentDate)
             : "-",
           documentNumber: extractedData.documentNumber || "-",
           totalAmount: extractedData.totalAmount || null,
         };
         allExtractedData.push(formattedExtractedData);
       } catch (error) {
-        // Log error and store error data for display
-        console.error(`Error processing file ${file.name}:`, error);
         const errorData = {
           originalFile: file,
           fileName: file.name,
@@ -1557,51 +1136,51 @@ document.addEventListener("DOMContentLoaded", async () => {
         showMessage(
           "error",
           `Error processing file "${file.name}": ${error.message}`
-        ); // Use showMessage for error feedback
+        );
       }
       processedCount++;
     }
 
-    // Sort all extracted data by document date in ascending order
     allExtractedData.sort((a, b) => {
-      // Convert DD/MM/YYYY strings to Date objects for comparison
-      // The parseDateForSorting utility expects the format DD/MM/YYYY already.
       const dateA = new Date(a.documentDate.split("/").reverse().join("-"));
       const dateB = new Date(b.documentDate.split("/").reverse().join("-"));
 
-      // Handle invalid dates by placing them at the end or beginning
       if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0;
-      if (isNaN(dateA.getTime())) return 1; // a is invalid, so b comes first
-      if (isNaN(dateB.getTime())) return -1; // b is invalid, so a comes first
+      if (isNaN(dateA.getTime())) return 1;
+      if (isNaN(dateB.getTime())) return -1;
 
       return dateA.getTime() - dateB.getTime();
     });
 
-    refreshExtractedResultsTable(); // Redraw the table with sorted data
+    refreshExtractedResultsTable();
 
     if (allExtractedData.length > 0) {
       showMessage(
         "success",
         `Finished processing ${processedCount} PDF(s). Data ready for download.`
-      ); // Use showMessage for success
+      );
     } else {
       showMessage(
         "warning",
         `Finished processing ${processedCount} PDF(s), but no data was extracted.`
-      ); // Use showMessage for warning
+      );
     }
-    updateProcessTabButtonsState(); // Update button states after all files processed
+    processBtnText.textContent = "Process";
+    spinnerProcess.classList.add("hidden");
+    updateProcessButtonsState();
   });
 
-  // Preview button click handler in "Template" tab
   previewButton.addEventListener("click", async () => {
     if (!currentPdfTextForAnalysis) {
       showNoDocumentSelectedModal();
       return;
     }
 
+    previewBtnText.textContent = "Previewing";
+    spinnerPreview.classList.remove("hidden");
+    previewButton.disabled = true;
+
     try {
-      // Get current regexs from input fields
       const currentRegexs = {
         supplierNamePattern: supplierNameRegexInput.value,
         documentDatePattern: documentDateRegexInput.value,
@@ -1609,71 +1188,54 @@ document.addEventListener("DOMContentLoaded", async () => {
         totalAmountPattern: totalAmountRegexInput.value,
       };
 
-      // Perform extraction using current regexs (no LLM for preview)
       const refinedData = await callGeminiApi(
         currentPdfTextForAnalysis,
         currentRegexs,
-        true, // This is a refinement/preview
+        true,
         false,
-        false // Do not use LLM for preview extraction itself
+        false
       );
 
       if (refinedData) {
-        // Display extracted data, ensuring date is formatted as DD/MM/YYYY
         supplierNameSpan.textContent = refinedData.supplierName || "-";
         documentDateSpan.textContent = formatDateForDisplay(
-          // Use utility function
           refinedData.documentDate
         );
         documentNumberSpan.textContent = refinedData.documentNumber || "-";
         totalAmountSpan.textContent = formatAmountForDisplay(
-          // Use utility function
           refinedData.totalAmount
         );
         showMessage("success", "Preview complete!");
       } else {
-        showMessage("warning", "No refined data extracted during preview."); // Use showMessage for feedback
+        showMessage("warning", "No refined data extracted during preview.");
       }
     } catch (error) {
       showMessage(
         "error",
         `Error during preview: ${error.message}. Check console for details.`
-      ); // Use showMessage for error feedback
-      console.error("Preview error:", error);
+      );
     } finally {
-      updateTemplateTabButtonsState();
-      updateProcessTabButtonsState();
+      previewBtnText.textContent = "Preview";
+      spinnerPreview.classList.add("hidden");
+      updateTemplateButtonsState();
+      updateProcessButtonsState();
     }
   });
 
-  // AI Suggestion buttons for regex
-  aiSuggestDateBtn.addEventListener("click", () => {
-    if (currentPdfTextForAnalysis) {
-      showRegexSuggestModal("documentDate");
-    } else {
-      showNoDocumentSelectedModal();
-    }
+  aiSuggestDateBtn.addEventListener("click", async () => {
+    await showRegexSuggestModal("documentDate");
   });
-  aiSuggestNumberBtn.addEventListener("click", () => {
-    if (currentPdfTextForAnalysis) {
-      showRegexSuggestModal("documentNumber");
-    } else {
-      showNoDocumentSelectedModal();
-    }
+  aiSuggestNumberBtn.addEventListener("click", async () => {
+    await showRegexSuggestModal("documentNumber");
   });
-  aiSuggestAmountBtn.addEventListener("click", () => {
-    if (currentPdfTextForAnalysis) {
-      showRegexSuggestModal("totalAmount");
-    } else {
-      showNoDocumentSelectedModal();
-    }
+  aiSuggestAmountBtn.addEventListener("click", async () => {
+    await showRegexSuggestModal("totalAmount");
   });
 
   generateRegexButton.addEventListener("click", generateRegexSuggestions);
   cancelRegexSuggestButton.addEventListener("click", hideRegexSuggestModal);
   useSelectedRegexButton.addEventListener("click", useSelectedRegex);
 
-  // Configuration management buttons
   saveTemplateButton.addEventListener("click", saveTemplateToLocalStorage);
   deleteTemplateButton.addEventListener(
     "click",
@@ -1682,37 +1244,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   importConfigButton.addEventListener("click", importConfigsFromJson);
   exportAllConfigsButton.addEventListener("click", exportAllConfigsToJson);
 
-  // Auto-load config when selection changes
   configSelect.addEventListener("change", autoLoadSelectedConfiguration);
 
-  // Download CSV button
-  downloadCsvButton.addEventListener("click", downloadCSVHandler);
+  downloadBtn.addEventListener("click", downloadCSVHandler);
 
-  // Update analyze tab buttons state when config selection changes
   configSelect.addEventListener("change", () => {
-    updateTemplateTabButtonsState();
+    updateTemplateButtonsState();
   });
 
-  // Update template tab buttons state when inputs change
-  configNameInput.addEventListener("input", updateTemplateTabButtonsState);
+  configNameInput.addEventListener("input", updateTemplateButtonsState);
   officialSupplierNameForExportInput.addEventListener(
     "input",
-    updateTemplateTabButtonsState
+    updateTemplateButtonsState
   );
-  supplierNameRegexInput.addEventListener(
-    "input",
-    updateTemplateTabButtonsState
-  );
-  documentDateRegexInput.addEventListener(
-    "input",
-    updateTemplateTabButtonsState
-  );
+  supplierNameRegexInput.addEventListener("input", updateTemplateButtonsState);
+  documentDateRegexInput.addEventListener("input", updateTemplateButtonsState);
   documentNumberRegexInput.addEventListener(
     "input",
-    updateTemplateTabButtonsState
+    updateTemplateButtonsState
   );
-  totalAmountRegexInput.addEventListener(
-    "input",
-    updateTemplateTabButtonsState
-  );
+  totalAmountRegexInput.addEventListener("input", updateTemplateButtonsState);
 });
