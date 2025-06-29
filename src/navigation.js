@@ -1,3 +1,10 @@
+import {
+  showConfirmationModal,
+  showMessage,
+  setGeminiApiKey,
+  getGeminiApiKey,
+} from "./utils.js";
+
 function setTheme(themeName) {
   document.documentElement.setAttribute("data-theme", themeName);
   localStorage.setItem("theme", themeName);
@@ -93,6 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <ul class="menu menu-horizontal px-1">
           <li><a href="index.html" class="nav-link">Statement</a></li>
           <li><a href="invoice.html" class="nav-link">Invoice</a></li>
+          <li><a id="clear-gemini-key-btn-desktop" class="nav-link cursor-pointer">Clear Gemini</a></li>
         </ul>
       </div>
       <div class="navbar-end">
@@ -141,6 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <ul class="menu menu-vertical w-full px-4">
         <li><a href="index.html" class="block py-3 nav-link">Statement</a></li>
         <li><a href="invoice.html" class="block py-3 nav-link">Invoice</a></li>
+        <li><a id="clear-gemini-key-btn-mobile" class="block py-3 nav-link cursor-pointer">Clear Gemini</a></li>
       </ul>
     </nav>
   `;
@@ -148,6 +157,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const navPlaceholder = document.getElementById("nav-placeholder");
   if (navPlaceholder) {
     navPlaceholder.outerHTML = navHtml;
+  }
+
+  const clearGeminiKeyBtnDesktop = document.getElementById(
+    "clear-gemini-key-btn-desktop"
+  );
+  const clearGeminiKeyBtnMobile = document.getElementById(
+    "clear-gemini-key-btn-mobile"
+  );
+
+  const geminiApiKeyExists = getGeminiApiKey() !== "";
+  if (!geminiApiKeyExists) {
+    if (clearGeminiKeyBtnDesktop) {
+      clearGeminiKeyBtnDesktop.classList.add("hidden");
+    }
+    if (clearGeminiKeyBtnMobile) {
+      clearGeminiKeyBtnMobile.classList.add("hidden");
+    }
   }
 
   const mobileMenuButton = document.getElementById("mobile-menu-button");
@@ -167,14 +193,59 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const handleClearGeminiKey = () => {
+    showConfirmationModal(
+      "Confirm Clear Gemini Key",
+      "Are you sure you want to clear your Gemini API key? You will need to re-enter it later to use Gemini features.",
+      "Clear Key",
+      () => {
+        setGeminiApiKey("");
+        showMessage("success", "Gemini API key cleared successfully!");
+
+        if (clearGeminiKeyBtnDesktop) {
+          clearGeminiKeyBtnDesktop.classList.add("hidden");
+        }
+        if (clearGeminiKeyBtnMobile) {
+          clearGeminiKeyBtnMobile.classList.add("hidden");
+        }
+      },
+      () => {
+        showMessage("info", "Clearing Gemini API key cancelled.");
+      }
+    );
+    if (!mobileMenu.classList.contains("hidden")) {
+      mobileMenu.classList.add("hidden");
+      const icon = mobileMenuButton.querySelector("svg");
+      icon.innerHTML =
+        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>';
+    }
+  };
+
+  if (clearGeminiKeyBtnDesktop) {
+    clearGeminiKeyBtnDesktop.addEventListener("click", handleClearGeminiKey);
+  }
+  if (clearGeminiKeyBtnMobile) {
+    clearGeminiKeyBtnMobile.addEventListener("click", handleClearGeminiKey);
+  }
+
   const currentPath = window.location.pathname.split("/").pop();
   const navLinks = document.querySelectorAll(".nav-link");
 
   navLinks.forEach((link) => {
-    if (link.getAttribute("href") === currentPath) {
+    if (
+      link.getAttribute("href") &&
+      link.getAttribute("href") === currentPath
+    ) {
       link.classList.add("menu-active");
     } else {
-      link.classList.remove("menu-active");
+      if (
+        link.id === "clear-gemini-key-btn-desktop" ||
+        link.id === "clear-gemini-key-btn-mobile"
+      ) {
+        link.classList.remove("menu-active");
+      } else {
+        link.classList.remove("menu-active");
+      }
     }
   });
 
