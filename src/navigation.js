@@ -3,25 +3,8 @@ import {
   showMessage,
   setGeminiApiKey,
   getGeminiApiKey,
+  setTheme,
 } from "./utils.js";
-
-function setTheme(themeName) {
-  document.documentElement.setAttribute("data-theme", themeName);
-  localStorage.setItem("theme", themeName);
-
-  const themeControllers = document.querySelectorAll(".theme-controller");
-  themeControllers.forEach((controller) => {
-    if (controller.value === themeName) {
-      controller.checked = true;
-      controller.classList.remove("btn-ghost");
-      controller.classList.add("btn-primary");
-    } else {
-      controller.checked = false;
-      controller.classList.remove("btn-primary");
-      controller.classList.add("btn-ghost");
-    }
-  });
-}
 
 document.addEventListener("DOMContentLoaded", () => {
   const daisyThemes = [

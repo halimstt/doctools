@@ -316,3 +316,126 @@ export function removeElementAtIndex(array, index) {
 export function filterPdfFiles(files) {
   return Array.from(files).filter((file) => file.type === "application/pdf");
 }
+
+export function logDebug(message) {}
+
+export function showNoDocumentSelectedModal() {
+  showMessage(
+    "info",
+    "Please select a document from the 'Extract' tab first to proceed."
+  );
+}
+
+export function extractDataWithRegex(pdfText, config) {
+  const extracted = {
+    supplierName: null,
+    documentDate: null,
+    documentNumber: null,
+    totalAmount: null,
+  };
+
+  const extractValue = (text, pattern) => {
+    if (!pattern) return null;
+    try {
+      const regex = new RegExp(pattern, "i");
+      const match = text.match(regex);
+      if (match) {
+        return match[1] ? match[1].trim() : match[0].trim();
+      }
+      return null;
+    } catch (e) {
+      console.error("Invalid regex pattern:", e);
+      return null;
+    }
+  };
+
+  if (config) {
+    extracted.supplierName = extractValue(pdfText, config.supplierNamePattern);
+    let docDate = extractValue(pdfText, config.documentDatePattern);
+    extracted.documentDate = docDate;
+
+    let docNumber = extractValue(pdfText, config.documentNumberPattern);
+    if (docNumber) {
+      docNumber = docNumber
+        .replace(/\s*-\s*/g, "-")
+        .replace(/\s+/g, "")
+        .trim();
+    }
+    extracted.documentNumber = docNumber;
+
+    const totalAmountStr = extractValue(pdfText, config.totalAmountPattern);
+    if (totalAmountStr) {
+      const cleanedAmount = totalAmountStr.replace(/[^0-9.]/g, "");
+      const parsedAmount = parseFloat(cleanedAmount);
+      if (!isNaN(parsedAmount)) {
+        extracted.totalAmount = parsedAmount;
+      }
+    }
+  }
+  return extracted;
+}
+
+export function classifyDocumentHeuristically(pdfText, configurations) {
+  let scores = [];
+
+  const testPattern = (text, pattern) => {
+    if (!pattern) return false;
+    try {
+      return new RegExp(pattern, "i").test(text);
+    } catch (e) {
+      console.error("Invalid regex pattern for classification:", e);
+      return false;
+    }
+  };
+
+  for (const config of configurations) {
+    let currentScore = 0;
+    if (testPattern(pdfText, config.supplierNamePattern)) {
+      currentScore += 4;
+    }
+    if (testPattern(pdfText, config.documentNumberPattern)) {
+      currentScore += 3;
+    }
+    if (testPattern(pdfText, config.totalAmountPattern)) {
+      currentScore += 2;
+    }
+    if (testPattern(pdfText, config.documentDatePattern)) {
+      currentScore += 1;
+    }
+
+    if (currentScore > 0) {
+      scores.push({ configName: config.name, score: currentScore });
+    }
+  }
+
+  if (scores.length === 0) {
+    return { matchedConfigName: "None" };
+  }
+
+  scores.sort((a, b) => b.score - a.score);
+  const bestMatch = scores[0];
+
+  if (bestMatch.score >= 3) {
+    return { matchedConfigName: bestMatch.configName };
+  } else {
+    return { matchedConfigName: "None" };
+  }
+}
+
+export function setTheme(themeName) {
+  document.documentElement.setAttribute("data-theme", themeName);
+  localStorage.setItem("theme", themeName);
+
+  const themeControllers = document.querySelectorAll(".theme-controller");
+  themeControllers.forEach((controller) => {
+    if (controller.value === themeName) {
+      controller.checked = true;
+      controller.classList.remove("btn-ghost");
+      controller.classList.add("btn-primary");
+    } else {
+      controller.checked = false;
+      controller.classList.remove("btn-primary");
+      controller.classList.add("btn-ghost");
+    }
+  });
+}
