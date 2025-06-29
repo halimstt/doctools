@@ -113,7 +113,23 @@ function showNoDocumentSelectedModal() {
   );
 }
 
-function showRegexSuggestModal(fieldName) {
+async function showRegexSuggestModal(fieldName) {
+  if (!currentPdfTextForAnalysis) {
+    showNoDocumentSelectedModal();
+    return;
+  }
+
+  if (!getGeminiApiKey()) {
+    const key = await showApiKeyModal();
+    if (!key) {
+      showMessage(
+        "error",
+        "Gemini API key is required for AI-powered features. Operation canceled."
+      );
+      return;
+    }
+  }
+
   currentRegexTargetField = fieldName;
   regexSuggestModalTitle.textContent = `AI Regex Suggestions for ${fieldName
     .replace(/([A-Z])/g, " $1")
@@ -1299,26 +1315,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  aiSuggestDateBtn.addEventListener("click", () => {
-    if (currentPdfTextForAnalysis) {
-      showRegexSuggestModal("documentDate");
-    } else {
-      showNoDocumentSelectedModal();
-    }
+  aiSuggestDateBtn.addEventListener("click", async () => {
+    await showRegexSuggestModal("documentDate");
   });
-  aiSuggestNumberBtn.addEventListener("click", () => {
-    if (currentPdfTextForAnalysis) {
-      showRegexSuggestModal("documentNumber");
-    } else {
-      showNoDocumentSelectedModal();
-    }
+  aiSuggestNumberBtn.addEventListener("click", async () => {
+    await showRegexSuggestModal("documentNumber");
   });
-  aiSuggestAmountBtn.addEventListener("click", () => {
-    if (currentPdfTextForAnalysis) {
-      showRegexSuggestModal("totalAmount");
-    } else {
-      showNoDocumentSelectedModal();
-    }
+  aiSuggestAmountBtn.addEventListener("click", async () => {
+    await showRegexSuggestModal("totalAmount");
   });
 
   generateRegexButton.addEventListener("click", generateRegexSuggestions);
