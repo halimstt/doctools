@@ -27,6 +27,8 @@ const DEBUG_MODE = false;
 const fileInput = document.getElementById("file-input");
 const pdfRawTextPreview = document.getElementById("pdfRawTextPreview");
 const processBtn = document.getElementById("process-btn");
+const processBtnText = document.getElementById("process-btn-text");
+const spinnerProcess = document.getElementById("spinner-process");
 const supplierNameSpan = document.getElementById("supplierName");
 const documentDateSpan = document.getElementById("documentDate");
 const documentNumberSpan = document.getElementById("documentNumber");
@@ -41,6 +43,8 @@ const documentNumberRegexInput = document.getElementById("documentNumberRegex");
 const totalAmountRegexInput = document.getElementById("totalAmountRegex");
 const configSelect = document.getElementById("configSelect");
 const previewButton = document.getElementById("previewButton");
+const previewBtnText = document.getElementById("preview-btn-text");
+const spinnerPreview = document.getElementById("spinner-preview");
 const uploadArea = document.getElementById("upload-area");
 const filePillsContainer = document.getElementById("file-pills-container");
 const resultsContainer = document.getElementById("results-container");
@@ -224,6 +228,8 @@ async function callGeminiApi(
   document.querySelectorAll(".ai-suggest-button").forEach((btn) => {
     btn.disabled = true;
   });
+  generateRegexButton.disabled = true;
+  useSelectedRegexButton.disabled = true;
 
   let prompt;
   let responseMimeType = "application/json";
@@ -332,6 +338,7 @@ async function callGeminiApi(
   } finally {
     updateTemplateButtonsState();
     updateProcessButtonsState();
+    generateRegexButton.disabled = false;
   }
 }
 
@@ -456,7 +463,7 @@ async function generateRegexSuggestions() {
   generateRegexButton.disabled = true;
   useSelectedRegexButton.disabled = true;
   regexSuggestionsContainer.innerHTML =
-    '<p class="text-center"><span class="loading loading-spinner loading-md"></span> Generating...</p>';
+    '<p class="text-center">Generating <span class="loading loading-spinner loading-md"></span></p>';
 
   try {
     const suggestions = await callGeminiApi(
@@ -999,6 +1006,10 @@ function resetUI() {
   switchTab("Process");
   updateTemplateButtonsState();
   updateProcessButtonsState();
+  processBtnText.textContent = "Process";
+  spinnerProcess.classList.add("hidden");
+  previewBtnText.textContent = "Preview";
+  spinnerPreview.classList.add("hidden");
 }
 
 function updateProcessButtonsState() {
@@ -1094,8 +1105,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     clearAllResults();
     resultsTableBody.innerHTML =
-      '<tr><td colspan="7" class="text-center">Processing...</td></tr>';
+      '<tr><td colspan="7" class="text-center">Processing</td></tr>';
     updateProcessButtonsState();
+
+    processBtnText.textContent = "Processing";
+    spinnerProcess.classList.remove("hidden");
+    processBtn.disabled = true;
 
     let processedCount = 0;
     for (let i = 0; i < uploadedFiles.length; i++) {
@@ -1227,6 +1242,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         `Finished processing ${processedCount} PDF(s), but no data was extracted.`
       );
     }
+    processBtnText.textContent = "Process";
+    spinnerProcess.classList.add("hidden");
     updateProcessButtonsState();
   });
 
@@ -1235,6 +1252,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       showNoDocumentSelectedModal();
       return;
     }
+
+    previewBtnText.textContent = "Previewing";
+    spinnerPreview.classList.remove("hidden");
+    previewButton.disabled = true;
 
     try {
       const currentRegexs = {
@@ -1271,6 +1292,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         `Error during preview: ${error.message}. Check console for details.`
       );
     } finally {
+      previewBtnText.textContent = "Preview";
+      spinnerPreview.classList.add("hidden");
       updateTemplateButtonsState();
       updateProcessButtonsState();
     }

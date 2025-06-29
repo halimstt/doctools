@@ -19,7 +19,7 @@ const processBtn = document.getElementById("process-btn");
 const downloadBtn = document.getElementById("download-btn");
 const statusText = document.getElementById("status-text");
 const processBtnText = document.getElementById("process-btn-text");
-const spinner = document.getElementById("spinner");
+const spinnerProcess = document.getElementById("spinner-process");
 const resultsContainer = document.getElementById("results-container");
 const resultsTableBody = document.getElementById("results-table-body");
 
@@ -37,7 +37,7 @@ function resetUI() {
   hideMessage();
   updateStatementsFileDisplay();
   processBtnText.textContent = "Process";
-  spinner.classList.add("hidden");
+  spinnerProcess.classList.add("hidden");
   displayTransactions([]);
   updateStatementsButtonsState();
 }
@@ -193,8 +193,8 @@ async function processStatements() {
   }
 
   processBtn.disabled = true;
-  spinner.classList.remove("hidden");
-  processBtnText.textContent = "Processing...";
+  spinnerProcess.classList.remove("hidden");
+  processBtnText.textContent = "Processing";
   statusText.textContent = "";
   hideMessage();
 
@@ -211,7 +211,7 @@ async function processStatements() {
           "Gemini API key is required for this parser. Processing canceled."
         );
         processBtn.disabled = false;
-        spinner.classList.add("hidden");
+        spinnerProcess.classList.add("hidden");
         processBtnText.textContent = "Process";
         return;
       }
@@ -222,7 +222,7 @@ async function processStatements() {
         "Could not get Gemini API key. Processing canceled."
       );
       processBtn.disabled = false;
-      spinner.classList.add("hidden");
+      spinnerProcess.classList.add("hidden");
       processBtnText.textContent = "Process";
       return;
     }
@@ -308,7 +308,7 @@ async function processStatements() {
     );
   } finally {
     processBtn.disabled = false;
-    spinner.classList.add("hidden");
+    spinnerProcess.classList.add("hidden");
     processBtnText.textContent = "Process";
     statusText.textContent = "Processing your statements...";
   }

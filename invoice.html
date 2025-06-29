@@ -120,7 +120,11 @@
 
           <div class="flex justify-center space-x-2">
             <button id="process-btn" class="btn btn-primary" disabled>
-              Process
+              <span id="process-btn-text">Process</span>
+              <span
+                id="spinner-process"
+                class="loading loading-dots text-primary hidden"
+              ></span>
             </button>
             <button id="download-btn" class="btn btn-secondary" disabled>
               Download
@@ -283,7 +287,7 @@
                   />
                   <button
                     id="aiSuggestDateBtn"
-                    class="btn btn-secondary join-item tooltip tooltip-left"
+                    class="btn btn-secondary join-item tooltip tooltip-left ai-suggest-button"
                     data-tip="Get AI-suggested regex"
                   >
                     ?
@@ -303,7 +307,7 @@
                   />
                   <button
                     id="aiSuggestNumberBtn"
-                    class="btn btn-secondary join-item tooltip tooltip-left"
+                    class="btn btn-secondary join-item tooltip tooltip-left ai-suggest-button"
                     data-tip="Get AI-suggested regex"
                   >
                     ?
@@ -323,7 +327,7 @@
                   />
                   <button
                     id="aiSuggestAmountBtn"
-                    class="btn btn-secondary join-item tooltip tooltip-left"
+                    class="btn btn-secondary join-item tooltip tooltip-left ai-suggest-button"
                     data-tip="Get AI-suggested regex"
                   >
                     ?
@@ -332,7 +336,11 @@
               </div>
               <div class="flex space-x-2">
                 <button id="previewButton" class="btn btn-primary flex-1">
-                  Preview
+                  <span id="preview-btn-text">Preview</span>
+                  <span
+                    id="spinner-preview"
+                    class="loading loading-dots text-primary hidden"
+                  ></span>
                 </button>
               </div>
             </div>
