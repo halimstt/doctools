@@ -566,8 +566,11 @@ async function processGeminiStatementWithAI(pdf, apiKey) {
       Rules for extraction:
       - The Date should be in DD/MM/YYYY format. If only DD/MM is present, assume the current year for a full DD/MM/YYYY format.
       - The Description should be a concise summary of the transaction.
-      - The Amount should be a numeric value. It should be positive for incoming funds (credit) and negative for outgoing funds (debit/expense). Do not include currency symbols (like RM).
-      - Pay close attention to keywords and common transaction patterns to correctly identify whether an amount is a debit or a credit. For example, 'DUITNOW QR' or direct deposits are typically positive, while 'QR PAY SALES', 'MBB CT', or mentions of purchases/payments are typically negative. If the original text explicitly shows a minus sign or indicates a debit, ensure the output amount is negative.
+      - The Amount should be a numeric value. It must be positive for incoming funds (credit/deposit) and negative for outgoing funds (debit/withdrawal/expense). Do not include currency symbols (like RM).
+      - **Crucially, determine the sign of the Amount based on explicit indicators and context:**
+          - If the original text explicitly shows a minus sign (e.g., "-123.45") or uses terms like "DEBIT", "WITHDRAWAL", "PAYMENT", "CHARGE", "PURCHASE", "OUTGOING", "TRANSFER TO", "QR PAY SALES", "MBB CT", then the Amount MUST be negative.
+          - If the original text explicitly shows a plus sign (e.g., "+123.45") or uses terms like "CREDIT", "DEPOSIT", "INCOMING", "TRANSFER FROM", "DUITNOW QR", "RECEIPT", "REFUND", then the Amount MUST be positive.
+          - If there is no explicit sign, carefully analyze the description and surrounding context to infer if it's an inflow (credit, positive) or outflow (debit, negative).
       - Ignore any opening/closing balances, totals, page numbers, headers, footers, or non-transactional text.
       - If multiple transactions are found, return them as an array of objects.
       - If no transactions are found on this page, return an empty array.
