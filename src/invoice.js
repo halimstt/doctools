@@ -611,6 +611,8 @@ async function displayPdfTextForAnalysis(file) {
   if (!file || file.type !== "application/pdf") {
     pdfRawTextPreview.value = "";
     currentPdfTextForAnalysis = "";
+    currentAnalysisFileName.textContent = "";
+    updateTemplateButtonsState();
     return;
   }
   currentAnalysisFileName.textContent = "( " + file.name + " )";
@@ -847,6 +849,7 @@ function resetExtractedFieldsForAnalysisTab() {
   totalAmountSpan.textContent = "-";
   currentPdfTextForAnalysis = "";
   pdfRawTextPreview.value = "";
+  currentAnalysisFileName.textContent = "";
   updateTemplateButtonsState();
 }
 
@@ -916,11 +919,11 @@ function switchTab(tabName) {
     tabButtonProcess.classList.remove("tab-active");
     tabContentTemplate.classList.remove("hidden");
     tabContentProcess.classList.add("hidden");
-    updateTemplateButtonsState();
-    resetExtractedFieldsForAnalysisTab();
+
     if (!currentPdfTextForAnalysis && uploadedFiles.length > 0) {
       displayPdfTextForAnalysis(uploadedFiles[0]);
     }
+    updateTemplateButtonsState();
   }
 }
 
