@@ -81,7 +81,8 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
       <div class="navbar-center hidden md:flex">
         <ul class="menu menu-horizontal px-1">
-          <li><a href="index.html" class="nav-link">Statement</a></li>
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="statement.html" class="nav-link">Statement</a></li>
           <li><a href="invoice.html" class="nav-link">Invoice</a></li>
           <li><a id="clear-gemini-key-btn-desktop" class="nav-link cursor-pointer">Clear Gemini</a></li>
         </ul>
@@ -130,7 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
     </header>
     <nav id="mobile-menu" class="hidden md:hidden fixed top-16 left-0 right-0 bg-base-100 shadow-md py-2 z-50">
       <ul class="menu menu-vertical w-full px-4">
-        <li><a href="index.html" class="block py-3 nav-link">Statement</a></li>
+        <li><a href="index.html" class="block py-3 nav-link">Home</a></li>
+        <li><a href="statement.html" class="block py-3 nav-link">Statement</a></li>
         <li><a href="invoice.html" class="block py-3 nav-link">Invoice</a></li>
         <li><a id="clear-gemini-key-btn-mobile" class="block py-3 nav-link cursor-pointer">Clear Gemini</a></li>
       </ul>

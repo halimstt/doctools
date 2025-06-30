@@ -18,6 +18,7 @@ export default defineConfig({
       input: {
         // Define entry points for your HTML files
         main: resolve(__dirname, "index.html"),
+        statement: resolve(__dirname, "statement.html"),
         invoice: resolve(__dirname, "invoice.html"),
         // Add more HTML entry points here if you have them
       },
