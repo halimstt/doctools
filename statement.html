@@ -164,6 +164,54 @@
       </main>
     </div>
 
+    <div
+      id="toast-container"
+      class="toast toast-end toast-bottom z-[9999] p-4 gap-2"
+    ></div>
+
+    <dialog id="shared-api-key-modal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Enter Gemini API Key</h3>
+        <p class="py-4">
+          Please enter your Gemini API key to use the AI-powered parser. You can
+          get one from
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            class="link link-primary"
+            >Google AI Studio</a
+          >.
+        </p>
+        <input
+          type="password"
+          id="shared-api-key-input"
+          class="input input-bordered w-full"
+          placeholder="Enter your API key"
+        />
+        <div class="modal-action">
+          <button id="shared-api-key-save-btn" class="btn btn-primary">
+            Save Key
+          </button>
+          <button id="shared-api-key-cancel-btn" class="btn btn-ghost">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="confirmationModal" class="modal">
+      <div class="modal-box">
+        <h3 id="confirmationModalTitle" class="font-bold text-lg"></h3>
+        <p id="confirmationModalText" class="py-4"></p>
+        <div class="modal-action">
+          <button id="confirmActionButton" class="btn btn-primary"></button>
+          <button id="cancelConfirmationButton" class="btn btn-ghost">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </dialog>
+
     <script type="module" src="./src/utils.js"></script>
     <script type="module" src="./src/statement.js"></script>
   </body>
