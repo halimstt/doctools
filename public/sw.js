@@ -1,7 +1,8 @@
-const CACHE_NAME = "doctools-cache-v3";
+const CACHE_NAME = "doctools-cache-v4";
 const urlsToPrecache = [
   "./", // Caches index.html implicitly from the root
   "./index.html",
+  "./statement.html",
   "./invoice.html",
   // You can still pre-cache specific static assets that you know won't change names,
   // or that are always requested directly, like the root paths.
