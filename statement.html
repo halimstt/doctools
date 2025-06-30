@@ -212,6 +212,17 @@
       </div>
     </dialog>
 
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {});
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("./sw.js")
+            .then((registration) => {})
+            .catch((error) => {});
+        });
+      }
+    </script>
     <script type="module" src="./src/utils.js"></script>
     <script type="module" src="./src/statement.js"></script>
   </body>
