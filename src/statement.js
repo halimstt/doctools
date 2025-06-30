@@ -164,6 +164,111 @@ function removeIndividualFile(indexToRemove) {
   }
 }
 
+function parseMaybankWebDate(dateString) {
+  const monthMap = {
+    Jan: 0,
+    Feb: 1,
+    Mar: 2,
+    Apr: 3,
+    May: 4,
+    Jun: 5,
+    Jul: 6,
+    Aug: 7,
+    Sep: 8,
+    Oct: 9,
+    Nov: 10,
+    Dec: 11,
+  };
+  const parts = dateString.split(" ");
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const month = monthMap[parts[1]];
+    const year = parseInt(parts[2], 10);
+    if (!isNaN(day) && month !== undefined && !isNaN(year)) {
+      return new Date(year, month, day);
+    }
+  }
+  return new Date("Invalid Date");
+}
+
+async function peekDatesFromPdf(pdf) {
+  let earliestDate = null;
+  let latestDate = null;
+
+  const dateParsers = [
+    {
+      regex: /(\d{1,2}\s+\w{3}\s+\d{4})/g,
+      parser: parseMaybankWebDate,
+    },
+    {
+      regex: /(\d{2}\/\d{2}\/\d{2}(?:\d{2})?)/g,
+      parser: (dateStr) => {
+        const timestamp = parseDateForSorting(dateStr);
+        return isNaN(timestamp)
+          ? new Date("Invalid Date")
+          : new Date(timestamp);
+      },
+    },
+  ];
+
+  const pagesToCheck = new Set();
+  for (let i = 1; i <= Math.min(pdf.numPages, 3); i++) {
+    pagesToCheck.add(i);
+  }
+  if (pdf.numPages > 3) {
+    for (let i = Math.max(1, pdf.numPages - 2); i <= pdf.numPages; i++) {
+      pagesToCheck.add(i);
+    }
+  }
+
+  console.log(`--- Starting date peek for PDF with ${pdf.numPages} pages ---`);
+  for (const pageNum of Array.from(pagesToCheck).sort((a, b) => a - b)) {
+    try {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map((item) => item.str).join(" ");
+      console.log(`  Scanning page ${pageNum} for dates...`);
+
+      for (const { regex, parser } of dateParsers) {
+        let match;
+        regex.lastIndex = 0;
+        while ((match = regex.exec(pageText)) !== null) {
+          const dateStr = match[1];
+          const parsedDate = parser(dateStr);
+          if (!isNaN(parsedDate.getTime())) {
+            const timestamp = parsedDate.getTime();
+            if (earliestDate === null || timestamp < earliestDate) {
+              earliestDate = timestamp;
+            }
+            if (latestDate === null || timestamp > latestDate) {
+              latestDate = timestamp;
+            }
+            console.log(
+              `    Page ${pageNum}: Found date "${dateStr}" -> Parsed: ${new Date(
+                timestamp
+              ).toLocaleDateString()}`
+            );
+          } else {
+            console.warn(
+              `    Page ${pageNum}: Matched date string "${dateStr}" but failed to parse with its parser.`
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`Error peeking page ${pageNum} for dates:`, error);
+    }
+  }
+  console.log(
+    `--- Peeked results for PDF: Earliest: ${
+      earliestDate ? new Date(earliestDate).toLocaleDateString() : "N/A"
+    }, Latest: ${
+      latestDate ? new Date(latestDate).toLocaleDateString() : "N/A"
+    } ---`
+  );
+  return { earliestDate, latestDate };
+}
+
 async function processStatements() {
   let filesToProcess = [...selectedFiles];
 
@@ -174,8 +279,8 @@ async function processStatements() {
 
   processBtn.disabled = true;
   spinnerProcess.classList.remove("hidden");
-  processBtnText.textContent = "Processing";
-  statusText.textContent = "";
+  processBtnText.textContent = "Analyzing files...";
+  statusText.textContent = "Analyzing files for sorting...";
   hideMessage();
 
   allTransactions = [];
@@ -211,9 +316,10 @@ async function processStatements() {
   try {
     const pdfjsLib = await getPDFLib();
 
+    const filesWithDateInfo = [];
     for (let i = 0; i < filesToProcess.length; i++) {
       const file = filesToProcess[i];
-      statusText.textContent = `Processing ${file.name} (${i + 1}/${
+      statusText.textContent = `Analyzing dates in ${file.name} (${i + 1}/${
         filesToProcess.length
       })...`;
 
@@ -223,9 +329,62 @@ async function processStatements() {
         fileReader.onerror = reject;
         fileReader.readAsArrayBuffer(file);
       });
-
       const typedarray = new Uint8Array(await fileReadPromise);
       const pdf = await pdfjsLib.getDocument(typedarray).promise;
+
+      const { earliestDate, latestDate } = await peekDatesFromPdf(pdf);
+      filesWithDateInfo.push({
+        file,
+        pdf,
+        earliestDate,
+        latestDate,
+        originalIndex: i,
+      });
+    }
+
+    console.log("Files before sorting:");
+    filesWithDateInfo.forEach((f) =>
+      console.log(
+        `  - ${f.file.name}: Earliest: ${
+          f.earliestDate ? new Date(f.earliestDate).toLocaleDateString() : "N/A"
+        }, Latest: ${
+          f.latestDate ? new Date(f.latestDate).toLocaleDateString() : "N/A"
+        }`
+      )
+    );
+
+    filesWithDateInfo.sort((a, b) => {
+      if (a.latestDate === null && b.latestDate === null)
+        return a.originalIndex - b.originalIndex;
+      if (a.latestDate === null) return 1;
+      if (b.latestDate === null) return -1;
+      const latestDiff = b.latestDate - a.latestDate;
+      if (latestDiff !== 0) return latestDiff;
+      if (a.earliestDate === null && b.earliestDate === null)
+        return a.originalIndex - b.originalIndex;
+      if (a.earliestDate === null) return 1;
+      if (b.earliestDate === null) return -1;
+      const earliestDiff = b.earliestDate - a.earliestDate;
+      if (earliestDiff !== 0) return earliestDiff;
+      return a.originalIndex - b.originalIndex;
+    });
+
+    console.log("Files after sorting:");
+    filesWithDateInfo.forEach((f) =>
+      console.log(
+        `  - ${f.file.name}: Earliest: ${
+          f.earliestDate ? new Date(f.earliestDate).toLocaleDateString() : "N/A"
+        }, Latest: ${
+          f.latestDate ? new Date(f.latestDate).toLocaleDateString() : "N/A"
+        }`
+      )
+    );
+
+    for (let i = 0; i < filesWithDateInfo.length; i++) {
+      const { file, pdf } = filesWithDateInfo[i];
+      statusText.textContent = `Processing ${file.name} (${i + 1}/${
+        filesWithDateInfo.length
+      })...`;
 
       let fileTransactions = [];
 
@@ -260,12 +419,6 @@ async function processStatements() {
       allTransactions = allTransactions.concat(fileTransactions);
     }
 
-    allTransactions.sort((a, b) => {
-      const dateA = parseDateForSorting(a["Date"]);
-      const dateB = parseDateForSorting(b["Date"]);
-      return dateA - dateB;
-    });
-
     statusText.textContent = "";
     displayTransactions(allTransactions);
     updateStatementsButtonsState();
@@ -273,7 +426,7 @@ async function processStatements() {
     if (allTransactions.length > 0) {
       showMessage(
         "success",
-        `${filesToProcess.length} PDF(s) processed and converted file ready for download!`
+        `${filesWithDateInfo.length} PDF(s) processed and converted file ready for download!`
       );
     } else {
       showMessage(
@@ -286,6 +439,7 @@ async function processStatements() {
       "error",
       `An error occurred during PDF conversion: ${error.message}. Please check the console for details and ensure your Gemini API is enabled for this project if using the AI parser.`
     );
+    console.error("Processing error:", error);
   } finally {
     processBtn.disabled = false;
     spinnerProcess.classList.add("hidden");
@@ -521,7 +675,7 @@ function parseTextAndGenerateCsvMaybankWeb(text) {
   }
 
   return transactions.map((t) => {
-    const dateObj = new Date(t.date);
+    const dateObj = parseMaybankWebDate(t.date);
     const day = String(dateObj.getDate()).padStart(2, "0");
     const month = String(dateObj.getMonth() + 1).padStart(2, "0");
     const year = dateObj.getFullYear();

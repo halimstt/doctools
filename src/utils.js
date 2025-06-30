@@ -237,12 +237,22 @@ export function downloadCSV(data, headers, fileName) {
 }
 
 export function parseDateForSorting(dateString) {
-  if (dateString && dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-    const [day, month, year] = dateString.split("/");
-    return new Date(`${year}-${month}-${day}`).getTime();
-  }
-  if (dateString && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    return new Date(dateString).getTime();
+  if (dateString) {
+    if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+      const [day, month, year] = dateString.split("/");
+      return new Date(`${year}-${month}-${day}`).getTime();
+    }
+    if (dateString.match(/^\d{2}\/\d{2}\/\d{2}$/)) {
+      const [day, month, yearTwoDigit] = dateString.split("/");
+      const currentYear = new Date().getFullYear();
+      const fullYear =
+        parseInt(yearTwoDigit, 10) +
+        (parseInt(yearTwoDigit, 10) > (currentYear % 100) + 20 ? 1900 : 2000);
+      return new Date(`${fullYear}-${month}-${day}`).getTime();
+    }
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return new Date(dateString).getTime();
+    }
   }
   try {
     const date = new Date(dateString);
