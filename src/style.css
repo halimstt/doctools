@@ -143,6 +143,8 @@
   --noise: 0;
 }
 
-body {
-  font-family: "Inter", sans-serif;
+@layer base {
+  body {
+    font-family: "Inter", sans-serif;
+  }
 }
