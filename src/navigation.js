@@ -90,15 +90,15 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="navbar-end">
         <div class="dropdown dropdown-end hidden md:flex">
           <div tabindex="0" role="button" class="btn m-1">
+            <div
+              class="bg-base-100 group-hover:border-base-content/20 border-base-content/10 grid shrink-0 grid-cols-2 gap-0.5 rounded-md border p-1 transition-colors mr-2"
+            >
+              <div class="bg-base-content size-1 rounded-full"></div>
+              <div class="bg-primary size-1 rounded-full"></div>
+              <div class="bg-secondary size-1 rounded-full"></div>
+              <div class="bg-accent size-1 rounded-full"></div>
+            </div>
             Theme
-            <svg
-              width="12px"
-              height="12px"
-              class="inline-block h-2 w-2 fill-current opacity-60"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 2048 2048">
-              <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z"></path>
-            </svg>
           </div>
           <ul class="dropdown-content bg-base-300 rounded-box z-[999] w-52 p-2 shadow-2xl theme-list max-h-72 overflow-y-auto">
             ${generateThemeListItems("theme-dropdown-desktop")}
@@ -107,15 +107,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div class="dropdown dropdown-end md:hidden">
             <div tabindex="0" role="button" class="btn m-1">
-                Theme
-                <svg
-                  width="12px"
-                  height="12px"
-                  class="inline-block h-2 w-2 fill-current opacity-60"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 2048 2048">
-                  <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z"></path>
-                </svg>
+              <div
+                class="bg-base-100 group-hover:border-base-content/20 border-base-content/10 grid shrink-0 grid-cols-2 gap-0.5 rounded-md border p-1 transition-colors mr-2"
+              >
+                <div class="bg-base-content size-1 rounded-full"></div>
+                <div class="bg-primary size-1 rounded-full"></div>
+                <div class="bg-secondary size-1 rounded-full"></div>
+                <div class="bg-accent size-1 rounded-full"></div>
+              </div>
+              Theme
             </div>
             <ul class="dropdown-content bg-base-300 rounded-box z-[999] w-52 p-2 shadow-2xl theme-list max-h-72 overflow-y-auto">
               ${generateThemeListItems("theme-dropdown-mobile")}
