@@ -121,22 +121,26 @@ document.addEventListener("DOMContentLoaded", () => {
               ${generateThemeListItems("theme-dropdown-mobile")}
             </ul>
         </div>
-
-        <button id="mobile-menu-button" class="btn btn-ghost md:hidden" aria-label="Open mobile menu">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-          </svg>
-        </button>
       </div>
     </header>
-    <nav id="mobile-menu" class="hidden md:hidden fixed top-16 left-0 right-0 bg-base-100 shadow-md py-2 z-50">
-      <ul class="menu menu-vertical w-full px-4">
-        <li><a href="index.html" class="block py-3 nav-link">Home</a></li>
-        <li><a href="statement.html" class="block py-3 nav-link">Statement</a></li>
-        <li><a href="invoice.html" class="block py-3 nav-link">Invoice</a></li>
-        <li><a id="clear-gemini-key-btn-mobile" class="block py-3 nav-link cursor-pointer">Clear Gemini</a></li>
-      </ul>
-    </nav>
+    <div class="dock md:hidden">
+      <a href="index.html" class="dock-item">
+        <svg class="size-[1.2em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="currentColor" stroke-linejoin="miter" stroke-linecap="butt"><polyline points="1 11 12 2 23 11" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></polyline><path d="m5,13v7c0,1.105.895,2,2,2h10c1.105,0,2-.895,2-2v-7" fill="none" stroke="currentColor" stroke-linecap="square" stroke-miterlimit="10" stroke-width="2"></path><line x1="12" y1="22" x2="12" y2="18" fill="none" stroke="currentColor" stroke-linecap="square" stroke-miterlimit="10" stroke-width="2"></line></g></svg>
+        <span class="dock-label">Home</span>
+      </a>
+      <a href="statement.html" class="dock-item">
+        <svg class="size-[1.2em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="currentColor" stroke-linejoin="miter" stroke-linecap="butt"><polyline points="3 14 9 14 9 17 15 17 15 14 21 14" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></polyline><rect x="3" y="3" width="18" height="18" rx="2" ry="2" fill="none" stroke="currentColor" stroke-linecap="square" stroke-miterlimit="10" stroke-width="2"></rect></g></svg>
+        <span class="dock-label">Statement</span>
+      </a>
+      <a href="invoice.html" class="dock-item">
+        <svg class="size-[1.2em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="currentColor" stroke-linejoin="miter" stroke-linecap="butt"><path d="m20,22h-16c-1.105,0-2-.895-2-2v-16c0-1.105.895-2,2-2h16c1.105,0,2,.895,2,2v16c0,1.105-.895,2-2,2Z" fill="none" stroke="currentColor" stroke-linecap="square" stroke-miterlimit="10" stroke-width="2"></path><line x1="6" y1="8" x2="18" y2="8" fill="none" stroke="currentColor" stroke-linecap="square" stroke-miterlimit="10" stroke-width="2"></line><line x1="6" y1="12" x2="18" y2="12" fill="none" stroke="currentColor" stroke-linecap="square" stroke-miterlimit="10" stroke-width="2"></line><line x1="6" y1="16" x2="14" y2="16" fill="none" stroke="currentColor" stroke-linecap="square" stroke-miterlimit="10" stroke-width="2"></line></g></svg>
+        <span class="dock-label">Invoice</span>
+      </a>
+      <a id="clear-gemini-key-btn-mobile" class="dock-item cursor-pointer">
+        <svg class="size-[1.2em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="currentColor" stroke-linejoin="miter" stroke-linecap="butt"><path d="m19,22h-14c-1.105,0-2-.895-2-2v-16c0-1.105.895-2,2-2h14c1.105,0,2,.895,2,2v16c0,1.105-.895,2-2,2Z" fill="none" stroke="currentColor" stroke-linecap="square" stroke-miterlimit="10" stroke-width="2"></path><line x1="12" y1="6" x2="12" y2="18" fill="none" stroke="currentColor" stroke-linecap="square" stroke-miterlimit="10" stroke-width="2"></line><line x1="15" y1="9" x2="12" y2="6" fill="none" stroke="currentColor" stroke-linecap="square" stroke-miterlimit="10" stroke-width="2"></line><line x1="9" y1="9" x2="12" y2="6" fill="none" stroke="currentColor" stroke-linecap="square" stroke-miterlimit="10" stroke-width="2"></line></g></svg>
+        <span class="dock-label">Clear Gemini</span>
+      </a>
+    </div>
   `;
 
   const navPlaceholder = document.getElementById("nav-placeholder");
@@ -161,23 +165,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  const mobileMenuButton = document.getElementById("mobile-menu-button");
-  const mobileMenu = document.getElementById("mobile-menu");
-
-  if (mobileMenuButton && mobileMenu) {
-    mobileMenuButton.addEventListener("click", () => {
-      mobileMenu.classList.toggle("hidden");
-      const icon = mobileMenuButton.querySelector("svg");
-      if (mobileMenu.classList.contains("hidden")) {
-        icon.innerHTML =
-          '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>';
-      } else {
-        icon.innerHTML =
-          '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
-      }
-    });
-  }
-
   const handleClearGeminiKey = () => {
     showConfirmationModal(
       "Confirm Clear Gemini Key",
@@ -198,12 +185,6 @@ document.addEventListener("DOMContentLoaded", () => {
         showMessage("info", "Clearing Gemini API key cancelled.");
       }
     );
-    if (!mobileMenu.classList.contains("hidden")) {
-      mobileMenu.classList.add("hidden");
-      const icon = mobileMenuButton.querySelector("svg");
-      icon.innerHTML =
-        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>';
-    }
   };
 
   if (clearGeminiKeyBtnDesktop) {
@@ -214,23 +195,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const currentPath = window.location.pathname.split("/").pop();
-  const navLinks = document.querySelectorAll(".nav-link");
+  const navLinks = document.querySelectorAll(".nav-link, .dock-item");
 
   navLinks.forEach((link) => {
     if (
       link.getAttribute("href") &&
       link.getAttribute("href") === currentPath
     ) {
-      link.classList.add("menu-active");
+      link.classList.add("dock-active");
     } else {
-      if (
-        link.id === "clear-gemini-key-btn-desktop" ||
-        link.id === "clear-gemini-key-btn-mobile"
-      ) {
-        link.classList.remove("menu-active");
-      } else {
-        link.classList.remove("menu-active");
-      }
+      link.classList.remove("dock-active");
     }
   });
 
