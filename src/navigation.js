@@ -202,8 +202,10 @@ document.addEventListener("DOMContentLoaded", () => {
       link.getAttribute("href") &&
       link.getAttribute("href") === currentPath
     ) {
+      link.classList.add("menu-active");
       link.classList.add("dock-active");
     } else {
+      link.classList.remove("menu-active");
       link.classList.remove("dock-active");
     }
   });
