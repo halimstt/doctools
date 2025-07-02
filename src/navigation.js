@@ -50,20 +50,8 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   const generateThemeListItems = (namePrefix) => {
-    const filteredThemes = daisyThemes.filter(
-      (theme) => theme !== "light" && theme !== "dark"
-    );
-
-    let itemsHtml = `
-      <li>
-        <input type="radio" name="${namePrefix}" class="theme-controller btn btn-md btn-block btn-ghost justify-start" aria-label="Light" value="light"/>
-      </li>
-      <li>
-        <input type="radio" name="${namePrefix}" class="theme-controller btn btn-md btn-block btn-ghost justify-start" aria-label="Dark" value="dark"/>
-      </li>
-    `;
-
-    filteredThemes.forEach((theme) => {
+    let itemsHtml = ``;
+    daisyThemes.forEach((theme) => {
       const label = theme.charAt(0).toUpperCase() + theme.slice(1);
       itemsHtml += `
         <li>
