@@ -1,0 +1,25 @@
+{
+  "name": "doctools",
+  "private": true,
+  "version": "0.0.4",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "daisyui": "^5.5.14",
+    "rollup-plugin-visualizer": "^6.0.3",
+    "vite": "^7.0.0"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.11",
+    "pdfjs-dist": "^5.3.31",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.22.3",
+    "tailwindcss": "^4.1.11"
+  }
+}
