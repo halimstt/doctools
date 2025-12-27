@@ -201,3 +201,28 @@ export function setTheme(themeName) {
     }
   });
 }
+
+export function getMonthYear(dateStr) {
+  if (!dateStr) return "Unknown Date";
+  try {
+    let date;
+    // Handle DD/MM/YYYY
+    const dmyMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (dmyMatch) {
+      const day = parseInt(dmyMatch[1], 10);
+      const month = parseInt(dmyMatch[2], 10);
+      let year = parseInt(dmyMatch[3], 10);
+      if (year < 100) year += 2000;
+      date = new Date(year, month - 1, day);
+    } else {
+      date = new Date(dateStr);
+    }
+
+    if (isNaN(date.getTime())) return "Unknown Date";
+
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    return `${months[date.getMonth()]} ${date.getFullYear()}`;
+  } catch (e) {
+    return "Unknown Date";
+  }
+}

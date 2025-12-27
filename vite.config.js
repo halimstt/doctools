@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
-  // base: "/doctools/", // Enable if hosting on github-pages free domain
+  base: "/", // Enable if hosting on github-pages free domain
   plugins: [
     tailwindcss(),
     react(),

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { getPDFLib, filterPdfFiles, downloadCSV } from '../utils';
+import { getPDFLib, filterPdfFiles, downloadCSV, removeElementAtIndex, getMonthYear, parseDateForSorting } from '../utils';
 import {
     peekDatesFromPdf,
     extractTextLinesFromPdfMaybankPdf,
@@ -11,6 +11,7 @@ import {
 import SplitPaneLayout from '../components/SplitPaneLayout';
 import FileUpload from '../components/FileUpload';
 import ResultSection from '../components/ResultSection';
+import DateSelectionModal from '../components/DateSelectionModal';
 
 const Statement = () => {
     const { showToast } = useOutletContext();
@@ -19,6 +20,10 @@ const Statement = () => {
     const [processing, setProcessing] = useState(false);
     const [parserType, setParserType] = useState('maybank-pdf');
     const [statusText, setStatusText] = useState('');
+
+    // Modal State
+    const [dateModalOpen, setDateModalOpen] = useState(false);
+    const [availableDates, setAvailableDates] = useState([]);
 
     const processFiles = (files) => {
         const pdfFiles = filterPdfFiles(files);
@@ -63,17 +68,29 @@ const Statement = () => {
                 const file = selectedFiles[i];
                 setStatusText(`Analyzing dates in ${file.name} (${i + 1}/${selectedFiles.length})...`);
 
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument(new Uint8Array(arrayBuffer)).promise;
-                const { earliestDate, latestDate } = await peekDatesFromPdf(pdf);
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument(new Uint8Array(arrayBuffer)).promise;
+                    const { earliestDate, latestDate } = await peekDatesFromPdf(pdf);
 
-                filesWithDateInfo.push({
-                    file,
-                    pdf,
-                    earliestDate,
-                    latestDate,
-                    originalIndex: i
-                });
+                    filesWithDateInfo.push({
+                        file,
+                        pdf,
+                        earliestDate,
+                        latestDate,
+                        originalIndex: i
+                    });
+                } catch (peekingError) {
+                    console.warn(`Could not peek dates for ${file.name}:`, peekingError);
+                    // Still add to list so it gets processed, just without date info
+                    filesWithDateInfo.push({
+                        file,
+                        pdf: null, // We'll have to reload it in Step 2 or handle null
+                        earliestDate: null,
+                        latestDate: null,
+                        originalIndex: i
+                    });
+                }
             }
 
             // Sort files
@@ -83,13 +100,6 @@ const Statement = () => {
                 if (b.latestDate === null) return -1;
                 const latestDiff = b.latestDate - a.latestDate;
                 if (latestDiff !== 0) return latestDiff;
-
-                if (a.earliestDate === null && b.earliestDate === null) return a.originalIndex - b.originalIndex;
-                if (a.earliestDate === null) return 1;
-                if (b.earliestDate === null) return -1;
-                const earliestDiff = b.earliestDate - a.earliestDate;
-                if (earliestDiff !== 0) return earliestDiff;
-
                 return a.originalIndex - b.originalIndex;
             });
 
@@ -97,47 +107,111 @@ const Statement = () => {
 
             // Step 2: Extract transactions
             for (let i = 0; i < filesWithDateInfo.length; i++) {
-                const { file, pdf } = filesWithDateInfo[i];
+                const { file, pdf: existingPdf } = filesWithDateInfo[i];
                 setStatusText(`Processing ${file.name} (${i + 1}/${filesWithDateInfo.length})...`);
 
                 let fileTransactions = [];
+                try {
+                    let pdf = existingPdf;
+                    if (!pdf) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        pdf = await pdfjsLib.getDocument(new Uint8Array(arrayBuffer)).promise;
+                    }
 
-                switch (parserType) {
-                    case 'maybank-pdf':
-                        setStatusText(`Analyzing content in ${file.name} (Maybank PDF mode)...`);
-                        const allLines = await extractTextLinesFromPdfMaybankPdf(pdf);
-                        fileTransactions = parseTransactionsMaybankPdf(allLines);
-                        break;
-                    case 'maybank-web':
-                        setStatusText(`Analyzing content in ${file.name} (Maybank Web mode)...`);
-                        const text = await getHighAccuracyTextFromPdfMaybankWeb(pdf);
-                        fileTransactions = parseTextAndGenerateCsvMaybankWeb(text);
-                        break;
-                    default:
-                        throw new Error('Invalid parser type');
+                    switch (parserType) {
+                        case 'maybank-pdf':
+                            const allLines = await extractTextLinesFromPdfMaybankPdf(pdf);
+                            fileTransactions = parseTransactionsMaybankPdf(allLines);
+                            break;
+                        case 'maybank-web':
+                            const text = await getHighAccuracyTextFromPdfMaybankWeb(pdf);
+                            fileTransactions = parseTextAndGenerateCsvMaybankWeb(text);
+                            break;
+                        default:
+                            throw new Error(`Unsupported parser type: ${parserType}`);
+                    }
+                } catch (extractError) {
+                    console.error(`Error extracting from ${file.name}:`, extractError);
+                    showToast('error', `Could not extract from ${file.name}: ${extractError.message}`);
                 }
-                allTrans = allTrans.concat(fileTransactions);
+
+                if (fileTransactions && fileTransactions.length > 0) {
+                    allTrans = allTrans.concat(fileTransactions);
+                }
             }
 
+            allTrans.sort((a, b) => parseDateForSorting(b.Date) - parseDateForSorting(a.Date));
             setTransactions(allTrans);
             if (allTrans.length > 0) {
-                showToast('success', `${filesWithDateInfo.length} PDF(s) processed!`);
+                showToast('success', `${selectedFiles.length} file(s) processed. Found ${allTrans.length} transactions.`);
             } else {
-                showToast('error', 'No transactions found.');
+                showToast('error', 'No transactions found in the selected file(s). Check if you used the correct Parser Type.');
             }
 
         } catch (error) {
             console.error('Processing error:', error);
-            showToast('error', `Error: ${error.message}`);
+            showToast('error', `Processing failed: ${error.message}`);
         } finally {
             setProcessing(false);
-            setStatusText('Processing complete.');
+            setStatusText('Complete.');
             setTimeout(() => setStatusText(''), 3000);
         }
     };
 
+
     const handleDownload = () => {
-        downloadCSV(transactions, ["Date", "Description", "Amount"], `statement_export_${new Date().toISOString().slice(0, 10)}.csv`);
+        if (transactions.length === 0) return;
+
+        // Grouping: Check if we have multiple months first.
+        const monthsSet = new Set();
+        const datesSet = new Set();
+
+        transactions.forEach(tx => {
+            if (tx.Date) {
+                datesSet.add(tx.Date);
+                monthsSet.add(getMonthYear(tx.Date));
+            }
+        });
+
+        const uniqueDates = Array.from(datesSet).sort((a, b) => parseDateForSorting(b) - parseDateForSorting(a));
+        const uniqueMonths = Array.from(monthsSet).sort((a, b) => {
+            const dateA = new Date(a);
+            const dateB = new Date(b);
+            return dateB - dateA;
+        });
+
+        if (uniqueDates.length <= 1) {
+            handleConfirmDownload(uniqueDates);
+            return;
+        }
+
+        // If we have multiple months, group by month for a cleaner UI.
+        // If we have only 1 month but multiple days, show the days.
+        if (uniqueMonths.length > 1) {
+            setAvailableDates(uniqueMonths);
+        } else {
+            setAvailableDates(uniqueDates);
+        }
+
+        setDateModalOpen(true);
+    };
+
+    const handleConfirmDownload = (selectedLabels) => {
+        if (!selectedLabels || selectedLabels.length === 0) return;
+
+        // Filter: check if tx.Date matches exactly OR via month-year label
+        const filteredTransactions = transactions.filter(tx => {
+            const txDate = tx.Date;
+            const txMonthYear = getMonthYear(txDate);
+            return selectedLabels.includes(txDate) || selectedLabels.includes(txMonthYear);
+        }).sort((a, b) => parseDateForSorting(b.Date) - parseDateForSorting(a.Date));
+
+        downloadCSV(
+            filteredTransactions,
+            ["Date", "Description", "Amount"],
+            `statement_export_${new Date().toISOString().slice(0, 10)}.csv`
+        );
+        setDateModalOpen(false);
     };
 
     const leftContent = (
@@ -238,6 +312,13 @@ const Statement = () => {
                     rightContent={rightContent}
                 />
             </main>
+
+            <DateSelectionModal
+                isOpen={dateModalOpen}
+                onClose={() => setDateModalOpen(false)}
+                onConfirm={handleConfirmDownload}
+                availableDates={availableDates}
+            />
         </div>
     );
 };

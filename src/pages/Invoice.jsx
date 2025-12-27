@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { getPDFLib, filterPdfFiles, downloadCSV, removeElementAtIndex } from '../utils';
+import { getPDFLib, filterPdfFiles, downloadCSV, removeElementAtIndex, getMonthYear, parseDateForSorting } from '../utils';
 import { extractDataWithRegex, classifyDocumentHeuristically, generateRegexWithAI } from '../parsers';
 import ProcessTab from '../components/Invoice/ProcessTab';
 import TemplateTab from '../components/Invoice/TemplateTab';
+import DateSelectionModal from '../components/DateSelectionModal';
 
 const Invoice = () => {
     const { showToast, openApiKeyModal, openConfirmationModal, geminiApiKey } = useOutletContext();
@@ -21,6 +22,10 @@ const Invoice = () => {
     // Analysis State
     const [currentPdfText, setCurrentPdfText] = useState('');
     const [currentFileName, setCurrentFileName] = useState('');
+
+    // Modal State
+    const [dateModalOpen, setDateModalOpen] = useState(false);
+    const [availableDates, setAvailableDates] = useState([]);
 
     // Load configs
     useEffect(() => {
@@ -66,41 +71,53 @@ const Invoice = () => {
 
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument(new Uint8Array(arrayBuffer)).promise;
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument(new Uint8Array(arrayBuffer)).promise;
 
-                let fullText = '';
-                for (let p = 1; p <= pdf.numPages; p++) {
-                    const page = await pdf.getPage(p);
-                    const textContent = await page.getTextContent();
-                    fullText += textContent.items.map(item => item.str).join(' ') + '\n';
-                }
-
-                // Classification
-                const { matchedConfigName } = classifyDocumentHeuristically(fullText, localConfigurations);
-
-                let extractedData = {};
-                let configUsed = null;
-
-                if (matchedConfigName && matchedConfigName !== 'None') {
-                    configUsed = localConfigurations.find(c => c.name === matchedConfigName);
-                    if (configUsed) {
-                        extractedData = extractDataWithRegex(fullText, configUsed);
+                    let fullText = '';
+                    for (let p = 1; p <= pdf.numPages; p++) {
+                        const page = await pdf.getPage(p);
+                        const textContent = await page.getTextContent();
+                        fullText += textContent.items.map(item => item.str).join(' ') + '\n';
                     }
-                }
 
-                newResults.push({
-                    fileName: file.name,
-                    configUsedName: matchedConfigName === 'None' ? null : matchedConfigName,
-                    ...extractedData,
-                    originalFile: file
-                });
+                    // Classification
+                    const { matchedConfigName } = classifyDocumentHeuristically(fullText, localConfigurations);
+
+                    let extractedData = {};
+                    let configUsed = null;
+
+                    if (matchedConfigName && matchedConfigName !== 'None') {
+                        configUsed = localConfigurations.find(c => c.name === matchedConfigName);
+                        if (configUsed) {
+                            extractedData = extractDataWithRegex(fullText, configUsed);
+                        }
+                    }
+
+                    newResults.push({
+                        fileName: file.name,
+                        configUsedName: matchedConfigName === 'None' ? null : matchedConfigName,
+                        ...extractedData,
+                        originalFile: file
+                    });
+                } catch (fileError) {
+                    console.error(`Error processing ${file.name}:`, fileError);
+                    showToast('error', `Failed to extract data from ${file.name}: ${fileError.message}`);
+                    // Add a placeholder result so the UI doesn't lose the file
+                    newResults.push({
+                        fileName: file.name,
+                        configUsedName: 'Error',
+                        originalFile: file
+                    });
+                }
             }
+            newResults.sort((a, b) => parseDateForSorting(b.documentDate) - parseDateForSorting(a.documentDate));
             setResults(newResults);
-            showToast('success', 'Processing complete!');
+            showToast('success', `Extraction complete. Processed ${files.length} file(s).`);
         } catch (e) {
-            console.error(e);
-            showToast('error', 'Error processing files: ' + e.message);
+            console.error('Extraction block error:', e);
+            showToast('error', 'Critical error during extraction: ' + e.message);
         } finally {
             setProcessing(false);
         }
@@ -214,9 +231,53 @@ const Invoice = () => {
     };
 
     const handleDownload = () => {
-        // Transform results to flat CSV friendly format
+        if (results.length === 0) return;
+
+        // Grouping
+        const monthsSet = new Set();
+        const datesSet = new Set();
+
+        results.forEach(r => {
+            if (r.documentDate) {
+                datesSet.add(r.documentDate);
+                monthsSet.add(getMonthYear(r.documentDate));
+            }
+        });
+
+        const uniqueDates = Array.from(datesSet).sort((a, b) => parseDateForSorting(b) - parseDateForSorting(a));
+        const uniqueMonths = Array.from(monthsSet).sort((a, b) => {
+            const dateA = new Date(a);
+            const dateB = new Date(b);
+            return dateB - dateA;
+        });
+
+        if (uniqueDates.length <= 1) {
+            handleConfirmDownload(uniqueDates);
+            return;
+        }
+
+        if (uniqueMonths.length > 1) {
+            setAvailableDates(uniqueMonths);
+        } else {
+            setAvailableDates(uniqueDates);
+        }
+
+        setDateModalOpen(true);
+    };
+
+    const handleConfirmDownload = (selectedLabels) => {
+        if (!selectedLabels || selectedLabels.length === 0) return;
+
         const headers = ["File Name", "Template", "Supplier", "Date", "Doc #", "Total Amount"];
-        const csvData = results.map(r => ({
+
+        const filteredResults = results.filter(r => {
+            if (!r.documentDate) return true; // Include items with no date if we didn't filter them out?
+            const d = r.documentDate;
+            const my = getMonthYear(d);
+            return selectedLabels.includes(d) || selectedLabels.includes(my);
+        }).sort((a, b) => parseDateForSorting(b.documentDate) - parseDateForSorting(a.documentDate));
+
+        const csvData = filteredResults.map(r => ({
             "File Name": r.fileName,
             "Template": r.configUsedName || '',
             "Supplier": r.officialSupplierNameForExport || r.extractedSupplierName || '',
@@ -224,7 +285,9 @@ const Invoice = () => {
             "Doc #": r.documentNumber || '',
             "Total Amount": r.totalAmount || ''
         }));
+
         downloadCSV(csvData, headers, `invoices_${new Date().toISOString().slice(0, 10)}.csv`);
+        setDateModalOpen(false);
     };
 
     return (
@@ -301,6 +364,12 @@ const Invoice = () => {
                     />
                 )}
             </main>
+            <DateSelectionModal
+                isOpen={dateModalOpen}
+                onClose={() => setDateModalOpen(false)}
+                onConfirm={handleConfirmDownload}
+                availableDates={availableDates}
+            />
         </div>
     );
 };
